@@ -1,6 +1,6 @@
 %Test trained GLMnet model with jittered datapoints
 function Test_Jittered
-
+close all
 %% Load the classifier parameters  
 % load class_params_dec.mat
 %  List of variables in class_params:
@@ -28,6 +28,7 @@ for f = 1:length(files)
     fall_err(f) = sum(~id(isfall))/sum(isfall);
     nfall_err(f) = sum(id(~isfall))/sum(~isfall);
     err(f) = (sum(id ~= isfall))/length(id); %error rate
+    confmat(:,:,f)=confusionmat(~id,isfall);
 end
 
 err = err([1 2 4 3 6 5 7]); %last corresponds to uniform distribution
@@ -39,14 +40,16 @@ figure, plot(stdwin,err(1:6),'o-')
 
 figure, plot([stdwin(1) 5], err([1 7]),'o-')
 
-%plot falls acc with unif jittered clips
+figure, imagesc(confmat(:,:,1)./repmat(sum(confmat(:,:,1),2),[1 2])), colorbar
 
-figure, plot(stdwin,fall_err(1:6),'o-')
+caxis([0 1])
+set(gca,'XTick', [1 2]), set(gca, 'XTickLabels', {'No Fall', 'Fall'})
+set(gca,'YTick', [1 2]), set(gca, 'YTickLabels', {'No Fall', 'Fall'})
 
-figure, plot([stdwin(1) 5], fall_err([1 7]),'o-')
+figure, imagesc(confmat(:,:,7)./repmat(sum(confmat(:,:,7),2),[1 2])), colorbar
 
-%plot ~falls acc with unif jittered clips
+caxis([0 1])
+set(gca,'XTick', [1 2]), set(gca, 'XTickLabels', {'No Fall', 'Fall'})
+set(gca,'YTick', [1 2]), set(gca, 'YTickLabels', {'No Fall', 'Fall'})
 
-figure, plot(stdwin,nfall_err(1:6),'o-')
 
-figure, plot([stdwin(1) 5], nfall_err([1 7]),'o-')
