@@ -63,7 +63,7 @@ fvar.nzstd= nzstd;
 FSz= size(FN,2);
 DSz= size(FN,1);
 
-LB=(L>4)+1;
+LB=(L<5)+1; % Fall=2 Non-Falls=1
 LF=L;
 LF(L>4)=5;
 %uncomment for fall detection
@@ -135,7 +135,7 @@ for i=1: nalpha
     if max(LF)>2
         d_nz{i}= cvglmnet(FN_nz, LF, 'multinomial', opts, 'class', folds_nr, fold_id);
     else
-        d_nz{i}= cvglmnet(FN_nz, LF, 'binomial', opts, 'class', folds_nr, fold_id);
+        d_nz{i}= cvglmnet(FN_nz, LF, 'binomial', opts, 'class', folds_nr, fold_id); % Output: 0 Nonfall, 1 Fall
     end;
     %cvmMat{i=d{i}.cvm;
     err_now= min(d_nz{i}.cvm)
