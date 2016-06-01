@@ -81,61 +81,36 @@ end
 
 newClips=0; % counter on added clips
 for i=1:length(labels.acce)
-   acce=labels.acce{i};
-   if isempty(acce)
-       continue
-   end
-   baro=labels.baro{i};
-   if isempty(baro)
-       continue
-   end
-   gyro=labels.gyro{i};
-   if isempty(gyro)
-       continue
-   end
-   tStart=max(min(acce(:,1),min(baro(:,1),min(gyro(:,1)));
-   tEnd=min(max(acce(:,1)),max(baro(:,1)),max(gyro(:,1)));
-   
-   duration=tEnd-tStart;
-   numClips=min(floor(duration/win));
-   for j=1:numClips
-       ind = data(:,1)>=min(data(:,1))+win*(j-1) & data(:,1)<min(data(:,1))+win*j;
-       new_acce{i+newClips}=data(ind,:);
-       newClips=newClips+1;
-   end
+    display(i)
+    acce=labels.acce{i};
+    if isempty(acce)
+        continue
+    end
+    baro=labels.baro{i};
+    if isempty(baro)
+        continue
+    end
+    gyro=labels.gyro{i};
+    if isempty(gyro)
+        continue
+    end
+    tStart=max([min(acce(:,1)),min(baro(:,1)),min(gyro(:,1))]);
+    tEnd=min([max(acce(:,1)),max(baro(:,1)),max(gyro(:,1))]);
+
+    duration=min([tEnd-tStart 500]);
+    numClips=min(floor(duration/win));
+    for j=1:numClips
+        a_ind = acce(:,1)>=tStart+win*(j-1) & acce(:,1)<tStart+win*j;
+        b_ind = baro(:,1)>=tStart+win*(j-1) & baro(:,1)<tStart+win*j;
+        g_ind = gyro(:,1)>=tStart+win*(j-1) & gyro(:,1)<tStart+win*j;
+        new_acce{i+newClips}=acce(a_ind,:);
+        new_baro{i+newClips}=baro(b_ind,:);
+        new_gyro{i+newClips}=gyro(g_ind,:);
+        newClips=newClips+1;
+    end
 end
 
-newClips=0; % counter on added clips
-for i=1:length(labels.baro)
-   data=labels.baro{i};
-   if isempty(data)
-       continue
-   end
-   duration=max(data(:,1))-min(data(:,1));
-   numClips=floor(duration/win);
-   for j=1:numClips
-       ind = data(:,1)>=min(data(:,1))+win*(j-1) & data(:,1)<min(data(:,1))+win*j;
-       new_baro{i+newClips}=data(ind,:);
-       newClips=newClips+1;
-   end
-end
-
-newClips=0; % counter on added clips
-for i=1:length(labels.gyro)
-   data=labels.gyro{i};
-   if isempty(data)
-       continue
-   end
-   duration=max(data(:,1))-min(data(:,1));
-   numClips=floor(duration/win);
-   for j=1:numClips
-       ind = data(:,1)>=min(data(:,1))+win*(j-1) & data(:,1)<min(data(:,1))+win*j;
-       new_gyro{i+newClips}=data(ind,:);
-       newClips=newClips+1;
-   end
-end
-
-save labels_plus_data  labels
+save labels_plus_data_ACT  labels
 c=0;
 
 %for j=1:labelsNum

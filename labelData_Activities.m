@@ -1,4 +1,4 @@
-
+clear all
 %%%%% Reading Gyroscope and Accelerometer
 load labelsData.mat
 % specify clip window size
@@ -106,11 +106,22 @@ for i=1:length(labels.acce)
         new_acce{i+newClips}=acce(a_ind,:);
         new_baro{i+newClips}=baro(b_ind,:);
         new_gyro{i+newClips}=gyro(g_ind,:);
-        newClips=newClips+1;
+        if numClips>1
+            newClips=newClips+1;
+        end
     end
 end
 
-save labels_plus_data  labels
+labels.acce=new_acce;
+labels.baro=new_baro;
+labels.gyro=new_gyro;
+
+labels.value=repmat(9,[1,length(labels.acce)]);
+labels.subject=repmat(labels.subject(1),[1,length(labels.acce)]);
+labels.text=repmat(labels.text(1),[1,length(labels.acce)]);
+labels.timestamp=repmat(labels.timestamp(1),[1,length(labels.acce)]);
+
+save labels_plus_data_ACT  labels
 c=0;
 
 %for j=1:labelsNum
