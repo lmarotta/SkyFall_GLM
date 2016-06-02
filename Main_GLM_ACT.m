@@ -22,6 +22,7 @@
 clear all
 
 skip_like=0; % flag to not use fall-like data
+ACTnumber=1000;
 
 addpath ./glmnet_matlab/
 % rng(10001)
@@ -44,8 +45,9 @@ load labels_plus_data_jittered_Unif
 
 % load Activities data - used as non falls
 ACT=load('labels_plus_data_ACT.mat');
-ACTnumber=2000;
 ACTnumber=min([ACTnumber length(ACT.labels.subject)]);
+
+%% Merge Falls and Activities Data
 
 labels.value=[labels.value ACT.labels.value(1:ACTnumber)];
 labels.subject=[labels.subject ACT.labels.subject(1:ACTnumber)];
@@ -231,3 +233,4 @@ fall_err = sum(~id(isfall))/sum(isfall);
 nfall_err = sum(id(~isfall))/sum(~isfall);
 err = (sum(id ~= isfall))/length(id); %error rate
 confmat(:,:)=confusionmat(id==1,isfall);
+figure; imagesc(confmat./repmat(sum(confmat,2),[1 2])); colorbar; caxis([0 1])
