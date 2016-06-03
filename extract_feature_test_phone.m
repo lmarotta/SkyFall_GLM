@@ -1,11 +1,4 @@
-function [FN, L, fold, mu, stdF, eps, nzstd]= extract_feature_dec( labels, fold_nr)
-
-eps=1e-6;
-labelsNum= numel(labels.value);
-
-F=[];
-L=[];
-sub_ind_vect=[];
+function FN= extract_feature_test_dec(accel_data, gyro_data, baro_data, fvar)
 %----------------------------------------------------------------------------------------------------
 % extracts features from  5 seconds interval of  sensor recordings (accelerometer, gyro and barometer)
 %----------------------------------------------------------------------------------------------------
@@ -25,20 +18,16 @@ sub_ind_vect=[];
 %         FN: 1*p vector containing  Features, where p is the size of feature set is returned empty
 
 
-
-for i=1:labelsNum
-
-
-
 %%  returns empty FN if there is not enough (<2) data points in  the data structure.
- if size(labels.gyro{i},1)>=100 && size( labels.acce{i} ,1)>=100 && size( labels.baro{i},1 )>=10 %&& cis
-        
-        data{1}= labels.gyro{i}(:, 2:end);
-        data{2}= labels.acce{i}(:, 2:end);
-        data{3}= labels.baro{i}(:, 2:end);
-        stamp{1}= labels.gyro{i}(:, 1);
-        stamp{2}= labels.acce{i}(:, 1);
-        stamp{3}= labels.baro{i}(:, 1);
+if size(gyro_data,1)>=100 && size( accel_data ,1)>=100 && size( baro_data,1 )>=10
+    
+    data{1}= gyro_data(:, 2:end);
+    data{2}= accel_data(:, 2:end);
+    data{3}= baro_data(:, 2:end);
+    %%
+    stamp{1}= gyro_data(:, 1);
+    stamp{2}= accel_data(:, 1);
+    stamp{3}= baro_data(:, 1);
     %%
     FC=[];
     %%
@@ -73,7 +62,7 @@ for i=1:labelsNum
 %             Phi= [exp(-(Tmat-Mmat).^2./var),ones(dsz,1)];
 %             Wmat= pinv(Phi'*Phi+alp*eye(bnum+1))*Phi'*DC(:,2:4);
 %             Wvect=Wmat(:)';
-%             
+            
             
             
             
@@ -100,7 +89,7 @@ for i=1:labelsNum
             %% computing the correlation coefficients between different channels of the sensors
             DCCorr= corrcoef(DC);
             DCCorr(isnan( DCCorr))=0;
-            DCCorr=DCCorr+eps;
+            DCCorr=DCCorr+fvar.eps;
             DCCorrup= triu(DCCorr,1);
             DCCorrInd= find(abs(DCCorrup)>0);
             DCCorrV= DCCorrup(DCCorrInd)';
@@ -155,9 +144,9 @@ for i=1:labelsNum
                 DDCfit123, DDCfit133,  DDCfit143];
             
             %% correlation coefficients between different channels of the sensors
-            DDCCorr= corrcoef(DSLN)+eps;
+            DDCCorr= corrcoef(DSLN)+fvar.eps;
             DDCCorr(isnan( DDCCorr))=0;
-            DDCCorr= DDCCorr+eps;
+            DDCCorr= DDCCorr+fvar.eps;
             DDCCorrup= triu(DDCCorr,1);
             DDCCorrInd= find(abs(DDCCorrup)>0);
             DDCCorrV= DDCCorrup(DDCCorrInd)';
@@ -188,7 +177,7 @@ for i=1:labelsNum
             %% Correlation coefficients between the sensors and time
             DCCorr= corrcoef(DC);
             DCCorr(isnan( DCCorr))=0;
-            DCCorr= DCCorr+eps;
+            DCCorr= DCCorr+fvar.eps;
             DCCorrup= triu(DCCorr,1);
             DCCorrInd= find(abs(DCCorrup)>0);
             DCCorrV= DCCorrup(DCCorrInd)';
@@ -228,7 +217,7 @@ for i=1:labelsNum
             if any(IDSL>0)
                 DSLN= DDC(IDSL,:)./ repmat(stamp_diff(IDSL),1,2);
                 %% mean
-              DDCM  DDCM= mean(DSLN,1);
+                DDCM= mean(DSLN,1);
                 %% median
                 DDCMed= median(DSLN,1);
                 %% standard deviation
@@ -242,69 +231,19 @@ for i=1:labelsNum
                 DDCMed=zeros(1,2);
             end;
             %% Stacking  all the features of barometer together
-            FC= [FC, DCM, DCMed DCCorrV, DCfit, DCstd, DCskew, DCkurt, DDCM, DDCMed, DDCstd, DCFFT_re, DCFFT_im, DCFFT_abs];
+            FC= [FC, DCM, DCMed DCCorrV, DCfit, DCstd, DCskew, DCkurt, DDCM, DDCMed, DDCstd, DCFFT_re, DCFFT_im, DCFFT_abs]; 
+            
         end;
         
     end;
     
- F =[F;FC];
-        %else
-        %    dd=1;
-        %end;
-        L= [L;labels.value(i)];
-        
-        Amp_flag =regexp(labels.subject{i},'AF','ignorecase');
-        
-        if isempty(Amp_flag)
-            sub_ind=str2num(labels.subject{i}(3:4))+7;
-        else
-            sub_ind=str2num(labels.subject{i}(3:4));
-        end;
-        
-        sub_ind_vect=  [sub_ind_vect; sub_ind];
-        
-        
-    end;
+    F= FC(fvar.nzstd);
+    %% standardizing the data by subtracting the mean and dividing it by variance
+    %% ( mean and variance are computed on the training set)
+    FN= (F- fvar.mu)./ fvar.std;
+else
+    FN=[];
+    
 end;
 
-
-
-
-F=F(1:end-50,:);
-sub_ind_vect=sub_ind_vect(1:end-50);
-L=L(1:end-50);
-dsz= size(F,1);
-v1= ones(dsz,1);
-mu= mean(F);
-stdF= std(F);
-
-
-%%%%Standardize the result
-
-nzstd=stdF>eps*mean(stdF);
-mu=mu(nzstd);
-F=F(:,nzstd);
-stdF=stdF(nzstd);
-
-FN=(F-v1*mu)./(v1*stdF);
-
-fold=zeros(dsz,1);
-
-
-[~,id]=sort(sub_ind_vect,'ascend');
-FN= FN(id, :);
-L= L(id);
-
-%fold_ind= linspace(1,dsz+1,folds_nr);
-%fold_sz= floor(dsz/fold_nr);
-
-fold_grid=round(linspace(1,dsz,fold_nr+1));
-
-
-
-for i=1:fold_nr
- fold(fold_grid(i):fold_grid(i+1))=i;
-end;
-
-
-return;
+return

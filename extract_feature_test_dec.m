@@ -52,16 +52,16 @@ if size(gyro_data,1)>=100 && size( accel_data ,1)>=100 && size( baro_data,1 )>=1
             DCFFT_abs= abs(DCFFT(:)');
             
             %% Fitting the recodings as the function of time
-            bnum=100;
-            alp=1e-4;
-            mu= linspace(0,5,bnum);
-            var=(20/bnum)^2;
-            dsz=size(DC,1);
-            Tmat= repmat( DC(:,1), 1,bnum);
-            Mmat= repmat( mu, dsz, 1);
-            Phi= [exp(-(Tmat-Mmat).^2./var),ones(dsz,1)];
-            Wmat= pinv(Phi'*Phi+alp*eye(bnum+1))*Phi'*DC(:,2:4);
-            Wvect=Wmat(:)';
+%             bnum=100;
+%             alp=1e-4;
+%             mu= linspace(0,5,bnum);
+%             var=(20/bnum)^2;
+%             dsz=size(DC,1);
+%             Tmat= repmat( DC(:,1), 1,bnum);
+%             Mmat= repmat( mu, dsz, 1);
+%             Phi= [exp(-(Tmat-Mmat).^2./var),ones(dsz,1)];
+%             Wmat= pinv(Phi'*Phi+alp*eye(bnum+1))*Phi'*DC(:,2:4);
+%             Wvect=Wmat(:)';
             
             
             
@@ -158,7 +158,7 @@ if size(gyro_data,1)>=100 && size( accel_data ,1)>=100 && size( baro_data,1 )>=1
             DDCK= kurtosis(DSLN);
             
             %% stacking the features of the  sensors (Gyro or accelerometer) together
-            FC= [FC, DCM,  DCMed, DCFFT_re, DCFFT_im,  DCFFT_abs, Wvect, DCfit,  DCCorrV, DCstd DCS, DCK, DDCM, DDCMed, DDCCorrV, DDCstd, DDCS, DDCK, DDCFFT_re, DDCFFT_im,  DDCFFT_abs, DDCfit];
+            FC= [FC, DCM,  DCMed, DCFFT_re, DCFFT_im,  DCFFT_abs, DCfit,  DCCorrV, DCstd DCS, DCK, DDCM, DDCMed, DDCCorrV, DDCstd, DDCS, DDCK, DDCFFT_re, DDCFFT_im,  DDCFFT_abs, DDCfit];
             
             %%
         else

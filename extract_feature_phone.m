@@ -1,4 +1,4 @@
-function [FN, L, fold, mu, stdF, eps, nzstd]= extract_feature_dec( labels, fold_nr)
+function [FN, L, fold, mu, stdF, eps, nzstd]= extract_feature_phone( labels, fold_nr)
 
 eps=1e-6;
 labelsNum= numel(labels.value);
@@ -228,7 +228,7 @@ for i=1:labelsNum
             if any(IDSL>0)
                 DSLN= DDC(IDSL,:)./ repmat(stamp_diff(IDSL),1,2);
                 %% mean
-              DDCM  DDCM= mean(DSLN,1);
+                DDCM= mean(DSLN,1);
                 %% median
                 DDCMed= median(DSLN,1);
                 %% standard deviation

@@ -22,9 +22,10 @@
 clear all
 
 skip_like=0; % flag to not use fall-like data
-ACTnumber=1000;
+ACTnumber=500;
+split=0; % flag to split data into test and train sets (25-75) and create cofnusion matrix
 
-addpath ./glmnet_matlab/
+addpath(genpath('./glmnet_matlab/'))
 % rng(10001)
 %% Initialization
 
@@ -68,10 +69,15 @@ if skip_like
     labels.gyro=labels.gyro(nlike_inds);
 end
 
-%Take 75% of original data for training 
-inds = randperm(length(labels.timestamp));
-indtrain = inds(1:round(0.75*length(inds)));
-indtest = inds(round(0.75*length(inds))+1:end);
+if split
+    %Take 75% of original data for training 
+    inds = randperm(length(labels.timestamp));
+    indtrain = inds(1:round(0.75*length(inds)));
+    indtest = inds(round(0.75*length(inds))+1:end);
+else
+    indtrain = 1:length(labels.timestamp);
+    indtest=[];
+end
 
 labels_test=labels;
 
@@ -107,7 +113,7 @@ labels.baro = labels.baro(indtrain);
 
 %% Feature extraction
 
-[FN, L, fold_id, muF, stdF, epsF, nzstd]=extract_feature_train_may(labels, folds_nr);
+[FN, L, fold_id, muF, stdF, epsF, nzstd]=extract_feature_phone(labels, folds_nr);
 fvar.std= stdF;
 fvar.mu= muF;
 fvar.eps= epsF;
@@ -214,23 +220,28 @@ bind=ceil(d-0.5);
 L0=(LF-1);
 crate=(numel(L0)-sum(abs(bind-L0)))/numel(L0);
 
-save class_params_ACT fvar b  nz_ind
+Feature_Labels={'DCM',  'DCMed', 'DCFFT_re', 'DCFFT_im',  'DCFFT_abs', 'DCfit121', 'DCfit131',  'DCfit141', 'DCfit122', 'DCfit132',  'DCfit142', 'DCfit123', 'DCfit133', 'DCfit143', 'DCCorrV', 'DCstd', 'DCS', 'DCK', 'DDCM', 'DDCMed', 'DDCCorrV', 'DDCstd', 'DDCS', 'DDCK', 'DDCFFT_re', 'DDCFFT_im',  'DDCFFT_abs', 'DDCfit121', 'DDCfit131',  'DDCfit141', 'DDCfit122', 'DDCfit132',  'DDCfit142', 'DDCfit123', 'DDCfit133',  'DDCfit143' ...
+    'DCM',  'DCMed', 'DCFFT_re', 'DCFFT_im',  'DCFFT_abs', 'DCfit121', 'DCfit131',  'DCfit141', 'DCfit122', 'DCfit132',  'DCfit142', 'DCfit123', 'DCfit133',  'DCfit143',  'DCCorrV', 'DCstd', 'DCS', 'DCK', 'DDCM', 'DDCMed', 'DDCCorrV', 'DDCstd', 'DDCS', 'DDCK', 'DDCFFT_re', 'DDCFFT_im',  'DDCFFT_abs', 'DDCfit121', 'DDCfit131',  'DDCfit141', 'DDCfit122', 'DDCfit132',  'DDCfit142', 'DDCfit123', 'DDCfit133',  'DDCfit143' ...
+    'DCM', 'DCMed', 'DCCorrV', 'DCfit121',  'DCfit131', 'DCfit122',  'DCfit132',  'DCfit123', 'DCfit133',  'DCfit124',  'DCfit134', 'DCstd', 'DCskew', 'DCkurt', 'DDCM', 'DDCMed', 'DDCstd', 'DCFFT_re', 'DCFFT_im', 'DCFFT_abs'};
+
+save class_params_ACT fvar b  nz_ind Feature_Labels
 
 %end;
 %% Genrating Randomn folds
 %DSz=size(FN,1);
 %fldsz=round(DSz/folds);
+if split
+    for k = 1:length(labels_test.acce)
+        accel_data = labels_test.acce{k};
+        gyro_data = labels_test.gyro{k};
+        baro_data = labels_test.baro{k};
+        [id(k), conf(k)]= fall_model_eval_ACT(accel_data, gyro_data,  baro_data);
+    end
 
-for k = 1:length(labels_test.acce)
-    accel_data = labels_test.acce{k};
-    gyro_data = labels_test.gyro{k};
-    baro_data = labels_test.baro{k};
-    [id(k), conf(k)]= fall_model_eval_ACT(accel_data, gyro_data,  baro_data);
+    isfall = labels_test.value < 9;
+    fall_err = sum(~id(isfall))/sum(isfall);
+    nfall_err = sum(id(~isfall))/sum(~isfall);
+    err = (sum(id ~= isfall))/length(id); %error rate
+    confmat(:,:)=confusionmat(id==1,isfall);
+    figure; imagesc(confmat./repmat(sum(confmat,2),[1 2])); colorbar; caxis([0 1])
 end
-
-isfall = labels_test.value < 9;
-fall_err = sum(~id(isfall))/sum(isfall);
-nfall_err = sum(id(~isfall))/sum(~isfall);
-err = (sum(id ~= isfall))/length(id); %error rate
-confmat(:,:)=confusionmat(id==1,isfall);
-figure; imagesc(confmat./repmat(sum(confmat,2),[1 2])); colorbar; caxis([0 1])

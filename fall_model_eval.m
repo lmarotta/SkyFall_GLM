@@ -30,7 +30,7 @@ load class_params
 % FN: Sparse features extracted for the data
 
 % FN= extract_feature_test(accel_data, gyro_data, baro_data, fvar);
-FN= extract_feature_test_dec(accel_data, gyro_data, baro_data, fvar);
+FN= extract_feature_test_phone(accel_data, gyro_data, baro_data, fvar);
 
 
 % remove the redundant features
