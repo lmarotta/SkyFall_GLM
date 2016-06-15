@@ -37,7 +37,7 @@ isfall = labels.value < 5;
 fall_err = sum(~id(isfall))/sum(isfall);
 nfall_err = sum(id(~isfall))/sum(~isfall);
 err = (sum(id ~= isfall))/length(id); %error rate
-confmat(:,:)=confusionmat(id==1,isfall);
+confmat(:,:)=confusionmat(isfall,id==1);
     
 confmat
 % err = err([1 2 4 3 6 5 7]); %last corresponds to uniform distribution

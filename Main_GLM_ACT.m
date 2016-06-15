@@ -242,6 +242,6 @@ if split
     fall_err = sum(~id(isfall))/sum(isfall);
     nfall_err = sum(id(~isfall))/sum(~isfall);
     err = (sum(id ~= isfall))/length(id); %error rate
-    confmat(:,:)=confusionmat(id==1,isfall);
+    confmat(:,:)=confusionmat(isfall,id==1);
     figure; imagesc(confmat./repmat(sum(confmat,2),[1 2])); colorbar; caxis([0 1])
 end
