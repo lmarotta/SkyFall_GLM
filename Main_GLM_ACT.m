@@ -113,11 +113,12 @@ labels.baro = labels.baro(indtrain);
 
 %% Feature extraction
 
-[FN, L, fold_id, muF, stdF, epsF, nzstd]=extract_feature_phone(labels, folds_nr);
+[FN, fl, L, fold_id, muF, stdF, epsF, nzstd]=extract_feature_phone_plus_labels(labels, folds_nr);
 fvar.std= stdF;
 fvar.mu= muF;
 fvar.eps= epsF;
 fvar.nzstd= nzstd;
+fvar.fl = fl;
 
 FSz= size(FN,2);
 DSz= size(FN,1);
@@ -242,6 +243,6 @@ if split
     fall_err = sum(~id(isfall))/sum(isfall);
     nfall_err = sum(id(~isfall))/sum(~isfall);
     err = (sum(id ~= isfall))/length(id); %error rate
-    confmat(:,:)=confusionmat(id==1,isfall);
+    confmat(:,:)=confusionmat(isfall,id==1);
     figure; imagesc(confmat./repmat(sum(confmat,2),[1 2])); colorbar; caxis([0 1])
 end

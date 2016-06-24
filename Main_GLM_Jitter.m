@@ -161,7 +161,7 @@ bind=ceil(d-0.5);
 L0=(LF-1);
 crate=(numel(L0)-sum(abs(bind-L0)))/numel(L0);
 
-save class_params fvar b  nz_ind
+save class_params_Jitter fvar b  nz_ind
 
 %end;
 %% Testing the trained model on jittered test clips w different std dev

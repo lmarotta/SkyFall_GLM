@@ -28,7 +28,7 @@ for f = 1:length(files)
     fall_err(f) = sum(~id(isfall))/sum(isfall);
     nfall_err(f) = sum(id(~isfall))/sum(~isfall);
     err(f) = (sum(id ~= isfall))/length(id); %error rate
-    confmat(:,:,f)=confusionmat(id==1,isfall);
+    confmat(:,:,f)=confusionmat(isfall,id==1);
 end
 
 err = err([1 2 4 3 6 5 7]); %last corresponds to uniform distribution
