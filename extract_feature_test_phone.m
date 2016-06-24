@@ -165,7 +165,7 @@ if size(gyro_data,1)>=100 && size( accel_data ,1)>=100 && size( baro_data,1 )>=1
             %--------------------------------------------------------------------------------------------------------------------------------------
             %  Extracting  features for barometer
             %--------------------------------------------------------------------------------------------------------------------------------------
-            continue % skip barometer features
+%             continue % skip barometer features
             %% sorting the  data in terms of their time stamps
             [stamp{j}, ind]= sort(stamp{j},'ascend');
             data{j}= data{j}(ind, :);

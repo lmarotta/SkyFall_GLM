@@ -22,11 +22,11 @@
 clear all
 
 skip_like=0; % flag to not use fall-like data
-ACTnumber=2000;
+ACTnumber=1000;
 split=0; % flag to split data into test and train sets (25-75) and create cofnusion matrix
 
 addpath(genpath('./glmnet_matlab/'))
-% rng(10001)
+rng(10001)
 %% Initialization
 
 Twin = 2000;
