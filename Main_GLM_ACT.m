@@ -22,11 +22,11 @@
 clear all
 
 skip_like=0; % flag to not use fall-like data
-ACTnumber=500;
+ACTnumber=1000;
 split=0; % flag to split data into test and train sets (25-75) and create cofnusion matrix
 
 addpath(genpath('./glmnet_matlab/'))
-% rng(10001)
+rng(10001)
 %% Initialization
 
 Twin = 2000;
@@ -113,11 +113,12 @@ labels.baro = labels.baro(indtrain);
 
 %% Feature extraction
 
-[FN, L, fold_id, muF, stdF, epsF, nzstd]=extract_feature_phone(labels, folds_nr);
+[FN, fl, L, fold_id, muF, stdF, epsF, nzstd]=extract_feature_phone_plus_labels(labels, folds_nr);
 fvar.std= stdF;
 fvar.mu= muF;
 fvar.eps= epsF;
 fvar.nzstd= nzstd;
+fvar.fl = fl;
 
 FSz= size(FN,2);
 DSz= size(FN,1);
@@ -227,7 +228,7 @@ Feature_Labels={'DCM',  'DCMed', 'DCFFT_re', 'DCFFT_im',  'DCFFT_abs', 'DCfit121
 save class_params_ACT fvar b  nz_ind Feature_Labels
 
 %end;
-%% Genrating Randomn folds
+%% Genrating Random n folds
 %DSz=size(FN,1);
 %fldsz=round(DSz/folds);
 if split

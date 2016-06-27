@@ -176,6 +176,7 @@ for i=1:labelsNum
             %--------------------------------------------------------------------------------------------------------------------------------------
             %  Extracting  features for barometer
             %--------------------------------------------------------------------------------------------------------------------------------------
+%             continue % skip barometer features
             %% sorting the  data in terms of their time stamps
             [stamp{j}, ind]= sort(stamp{j},'ascend');
             data{j}= data{j}(ind, :);

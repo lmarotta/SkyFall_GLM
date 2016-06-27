@@ -39,11 +39,12 @@ load labels_plus_data.mat
 
 %% Feature extraction
 
-[FN, L, fold_id, muF, stdF, epsF, nzstd]=extract_feature_dec(labels, folds_nr);
+[FN, fl, L, fold_id, muF, stdF, epsF, nzstd]=extract_feature_phone_plus_labels(labels, folds_nr);
 fvar.std= stdF;
 fvar.mu= muF;
 fvar.eps= epsF;
 fvar.nzstd= nzstd;
+fvar.fl = fl;
 
 FSz= size(FN,2);
 DSz= size(FN,1);
