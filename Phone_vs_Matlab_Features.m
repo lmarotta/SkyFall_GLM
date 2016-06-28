@@ -1,4 +1,4 @@
-load FallProbe_TestData.mat
+load PhoneProbe_data.mat
 load class_params_ACT_old.mat
 FN=zeros(1,sum(nz_ind));
 
@@ -10,3 +10,7 @@ for i=1:length(labels.acce)
     end
     
 end
+
+labels.FN=FN;
+
+save PhoneProbe_data labels

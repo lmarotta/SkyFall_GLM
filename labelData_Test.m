@@ -42,5 +42,5 @@ for i=1:fsz
     end;
 end;
 
-save FallProbe_TestData  labels
+save PhoneProbe_data  labels
 c=0;
