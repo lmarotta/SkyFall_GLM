@@ -1,3 +1,5 @@
+clear all
+
 [FileName,PathName,~] = uigetfile('*.txt');
 Payload=readtable([PathName '\' FileName],'Delimiter','\t');
 Payload=Payload.Payload;
