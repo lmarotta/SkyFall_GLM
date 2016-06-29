@@ -81,7 +81,7 @@ for i=1:size(bar_probe,1)
     tNormalizedTimestamp=[tNormalizedTimestamp; str2double(bar_probe(i,y+1:y+len)).'];
 end
 
-save barTest tNormalizedTimestamp X Y Z Data_type
+save barTest tNormalizedTimestamp Altitude Pressure Data_type
 
 x=find(strcmp(fall_probe(1,:),'TIMESTAMP'));
 v=find(strcmp(fall_probe(1,:),'FALL_VALUES'));
