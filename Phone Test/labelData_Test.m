@@ -1,4 +1,4 @@
-
+ 
 %%%%% Reading Gyroscope and Accelerometer
 load FallProbe_TestData.mat
 win=5;
