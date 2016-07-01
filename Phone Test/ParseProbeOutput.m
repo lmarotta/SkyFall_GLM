@@ -1,5 +1,9 @@
+% Loads a user-selected .txt file containing exported data from Fallnet
+% and sensor probes and separates probe data fro analysis
+
 clear all
 
+% load file
 [FileName,PathName,~] = uigetfile('*.txt');
 Payload=readtable([PathName '\' FileName],'Delimiter','\t');
 Payload=Payload.Payload;
@@ -10,12 +14,16 @@ gyr_probe=[];
 bar_probe=[];
 
 for i=1:length(Payload)
+    % skip junk data
     if length(Payload{i})<9
         continue
     end
     
     temp=strsplit(Payload{i},{'{' '"' ':' ',' ' ' '[' ']' '}'});
     if strcmp(Payload{i}(3:9),'IS_FALL')
+        % only stores fall_probe data of the same size
+        % prevents errors if data contains probe data for 
+        % multiple sets of model parameters
         if size(temp,2)==size(fall_probe,2) || size(fall_probe,2)==0
             fall_probe=[fall_probe; temp];
         end
@@ -31,6 +39,8 @@ for i=1:length(Payload)
     end
     
 end
+
+% combine data from each sensor into single vectors
 
 Data_type='accelerometer';
 y=find(strcmp(acc_probe(1,:),'Y'));
@@ -83,8 +93,12 @@ end
 
 save barTest tNormalizedTimestamp Altitude Pressure Data_type
 
+% separate timestamps and feature values from fall_probe and save in
+% labels structure
+
 x=find(strcmp(fall_probe(1,:),'TIMESTAMP'));
 v=find(strcmp(fall_probe(1,:),'FALL_VALUES'));
 labels.timestamp=str2double(fall_probe(:,x+1));
 labels.values=str2double(fall_probe(:,v+1:v+43));
+
 save FallProbe_TestData labels
