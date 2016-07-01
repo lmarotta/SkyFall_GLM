@@ -334,8 +334,10 @@ sub_ind_vect=[];
 
 F=csvread('full_feature_set.csv');
 F=F(:,1:1781);
+L=labels.value;
 
 z_inds=max(abs(F).')==0;
+
 
 L(z_inds)=[];
 subjects=labels.subject;
@@ -372,7 +374,7 @@ stdF= std(F);
 nzstd=stdF>eps*mean(stdF);
 mu=mu(nzstd);
 F=F(:,nzstd);
-fl = FC_label(:,nzstd);
+fl = [];
 stdF=stdF(nzstd);
 
 FN=(F-v1*mu)./(v1*stdF);
