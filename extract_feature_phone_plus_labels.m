@@ -336,9 +336,10 @@ F=csvread('full_feature_set.csv');
 F=F(:,1:1781);
 L=labels.value;
 
+% find zeroed rows in F
 z_inds=max(abs(F).')==0;
 
-
+F(z_inds,:)=[];
 L(z_inds)=[];
 subjects=labels.subject;
 subjects(z_inds)=[];
