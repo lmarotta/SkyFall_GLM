@@ -223,11 +223,11 @@ bind=ceil(d-0.5)';
 L0=(LF-1);
 crate=(numel(L0)-sum(abs(bind-L0)))/numel(L0);
 
-% Feature_Labels={'DCM',  'DCMed', 'DCFFT_re', 'DCFFT_im',  'DCFFT_abs', 'DCfit121', 'DCfit131',  'DCfit141', 'DCfit122', 'DCfit132',  'DCfit142', 'DCfit123', 'DCfit133', 'DCfit143', 'DCCorrV', 'DCstd', 'DCS', 'DCK', 'DDCM', 'DDCMed', 'DDCCorrV', 'DDCstd', 'DDCS', 'DDCK', 'DDCFFT_re', 'DDCFFT_im',  'DDCFFT_abs', 'DDCfit121', 'DDCfit131',  'DDCfit141', 'DDCfit122', 'DDCfit132',  'DDCfit142', 'DDCfit123', 'DDCfit133',  'DDCfit143' ...
-%     'DCM',  'DCMed', 'DCFFT_re', 'DCFFT_im',  'DCFFT_abs', 'DCfit121', 'DCfit131',  'DCfit141', 'DCfit122', 'DCfit132',  'DCfit142', 'DCfit123', 'DCfit133',  'DCfit143',  'DCCorrV', 'DCstd', 'DCS', 'DCK', 'DDCM', 'DDCMed', 'DDCCorrV', 'DDCstd', 'DDCS', 'DDCK', 'DDCFFT_re', 'DDCFFT_im',  'DDCFFT_abs', 'DDCfit121', 'DDCfit131',  'DDCfit141', 'DDCfit122', 'DDCfit132',  'DDCfit142', 'DDCfit123', 'DDCfit133',  'DDCfit143' ...
-%     'DCM', 'DCMed', 'DCCorrV', 'DCfit121',  'DCfit131', 'DCfit122',  'DCfit132',  'DCfit123', 'DCfit133',  'DCfit124',  'DCfit134', 'DCstd', 'DCskew', 'DCkurt', 'DDCM', 'DDCMed', 'DDCstd', 'DCFFT_re', 'DCFFT_im', 'DCFFT_abs'};
+Feature_Labels={'DCM',  'DCMed', 'DCFFT_re', 'DCFFT_im',  'DCFFT_abs', 'DCfit121', 'DCfit131',  'DCfit141', 'DCfit122', 'DCfit132',  'DCfit142', 'DCfit123', 'DCfit133', 'DCfit143', 'DCCorrV', 'DCstd', 'DCS', 'DCK', 'DDCM', 'DDCMed', 'DDCCorrV', 'DDCstd', 'DDCS', 'DDCK', 'DDCFFT_re', 'DDCFFT_im',  'DDCFFT_abs', 'DDCfit121', 'DDCfit131',  'DDCfit141', 'DDCfit122', 'DDCfit132',  'DDCfit142', 'DDCfit123', 'DDCfit133',  'DDCfit143' ...
+    'DCM',  'DCMed', 'DCFFT_re', 'DCFFT_im',  'DCFFT_abs', 'DCfit121', 'DCfit131',  'DCfit141', 'DCfit122', 'DCfit132',  'DCfit142', 'DCfit123', 'DCfit133',  'DCfit143',  'DCCorrV', 'DCstd', 'DCS', 'DCK', 'DDCM', 'DDCMed', 'DDCCorrV', 'DDCstd', 'DDCS', 'DDCK', 'DDCFFT_re', 'DDCFFT_im',  'DDCFFT_abs', 'DDCfit121', 'DDCfit131',  'DDCfit141', 'DDCfit122', 'DDCfit132',  'DDCfit142', 'DDCfit123', 'DDCfit133',  'DDCfit143' ...
+    'DCM', 'DCMed', 'DCCorrV', 'DCfit121',  'DCfit131', 'DCfit122',  'DCfit132',  'DCfit123', 'DCfit133',  'DCfit124',  'DCfit134', 'DCstd', 'DCskew', 'DCkurt', 'DDCM', 'DDCMed', 'DDCstd', 'DCFFT_re', 'DCFFT_im', 'DCFFT_abs'};
 
-save class_params_ACT fvar b  nz_ind
+save class_params_ACT fvar b  nz_ind Feature_Labels
 
 %end;
 %% Genrating Random n folds
