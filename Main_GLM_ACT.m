@@ -40,6 +40,10 @@ maxPrincRatio=1e-4;
 
 
 %%% Loading the data
+
+% load full data set
+% any filtering of data past this point should be mirrored on the features
+% loaded by extract_feature_phone_plus_labels
 load labels_full.mat
 
 % Can use either standard or jittered falls data
@@ -125,6 +129,7 @@ fvar.fl = fl;
 FSz= size(FN,2);
 DSz= size(FN,1);
 
+% Assign fall categories as 2 (falls and fall-like) or 1 (non-fall)
 LB=(L<9)+1;
 LF=L;
 LF(L>4)=5;

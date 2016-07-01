@@ -40,6 +40,10 @@ maxPrincRatio=1e-4;
 
 
 %%% Loading the data
+
+% load full data set
+% any filtering of data past this point should be mirrored on the features
+% loaded by extract_feature_phone_plus_labels
 load labels_full.mat
 
 % Can use either standard or jittered falls data
@@ -125,6 +129,7 @@ fvar.fl = fl;
 FSz= size(FN,2);
 DSz= size(FN,1);
 
+% Assign fall categories as 2 (falls and fall-like) or 1 (non-fall)
 LB=(L<9)+1;
 LF=L;
 LF(L>4)=5;
@@ -223,11 +228,11 @@ bind=ceil(d-0.5)';
 L0=(LF-1);
 crate=(numel(L0)-sum(abs(bind-L0)))/numel(L0);
 
-Feature_Labels={'DCM',  'DCMed', 'DCFFT_re', 'DCFFT_im',  'DCFFT_abs', 'DCfit121', 'DCfit131',  'DCfit141', 'DCfit122', 'DCfit132',  'DCfit142', 'DCfit123', 'DCfit133', 'DCfit143', 'DCCorrV', 'DCstd', 'DCS', 'DCK', 'DDCM', 'DDCMed', 'DDCCorrV', 'DDCstd', 'DDCS', 'DDCK', 'DDCFFT_re', 'DDCFFT_im',  'DDCFFT_abs', 'DDCfit121', 'DDCfit131',  'DDCfit141', 'DDCfit122', 'DDCfit132',  'DDCfit142', 'DDCfit123', 'DDCfit133',  'DDCfit143' ...
-    'DCM',  'DCMed', 'DCFFT_re', 'DCFFT_im',  'DCFFT_abs', 'DCfit121', 'DCfit131',  'DCfit141', 'DCfit122', 'DCfit132',  'DCfit142', 'DCfit123', 'DCfit133',  'DCfit143',  'DCCorrV', 'DCstd', 'DCS', 'DCK', 'DDCM', 'DDCMed', 'DDCCorrV', 'DDCstd', 'DDCS', 'DDCK', 'DDCFFT_re', 'DDCFFT_im',  'DDCFFT_abs', 'DDCfit121', 'DDCfit131',  'DDCfit141', 'DDCfit122', 'DDCfit132',  'DDCfit142', 'DDCfit123', 'DDCfit133',  'DDCfit143' ...
-    'DCM', 'DCMed', 'DCCorrV', 'DCfit121',  'DCfit131', 'DCfit122',  'DCfit132',  'DCfit123', 'DCfit133',  'DCfit124',  'DCfit134', 'DCstd', 'DCskew', 'DCkurt', 'DDCM', 'DDCMed', 'DDCstd', 'DCFFT_re', 'DCFFT_im', 'DCFFT_abs'};
+% Feature_Labels={'DCM',  'DCMed', 'DCFFT_re', 'DCFFT_im',  'DCFFT_abs', 'DCfit121', 'DCfit131',  'DCfit141', 'DCfit122', 'DCfit132',  'DCfit142', 'DCfit123', 'DCfit133', 'DCfit143', 'DCCorrV', 'DCstd', 'DCS', 'DCK', 'DDCM', 'DDCMed', 'DDCCorrV', 'DDCstd', 'DDCS', 'DDCK', 'DDCFFT_re', 'DDCFFT_im',  'DDCFFT_abs', 'DDCfit121', 'DDCfit131',  'DDCfit141', 'DDCfit122', 'DDCfit132',  'DDCfit142', 'DDCfit123', 'DDCfit133',  'DDCfit143' ...
+%     'DCM',  'DCMed', 'DCFFT_re', 'DCFFT_im',  'DCFFT_abs', 'DCfit121', 'DCfit131',  'DCfit141', 'DCfit122', 'DCfit132',  'DCfit142', 'DCfit123', 'DCfit133',  'DCfit143',  'DCCorrV', 'DCstd', 'DCS', 'DCK', 'DDCM', 'DDCMed', 'DDCCorrV', 'DDCstd', 'DDCS', 'DDCK', 'DDCFFT_re', 'DDCFFT_im',  'DDCFFT_abs', 'DDCfit121', 'DDCfit131',  'DDCfit141', 'DDCfit122', 'DDCfit132',  'DDCfit142', 'DDCfit123', 'DDCfit133',  'DDCfit143' ...
+%     'DCM', 'DCMed', 'DCCorrV', 'DCfit121',  'DCfit131', 'DCfit122',  'DCfit132',  'DCfit123', 'DCfit133',  'DCfit124',  'DCfit134', 'DCstd', 'DCskew', 'DCkurt', 'DDCM', 'DDCMed', 'DDCstd', 'DCFFT_re', 'DCFFT_im', 'DCFFT_abs'};
 
-save class_params_ACT fvar b  nz_ind Feature_Labels
+save class_params_ACT fvar b  nz_ind
 
 %end;
 %% Genrating Random n folds

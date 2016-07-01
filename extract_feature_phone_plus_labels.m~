@@ -333,7 +333,7 @@ sub_ind_vect=[];
 %     end;
 
 F=csvread('full_feature_set.csv');
-F=F(:,1:1781);
+% F=F(:,1:1781);
 
 L=labels.value;
 
@@ -374,8 +374,6 @@ stdF= std(F);
 %%%%Standardize the result
 
 nzstd=stdF>eps*mean(stdF);
-% remove barometer features
-nzstd(1701:1781)=zeros(1,81);
 mu=mu(nzstd);
 F=F(:,nzstd);
 fl = [];
