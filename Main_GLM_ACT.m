@@ -22,7 +22,7 @@
 clear all
 
 skip_like=0; % flag to not use fall-like data
-ACTnumber=1000;
+ACTnumber=10000;
 split=0; % flag to split data into test and train sets (25-75) and create cofnusion matrix
 
 addpath(genpath('./glmnet_matlab/'))
@@ -40,76 +40,78 @@ maxPrincRatio=1e-4;
 
 
 %%% Loading the data
+load labels_full.mat
+
 % Can use either standard or jittered falls data
 % load labels_plus_data.mat
-load labels_plus_data_jittered_Unif
-
-% load Activities data - used as non falls
-ACT=load('labels_plus_data_ACT.mat');
-ACTnumber=min([ACTnumber length(ACT.labels.subject)]);
-
-%% Merge Falls and Activities Data
-
-labels.value=[labels.value ACT.labels.value(1:ACTnumber)];
-labels.subject=[labels.subject ACT.labels.subject(1:ACTnumber)];
-labels.timestamp=[labels.timestamp ACT.labels.timestamp(1:ACTnumber)];
-labels.text=[labels.text ACT.labels.text(1:ACTnumber)];
-labels.acce=[labels.acce ACT.labels.acce(1:ACTnumber)];
-labels.baro=[labels.baro ACT.labels.baro(1:ACTnumber)];
-labels.gyro=[labels.gyro ACT.labels.gyro(1:ACTnumber)];
-if skip_like
-    nlike_inds=find(labels.value<5 | labels.value>8);
-
-    labels.value=labels.value(nlike_inds);
-    labels.subject=labels.subject(nlike_inds);
-    labels.timestamp=labels.timestamp(nlike_inds);
-    labels.text=labels.text(nlike_inds);
-    labels.acce=labels.acce(nlike_inds);
-    labels.baro=labels.baro(nlike_inds);
-    labels.gyro=labels.gyro(nlike_inds);
-end
-
-if split
-    %Take 75% of original data for training 
-    inds = randperm(length(labels.timestamp));
-    indtrain = inds(1:round(0.75*length(inds)));
-    indtest = inds(round(0.75*length(inds))+1:end);
-else
-    indtrain = 1:length(labels.timestamp);
-    indtest=[];
-end
-
-labels_test=labels;
-
-%TEST DATA
-labels_test.timestamp = labels.timestamp(indtest);
-labels_test.value = labels.value(indtest);
-labels_test.subject = labels.subject(indtest);
-labels_test.text = labels.text(indtest);
-labels_test.acce = labels.acce(indtest);
-labels_test.gyro = labels.gyro(indtest);
-labels_test.baro = labels.baro(indtest);
-
-inds=cellfun(@(x,y,z) length(x)<100 | length(y)<100 | length(z)<10,labels_test.acce,labels_test.gyro,labels_test.baro);
-inds=~inds;
-labels_test.timestamp = labels_test.timestamp(inds);
-labels_test.value = labels_test.value(inds);
-labels_test.subject = labels_test.subject(inds);
-labels_test.text = labels_test.text(inds);
-labels_test.acce = labels_test.acce(inds);
-labels_test.gyro = labels_test.gyro(inds);
-labels_test.baro = labels_test.baro(inds);
-
-% save indstest_act.mat indstest labels
-
-%TRAIN DATA
-labels.timestamp = labels.timestamp(indtrain);
-labels.value = labels.value(indtrain);
-labels.subject = labels.subject(indtrain);
-labels.text = labels.text(indtrain);
-labels.acce = labels.acce(indtrain);
-labels.gyro = labels.gyro(indtrain);
-labels.baro = labels.baro(indtrain);
+% load labels_plus_data_jittered_Unif
+% 
+% % load Activities data - used as non falls
+% ACT=load('labels_plus_data_ACT.mat');
+% ACTnumber=min([ACTnumber length(ACT.labels.subject)]);
+% 
+% %% Merge Falls and Activities Data
+% 
+% labels.value=[labels.value ACT.labels.value(1:ACTnumber)];
+% labels.subject=[labels.subject ACT.labels.subject(1:ACTnumber)];
+% labels.timestamp=[labels.timestamp ACT.labels.timestamp(1:ACTnumber)];
+% labels.text=[labels.text ACT.labels.text(1:ACTnumber)];
+% labels.acce=[labels.acce ACT.labels.acce(1:ACTnumber)];
+% labels.baro=[labels.baro ACT.labels.baro(1:ACTnumber)];
+% labels.gyro=[labels.gyro ACT.labels.gyro(1:ACTnumber)];
+% if skip_like
+%     nlike_inds=find(labels.value<5 | labels.value>8);
+% 
+%     labels.value=labels.value(nlike_inds);
+%     labels.subject=labels.subject(nlike_inds);
+%     labels.timestamp=labels.timestamp(nlike_inds);
+%     labels.text=labels.text(nlike_inds);
+%     labels.acce=labels.acce(nlike_inds);
+%     labels.baro=labels.baro(nlike_inds);
+%     labels.gyro=labels.gyro(nlike_inds);
+% end
+% 
+% if split
+%     %Take 75% of original data for training 
+%     inds = randperm(length(labels.timestamp));
+%     indtrain = inds(1:round(0.75*length(inds)));
+%     indtest = inds(round(0.75*length(inds))+1:end);
+% else
+%     indtrain = 1:length(labels.timestamp);
+%     indtest=[];
+% end
+% 
+% labels_test=labels;
+% 
+% %TEST DATA
+% labels_test.timestamp = labels.timestamp(indtest);
+% labels_test.value = labels.value(indtest);
+% labels_test.subject = labels.subject(indtest);
+% labels_test.text = labels.text(indtest);
+% labels_test.acce = labels.acce(indtest);
+% labels_test.gyro = labels.gyro(indtest);
+% labels_test.baro = labels.baro(indtest);
+% 
+% inds=cellfun(@(x,y,z) length(x)<100 | length(y)<100 | length(z)<10,labels_test.acce,labels_test.gyro,labels_test.baro);
+% inds=~inds;
+% labels_test.timestamp = labels_test.timestamp(inds);
+% labels_test.value = labels_test.value(inds);
+% labels_test.subject = labels_test.subject(inds);
+% labels_test.text = labels_test.text(inds);
+% labels_test.acce = labels_test.acce(inds);
+% labels_test.gyro = labels_test.gyro(inds);
+% labels_test.baro = labels_test.baro(inds);
+% 
+% % save indstest_act.mat indstest labels
+% 
+% %TRAIN DATA
+% labels.timestamp = labels.timestamp(indtrain);
+% labels.value = labels.value(indtrain);
+% labels.subject = labels.subject(indtrain);
+% labels.text = labels.text(indtrain);
+% labels.acce = labels.acce(indtrain);
+% labels.gyro = labels.gyro(indtrain);
+% labels.baro = labels.baro(indtrain);
 
 %% Feature extraction
 
