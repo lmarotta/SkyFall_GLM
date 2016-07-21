@@ -1,4 +1,4 @@
-function [id, conf]= fall_model_eval_ACT(accel_data, gyro_data,  baro_data)
+function [id, conf]= fall_model_eval_ACT(accel_data, gyro_data,  baro_data, indtest)
 
 %------------------------------------------------------------------------------------
 % Fall prediction model: predicts fall using a generalized linear model
@@ -30,7 +30,7 @@ load class_params_ACT
 % FN: Sparse features extracted for the data
 
 % FN= extract_feature_test(accel_data, gyro_data, baro_data, fvar);
-FN= extract_feature_test_phone(accel_data, gyro_data, baro_data, fvar);
+FN= extract_feature_test_phone(accel_data, gyro_data, baro_data, fvar, indtest);
 
 
 % remove the redundant features

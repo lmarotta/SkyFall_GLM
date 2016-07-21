@@ -1,4 +1,4 @@
-function [FN, L, fold, mu, stdF, eps, nzstd]= extract_feature_phone( labels, fold_nr)
+function [FN, L, fold, mu, stdF, eps, nzstd]= extract_feature_phone( labels, fold_nr, indtest)
 
 eps=1e-6;
 labelsNum= numel(labels.value);

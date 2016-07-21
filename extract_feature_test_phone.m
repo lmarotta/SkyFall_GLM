@@ -1,4 +1,4 @@
-function FN= extract_feature_test_phone(accel_data, gyro_data, baro_data, fvar)
+function FN= extract_feature_test_phone(accel_data, gyro_data, baro_data, fvar, indtest)
 %----------------------------------------------------------------------------------------------------
 % extracts features from  5 seconds interval of  sensor recordings (accelerometer, gyro and barometer)
 %----------------------------------------------------------------------------------------------------

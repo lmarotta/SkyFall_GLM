@@ -22,11 +22,12 @@
 clear all
 
 skip_like=0; % flag to not use fall-like data
-ACTnumber=10000;
+ACTnumber=1000;
 split=0; % flag to split data into test and train sets (25-75) and create cofnusion matrix
+rmv_ACT=1; % flag to remove activities data
 
 addpath(genpath('./glmnet_matlab/'))
-rng(10001)
+% rng(10001)
 %% Initialization
 
 Twin = 2000;
@@ -75,51 +76,60 @@ load labels_full.mat
 %     labels.gyro=labels.gyro(nlike_inds);
 % end
 % 
-% if split
-%     %Take 75% of original data for training 
-%     inds = randperm(length(labels.timestamp));
-%     indtrain = inds(1:round(0.75*length(inds)));
-%     indtest = inds(round(0.75*length(inds))+1:end);
-% else
-%     indtrain = 1:length(labels.timestamp);
-%     indtest=[];
-% end
+if split
+    %Take 75% of original data for training 
+    inds = randperm(length(labels.timestamp));
+    indtrain = inds(1:round(0.75*length(inds)));
+    indtest = inds(round(0.75*length(inds))+1:end);
+else
+    indtrain = 1:length(labels.timestamp);
+    indtest=[];
+end
+
+if rmv_ACT
+    train_ACT=labels.value(indtrain)==9;
+    indtrain(train_ACT)=[];
+    
+    test_ACT=labels.value(indtest)==9;
+    indtest(test_ACT)=[]; 
+end
+
 % 
-% labels_test=labels;
+labels_test=labels;
 % 
-% %TEST DATA
-% labels_test.timestamp = labels.timestamp(indtest);
-% labels_test.value = labels.value(indtest);
-% labels_test.subject = labels.subject(indtest);
-% labels_test.text = labels.text(indtest);
-% labels_test.acce = labels.acce(indtest);
-% labels_test.gyro = labels.gyro(indtest);
-% labels_test.baro = labels.baro(indtest);
+%TEST DATA
+labels_test.timestamp = labels.timestamp(indtest);
+labels_test.value = labels.value(indtest);
+labels_test.subject = labels.subject(indtest);
+labels_test.text = labels.text(indtest);
+labels_test.acce = labels.acce(indtest);
+labels_test.gyro = labels.gyro(indtest);
+labels_test.baro = labels.baro(indtest);
 % 
-% inds=cellfun(@(x,y,z) length(x)<100 | length(y)<100 | length(z)<10,labels_test.acce,labels_test.gyro,labels_test.baro);
-% inds=~inds;
-% labels_test.timestamp = labels_test.timestamp(inds);
-% labels_test.value = labels_test.value(inds);
-% labels_test.subject = labels_test.subject(inds);
-% labels_test.text = labels_test.text(inds);
-% labels_test.acce = labels_test.acce(inds);
-% labels_test.gyro = labels_test.gyro(inds);
-% labels_test.baro = labels_test.baro(inds);
+inds=cellfun(@(x,y,z) length(x)<100 | length(y)<100 | length(z)<10,labels_test.acce,labels_test.gyro,labels_test.baro);
+inds=~inds;
+labels_test.timestamp = labels_test.timestamp(inds);
+labels_test.value = labels_test.value(inds);
+labels_test.subject = labels_test.subject(inds);
+labels_test.text = labels_test.text(inds);
+labels_test.acce = labels_test.acce(inds);
+labels_test.gyro = labels_test.gyro(inds);
+labels_test.baro = labels_test.baro(inds);
 % 
 % % save indstest_act.mat indstest labels
 % 
-% %TRAIN DATA
-% labels.timestamp = labels.timestamp(indtrain);
-% labels.value = labels.value(indtrain);
-% labels.subject = labels.subject(indtrain);
-% labels.text = labels.text(indtrain);
-% labels.acce = labels.acce(indtrain);
-% labels.gyro = labels.gyro(indtrain);
-% labels.baro = labels.baro(indtrain);
+%TRAIN DATA
+labels.timestamp = labels.timestamp(indtrain);
+labels.value = labels.value(indtrain);
+labels.subject = labels.subject(indtrain);
+labels.text = labels.text(indtrain);
+labels.acce = labels.acce(indtrain);
+labels.gyro = labels.gyro(indtrain);
+labels.baro = labels.baro(indtrain);
 
 %% Feature extraction
 
-[FN, fl, L, fold_id, muF, stdF, epsF, nzstd]=extract_feature_phone_plus_labels(labels, folds_nr);
+[FN, fl, L, fold_id, muF, stdF, epsF, nzstd]=extract_feature_phone_plus_labels(labels, folds_nr, indtrain);
 fvar.std= stdF;
 fvar.mu= muF;
 fvar.eps= epsF;
@@ -132,9 +142,13 @@ DSz= size(FN,1);
 % Assign fall categories as 2 (falls and fall-like) or 1 (non-fall)
 LB=(L<9)+1;
 LF=L;
-LF(L>4)=5;
+LF(L>4 & L<9)=5;
+%uncomment for fall-like/activities separate 
+% LF(L>4)=5;
 %uncomment for fall detection
-LF=LB;
+if ~rmv_ACT
+    LF=LB;
+end
 
 
 alpha=linspace(0.5, 1, nalpha);
@@ -232,24 +246,34 @@ crate=(numel(L0)-sum(abs(bind-L0)))/numel(L0);
 %     'DCM',  'DCMed', 'DCFFT_re', 'DCFFT_im',  'DCFFT_abs', 'DCfit121', 'DCfit131',  'DCfit141', 'DCfit122', 'DCfit132',  'DCfit142', 'DCfit123', 'DCfit133',  'DCfit143',  'DCCorrV', 'DCstd', 'DCS', 'DCK', 'DDCM', 'DDCMed', 'DDCCorrV', 'DDCstd', 'DDCS', 'DDCK', 'DDCFFT_re', 'DDCFFT_im',  'DDCFFT_abs', 'DDCfit121', 'DDCfit131',  'DDCfit141', 'DDCfit122', 'DDCfit132',  'DDCfit142', 'DDCfit123', 'DDCfit133',  'DDCfit143' ...
 %     'DCM', 'DCMed', 'DCCorrV', 'DCfit121',  'DCfit131', 'DCfit122',  'DCfit132',  'DCfit123', 'DCfit133',  'DCfit124',  'DCfit134', 'DCstd', 'DCskew', 'DCkurt', 'DDCM', 'DDCMed', 'DDCstd', 'DCFFT_re', 'DCFFT_im', 'DCFFT_abs'};
 
-save class_params_ACT fvar b  nz_ind
-
+if ~split
+    save class_params_ACT fvar b  nz_ind
+end
+    
 %end;
 %% Genrating Random n folds
 %DSz=size(FN,1);
 %fldsz=round(DSz/folds);
 if split
-    for k = 1:length(labels_test.acce)
-        accel_data = labels_test.acce{k};
-        gyro_data = labels_test.gyro{k};
-        baro_data = labels_test.baro{k};
-        [id(k), conf(k)]= fall_model_eval_ACT(accel_data, gyro_data,  baro_data);
-    end
+    F=csvread('full_feature_set.csv');
+    F=F(indtest,1:1781);
+
+    % find zeroed rows in F
+    z_inds=max(abs(F).')==0;
+
+    F(z_inds,:)=[];
+    F=F(:,fvar.nzstd);
+    dsz= size(F,1);
+    v1= ones(dsz,1);
+    FN=(F-v1*fvar.mu)./(v1*fvar.std);
+    FN_nz=FN(:,nz_ind);
+    conf= glmval(b, FN_nz, 'logit');
+    id= ceil(conf-0.5);
 
     isfall = labels_test.value < 9;
     fall_err = sum(~id(isfall))/sum(isfall);
     nfall_err = sum(id(~isfall))/sum(~isfall);
-    err = (sum(id ~= isfall))/length(id); %error rate
+    err = (sum(id.' ~= isfall))/length(id); %error rate
     confmat(:,:)=confusionmat(isfall,id==1);
     figure; imagesc(confmat./repmat(sum(confmat,2),[1 2])); colorbar; caxis([0 1])
 end

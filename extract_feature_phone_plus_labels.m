@@ -1,4 +1,4 @@
-function [FN, fl, L, fold, mu, stdF, eps, nzstd]= extract_feature_phone_plus_labels(labels, fold_nr)
+function [FN, fl, L, fold, mu, stdF, eps, nzstd]= extract_feature_phone_plus_labels(labels, fold_nr, indtrain)
 
 eps=1e-6;
 labelsNum= numel(labels.value);
@@ -333,7 +333,7 @@ sub_ind_vect=[];
 %     end;
 
 F=csvread('full_feature_set.csv');
-F=F(:,1:1781);
+F=F(indtrain,1:1781);
 
 L=labels.value;
 
