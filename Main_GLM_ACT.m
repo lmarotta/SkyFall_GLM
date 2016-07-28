@@ -23,11 +23,12 @@ clear all
 
 skip_like=0; % flag to not use fall-like data
 ACTnumber=1000;
-split=0; % flag to split data into test and train sets (25-75) and create cofnusion matrix
+split=1; % flag to split data into test and train sets (25-75) and create cofnusion matrix
 rmv_ACT=1; % flag to remove activities data
+class=1;
 
 addpath(genpath('./glmnet_matlab/'))
-% rng(10001)
+rng(10001)
 %% Initialization
 
 Twin = 2000;
@@ -146,7 +147,7 @@ LF(L>4 & L<9)=5;
 %uncomment for fall-like/activities separate 
 % LF(L>4)=5;
 %uncomment for fall detection
-if ~rmv_ACT
+if ~class
     LF=LB;
 end
 
@@ -164,7 +165,7 @@ lam_ind =zeros(nalpha, 1);
 
 
 for i=1: nalpha
-    %rng(200);
+    rng(200);
     opts.alpha= alpha(i);
     
     if max(LF)>2
@@ -267,13 +268,29 @@ if split
     v1= ones(dsz,1);
     FN=(F-v1*fvar.mu)./(v1*fvar.std);
     FN_nz=FN(:,nz_ind);
-    conf= glmval(b, FN_nz, 'logit');
-    id= ceil(conf-0.5);
-
-    isfall = labels_test.value < 9;
-    fall_err = sum(~id(isfall))/sum(isfall);
-    nfall_err = sum(id(~isfall))/sum(~isfall);
-    err = (sum(id.' ~= isfall))/length(id); %error rate
-    confmat(:,:)=confusionmat(isfall,id==1);
-    figure; imagesc(confmat./repmat(sum(confmat,2),[1 2])); colorbar; caxis([0 1])
+    
+    if class
+        conf(:,1)=glmval(b{1},FN_nz,'logit');
+        conf(:,2)=glmval(b{2},FN_nz,'logit');
+        conf(:,3)=glmval(b{3},FN_nz,'logit');
+        conf(:,4)=glmval(b{4},FN_nz,'logit');
+        conf(:,5)=glmval(b{5},FN_nz,'logit');
+        [~, id]=max(conf,[],2);
+        
+        value=labels_test.value;
+        value(value>5)=5;
+        confmat=confusionmat(id,value);
+        figure; imagesc(confmat./repmat(sum(confmat,2),[1 5])); colorbar; caxis([0 1])
+    else
+        conf= glmval(b, FN_nz, 'logit');
+        id= ceil(conf-0.5);
+        
+        isfall = labels_test.value < 9;
+        fall_err = sum(~id(isfall))/sum(isfall);
+        nfall_err = sum(id(~isfall))/sum(~isfall);
+        err = (sum(id.' ~= isfall))/length(id); %error rate
+        confmat(:,:)=confusionmat(isfall,id==1);
+        figure; imagesc(confmat./repmat(sum(confmat,2),[1 2])); colorbar; caxis([0 1])
+    end
+    
 end
