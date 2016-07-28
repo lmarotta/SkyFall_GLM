@@ -27,15 +27,14 @@ for i=1:length(Payload)
         if size(temp,2)==size(fall_probe,2) || size(fall_probe,2)==0
             fall_probe=[fall_probe; temp];
         end
-    end
-    if strcmp(Payload{i}(71:79),'Gyroscope')
+    elseif strcmp(Payload{i}(71:79),'Gyroscope')
         gyr_probe=[gyr_probe; temp];
-    end
-    if strcmp(Payload{i}(71:83),'Accelerometer')
+    elseif strcmp(Payload{i}(71:83),'Accelerometer')
         acc_probe=[acc_probe; temp];
-    end
-    if strcmp(Payload{i}(71:78),'Pressure')
+    elseif strcmp(Payload{i}(71:78),'Pressure')
         bar_probe=[bar_probe; temp];
+    else
+        dummy=1;
     end
     
 end
