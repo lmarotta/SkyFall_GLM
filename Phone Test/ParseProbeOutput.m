@@ -20,7 +20,11 @@ for i=1:length(Payload)
     end
     
     temp=strsplit(Payload{i},{'{' '"' ':' ',' ' ' '[' ']' '}'});
-    if strcmp(Payload{i}(3:9),'IS_FALL')
+    % for files exported after 07/12/16
+    % if strcmp(Payload{i}(3:9),'fallnet')
+    
+    % for files exported after 07/12/16
+    if strcmp(Payload{i}(71:77),'fallnet')
         % only stores fall_probe data of the same size
         % prevents errors if data contains probe data for 
         % multiple sets of model parameters
@@ -97,7 +101,26 @@ save barTest tNormalizedTimestamp Altitude Pressure Data_type
 
 x=find(strcmp(fall_probe(1,:),'TIMESTAMP'));
 v=find(strcmp(fall_probe(1,:),'FALL_VALUES'));
+%Additional Start and End timestamps for the clip
+xs = find(strcmp(fall_probe(1,:),'EVALUATION_WINDOW_START'));
+xe = find(strcmp(fall_probe(1,:),'EVALUATION_WINDOW_END'));
+
 labels.timestamp=str2double(fall_probe(:,x+1));
-labels.values=str2double(fall_probe(:,v+1:v+43));
+labels.values=str2double(fall_probe(:,v+1:v+175));
+labels.timestampSTART_END=[str2double(fall_probe(:,xs+1)) str2double(fall_probe(:,xe+1))]; 
+
+%parse sample counts for each probe
+ac = find(strcmp(fall_probe(1,:),'ACCELEROMETER_READING_COUNT'));
+gc = find(strcmp(fall_probe(1,:),'GYROSCOPE_READING_COUNT'));
+bc = find(strcmp(fall_probe(1,:),'BAROMETER_READING_COUNT'));
+labels.sensor_counts=[str2double(fall_probe(:,ac+1)) str2double(fall_probe(:,gc+1)) str2double(fall_probe(:,bc+1))]; 
 
 save FallProbe_TestData labels
+
+%histogram of duration of clips
+td = (labels.timestampSTART_END(:,2)-labels.timestampSTART_END(:,1))/1000;
+figure, histogram(td), xlabel('Clip Duration [s]'), ylabel('Frequency of clips')
+figure, hold on, subplot(311), histogram(labels.sensor_counts(:,1)), title('acc'), xlabel('# of samples in clip')
+subplot(312), histogram(labels.sensor_counts(:,2)), title('gyr')
+subplot(313), histogram(labels.sensor_counts(:,3)), title('bar')
+
