@@ -1,5 +1,5 @@
 load PhoneProbe_data.mat
-load class_params_ACT_old.mat
+load class_params_ACT_nobar.mat
 FN=zeros(1,sum(nz_ind));
 
 for i=1:length(labels.acce)
@@ -13,4 +13,4 @@ end
 
 labels.FN=FN;
 
-save PhoneProbe_data labels
+save PhoneProbe_data_plus_features labels
