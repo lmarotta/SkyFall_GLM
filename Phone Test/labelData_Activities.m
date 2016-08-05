@@ -11,18 +11,24 @@ bar=load('barTest.mat');
 newClips=0; % counter on added clips
 acce=[acc.NormalizedTimestamp acc.X acc.Y acc.Z];
 if isempty(acce)
-    continue
+    return
 end
 baro=[bar.tNormalizedTimestamp bar.Altitude bar.Pressure];
 if isempty(baro)
-    continue
+    return
 end
 gyro=[gyr.NormalizedTimestamp gyr.X gyr.Y gyr.Z];
 if isempty(gyro)
-    continue
+    return
 end
-tStart=max([min(acce(:,1)),min(baro(:,1)),min(gyro(:,1))]);
-tEnd=min([max(acce(:,1)),max(baro(:,1)),max(gyro(:,1))]);
+% tStart=max([min(acce(:,1)),min(baro(:,1)),min(gyro(:,1))]);
+% tEnd=min([max(acce(:,1)),max(baro(:,1)),max(gyro(:,1))]);
+
+% tStart=1470398400+5*60*60;
+% tEnd=1470403800+5*60*60;
+
+tStart=1470403800+30*60+5*60*60;
+tEnd=1470403800+120*60+5*60*60;
 
 duration=min([tEnd-tStart 5*max_clips]);
 numClips=min(floor(duration/win));
