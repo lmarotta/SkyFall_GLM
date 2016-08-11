@@ -21,14 +21,17 @@ gyro=[gyr.NormalizedTimestamp gyr.X gyr.Y gyr.Z];
 if isempty(gyro)
     return
 end
+
+clear acc bar gyr
+
 % tStart=max([min(acce(:,1)),min(baro(:,1)),min(gyro(:,1))]);
 % tEnd=min([max(acce(:,1)),max(baro(:,1)),max(gyro(:,1))]);
 
-% tStart=1470398400+5*60*60;
-% tEnd=1470403800+5*60*60;
+tStart=1470398400+5*60*60;
+tEnd=1470403800+5*60*60;
 
-tStart=1470403800+30*60+5*60*60;
-tEnd=1470403800+120*60+5*60*60;
+% tStart=1470403800+15*60+5*60*60;
+% tEnd=1470403800+105*60+5*60*60;
 
 duration=min([tEnd-tStart 5*max_clips]);
 numClips=min(floor(duration/win));
@@ -36,9 +39,9 @@ for j=1:numClips
     a_ind = acce(:,1)>=tStart+win*(j-1) & acce(:,1)<tStart+win*j;
     b_ind = baro(:,1)>=tStart+win*(j-1) & baro(:,1)<tStart+win*j;
     g_ind = gyro(:,1)>=tStart+win*(j-1) & gyro(:,1)<tStart+win*j;
-    new_acce{1+newClips}=acce(a_ind,:);
-    new_baro{1+newClips}=baro(b_ind,:);
-    new_gyro{1+newClips}=gyro(g_ind,:);
+    new_acce{1+newClips}=sortrows(acce(a_ind,:));
+    new_baro{1+newClips}=sortrows(baro(b_ind,:));
+    new_gyro{1+newClips}=sortrows(gyro(g_ind,:));
     if numClips>1
         newClips=newClips+1;
     end

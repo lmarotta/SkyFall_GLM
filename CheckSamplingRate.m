@@ -12,23 +12,23 @@ gyr_counts=zeros(len,1);
 bar_counts=zeros(len,1);
 
 for i=1:len
-    acc=labels.acce{i};
-    gyr=labels.gyro{i};
-    bar=labels.baro{i};
+    acce=labels.acce{i};
+    gyro=labels.gyro{i};
+    baro=labels.baro{i};
     
     acc_counts(i)=size(labels.acce{i},1);
     gyr_counts(i)=size(labels.gyro{i},1);
     bar_counts(i)=size(labels.baro{i},1);
     
 %     if size(acc,1)>=100 && size(gyr,1)>=100 && size(bar,1)>=10
-    if size(acc,1)>=2 && size(gyr,1)>=2 && size(bar,1)>=2
-        acc_gap(i)=max(diff(sort(acc(:,1))));
-        gyr_gap(i)=max(diff(sort(gyr(:,1))));
-        bar_gap(i)=max(diff(sort(bar(:,1))));
+    if size(acce,1)>=2 && size(gyro,1)>=2 && size(baro,1)>=2
+        acc_gap(i)=max(diff(sort(acce(:,1))));
+        gyr_gap(i)=max(diff(sort(gyro(:,1))));
+        bar_gap(i)=max(diff(sort(baro(:,1))));
         
-        acc_fs=[acc_fs; diff(sort(acc(:,1)))];
-        gyr_fs=[gyr_fs; diff(sort(gyr(:,1)))];
-        bar_fs=[bar_fs; diff(sort(bar(:,1)))];
+        acc_fs=[acc_fs; diff(sort(acce(:,1)))];
+        gyr_fs=[gyr_fs; diff(sort(gyro(:,1)))];
+        bar_fs=[bar_fs; diff(sort(baro(:,1)))];
     end
 end
 
