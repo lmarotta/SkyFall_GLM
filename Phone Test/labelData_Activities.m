@@ -24,11 +24,11 @@ end
 
 clear acc bar gyr
 
-% tStart=max([min(acce(:,1)),min(baro(:,1)),min(gyro(:,1))]);
-% tEnd=min([max(acce(:,1)),max(baro(:,1)),max(gyro(:,1))]);
+tStart=max([min(acce(:,1)),min(baro(:,1)),min(gyro(:,1))]);
+tEnd=min([max(acce(:,1)),max(baro(:,1)),max(gyro(:,1))]);
 
-tStart=1470398400+5*60*60;
-tEnd=1470403800+5*60*60;
+% tStart=1470398400+5*60*60;
+% tEnd=1470403800+5*60*60;
 
 % tStart=1470403800+15*60+5*60*60;
 % tEnd=1470403800+105*60+5*60*60;
@@ -39,9 +39,24 @@ for j=1:numClips
     a_ind = acce(:,1)>=tStart+win*(j-1) & acce(:,1)<tStart+win*j;
     b_ind = baro(:,1)>=tStart+win*(j-1) & baro(:,1)<tStart+win*j;
     g_ind = gyro(:,1)>=tStart+win*(j-1) & gyro(:,1)<tStart+win*j;
-    new_acce{1+newClips}=sortrows(acce(a_ind,:));
-    new_baro{1+newClips}=sortrows(baro(b_ind,:));
-    new_gyro{1+newClips}=sortrows(gyro(g_ind,:));
+    temp=sortrows(acce(a_ind,:));
+    temp(find(diff(temp(:,1))==0),:)=[];
+    if size(temp,1)<100 || max(temp(:,1))-min(temp(:,1))<4.5
+        continue
+    end
+    new_acce{1+newClips}=[(0:.02:5-.02)' spline(temp(:,1)-min(temp(:,1)),temp(:,2:end)',(0:.02:5-.02)')'];
+    temp=sortrows(baro(b_ind,:));
+    temp(find(diff(temp(:,1))==0),:)=[];
+    if size(temp,1)<10 || max(temp(:,1))-min(temp(:,1))<4.5
+        continue
+    end
+    new_baro{1+newClips}=[(0:1/6:5-1/6)' spline(temp(:,1)-min(temp(:,1)),temp(:,2:end)',(0:1/6:5-1/6)')'];
+    temp=sortrows(gyro(g_ind,:));
+    temp(find(diff(temp(:,1))==0),:)=[];
+    if size(temp,1)<100 || max(temp(:,1))-min(temp(:,1))<4.5
+        continue
+    end
+    new_gyro{1+newClips}=[(0:.02:5-.02)' spline(temp(:,1)-min(temp(:,1)),temp(:,2:end)',(0:.02:5-.02)')'];
     if numClips>1
         newClips=newClips+1;
     end
