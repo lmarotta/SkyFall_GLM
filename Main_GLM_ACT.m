@@ -28,7 +28,7 @@ rmv_ACT=0; % flag to remove activities data
 class=0; % flag for fall classification
 
 addpath(genpath('./glmnet_matlab/'))
-rng(10001)
+% rng(10001)
 %% Initialization
 
 Twin = 2000;
