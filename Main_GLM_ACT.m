@@ -24,8 +24,8 @@ clear all
 skip_like=0; % flag to not use fall-like data
 ACTnumber=1000;
 split=1; % flag to split data into test and train sets (25-75) and create cofnusion matrix
-rmv_ACT=1; % flag to remove activities data
-class=1;
+rmv_ACT=0; % flag to remove activities data
+class=0; % flag for fall classification
 
 addpath(genpath('./glmnet_matlab/'))
 rng(10001)
@@ -46,7 +46,9 @@ maxPrincRatio=1e-4;
 % load full data set
 % any filtering of data past this point should be mirrored on the features
 % loaded by extract_feature_phone_plus_labels
+
 load labels_full.mat
+% load labels_plus_data_ACT_rot.mat
 
 % Can use either standard or jittered falls data
 % load labels_plus_data.mat

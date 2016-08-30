@@ -21,8 +21,8 @@
 
 clear all
 
-X=70; % set percentage to save for training if split==1
-split=1; % flag to split data into test and train sets (25-75) and create cofnusion matrix
+X=75; % set percentage to save for training if split==1
+split=1; % flag to split data into test and train sets and create cofnusion matrix
 
 for indSet=1:2
 skip_like=0; % flag to not use fall-like data
@@ -495,7 +495,7 @@ if split
 
     value=labels_test.value;
     value(value>5)=5;
-    id=sortrows([id value.']
+    id=sortrows([id value.']);
     confmat=confusionmat(id,value);
     figure; imagesc(confmat./repmat(sum(confmat,2),[1 5])); colorbar; caxis([0 1])
     

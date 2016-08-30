@@ -1,7 +1,7 @@
 %% RotateData.m
 % Rotates the accelerometer and gyro data randomly along the z-axis
 
-load labels_plus_data_ACT
+load labels_full.mat
 
 X=rand(size(labels.acce,2))*180-90; % random angles between +/-90
 
@@ -13,4 +13,4 @@ for i=1:size(labels.acce,2)
     end
 end
 
-save labels_plus_data_ACT_rot labels
+save labels_ful_rot labels
