@@ -47,8 +47,8 @@ maxPrincRatio=1e-4;
 % any filtering of data past this point should be mirrored on the features
 % loaded by extract_feature_phone_plus_labels
 
-load labels_full.mat
-% load labels_plus_data_ACT_rot.mat
+% load labels_full.mat
+load labels_plus_data_ACT_rot.mat
 
 % Can use either standard or jittered falls data
 % load labels_plus_data.mat
@@ -258,7 +258,7 @@ end
 %DSz=size(FN,1);
 %fldsz=round(DSz/folds);
 if split
-    F=csvread('full_feature_set.csv');
+    F=csvread('full_feature_set_rot.csv');
     F=F(indtest,1:1781);
 
     % find zeroed rows in F
