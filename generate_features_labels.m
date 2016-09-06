@@ -11,6 +11,9 @@ fullFeturesSetForOneSensor = {'mean', 'median', 'real_val_40comp_FFT', 'imag_val
     'fit_func_122_deriv', 'fit_func_132_deriv', 'fit_func_142_deriv', 'fit_func_123_deriv', 'fit_func_133_deriv', 'fit_func_143_deriv'};
 
 numOfRepFeatures = [4 3 120 120 120 2 2 2 3 3 3 4 4 4 5 5 5 6 6 6 6 4 4 4 3 3 3 3 3 3 120 120 120 2 2 2 3 3 3 4 4 4];
+% 1 - to add timestamp or axis to a label; 2- to add axis to a label; 0 - no info about axis
+startAxisIndex =   [1 2 2   2   2   0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 2 2 2 2 2 2 2   2   2   0 0 0 0 0 0 0 0 0]; 
+listOfAxis = {'_timestamp', '_x', '_y', '_z'};
 
 %features for barometer
 featuresSetForBaro = {'mean', 'median', 'corr_coef', 'fit_func_121', 'fit_func_131', 'fit_func_122', 'fit_func_132', 'fit_func_123', 'fit_func_133', ...
@@ -18,6 +21,9 @@ featuresSetForBaro = {'mean', 'median', 'corr_coef', 'fit_func_121', 'fit_func_1
     'abs_val_5comp_FFT'};
 
 numOfRepFeaturesBaro = [3 2 3 2 2 3 3 4 4 5 5 3 3 3 2 2 2 10 10 10];
+% 1 - to add timestamp or axis to a label; 2- to add axis to a label; 0 - no info about axis
+startAxisIndexBaro   = [1 2 1 0 0 0 0 0 0 0 0 1 1 1 2 2 2 2  2  2];
+listOfAxisBaro = {'_timestamp', '_pressure', '_altitude'};
 
 %generates vector with features labels
 currIndex = 1;
@@ -26,21 +32,39 @@ for j=1:length(sensors)
     if j<=2
         featuresSet = fullFeturesSetForOneSensor;
         numOfRep = numOfRepFeatures;
+        axis = listOfAxis;
+        startIndecies = startAxisIndex;
     %barometer    
     else
         featuresSet = featuresSetForBaro;
         numOfRep = numOfRepFeaturesBaro;
+        axis = listOfAxisBaro;
+        startIndecies = startAxisIndexBaro;
     end
     for i=1:1:length(numOfRep)
-        for k=1:numOfRep(1,i)
-            featuresLabels{currIndex} = strcat(sensors(1,j),featuresSet(1,i));
-            currIndex=currIndex+1;
+        if startIndecies(1,i)==0
+            for k=1:numOfRep(1,i)
+                featuresLabels(currIndex) = strcat(sensors(1,j),featuresSet(1,i));
+                currIndex=currIndex+1;
+            end
+        else
+            axisStart = startIndecies(1,i);
+            rep = numOfRep(1,i);
+            repPerAxis = rep/(length(axis)-(axisStart-1));
+            currAxis = axisStart;
+            while currAxis<=length(axis)
+                for l=1:repPerAxis
+                    featuresLabels(currIndex) = strcat(sensors(1,j),featuresSet(1,i),axis(1,currAxis));
+                    currIndex=currIndex+1;
+                end
+                currAxis=currAxis+1;
+            end
         end
     end
 end
 
-load class_params_ACT
+%load class_params_ACT_nobar
 
-featuresLabels = featuresLabels(:,fvar.nzstd);
+%featuresLabels = featuresLabels(:,fvar.nzstd);
 
-save features_labels featuresLabels
+save features_labels_full featuresLabels
