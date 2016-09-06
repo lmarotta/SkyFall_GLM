@@ -13,4 +13,4 @@ for i=1:size(labels.acce,2)
     end
 end
 
-save labels_ful_rot labels
+save labels_full_rot labels
