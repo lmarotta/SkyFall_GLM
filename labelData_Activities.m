@@ -18,6 +18,7 @@ fsz= numel(files_list);
 endStamps=[];
 startStamps=[];
 values=[];
+subject={};
 
 for i=9:2:17
    
@@ -27,10 +28,12 @@ for i=9:2:17
     endStamps=[endStamps; labels.timestamp(endInd).'];
     startStamps=[startStamps; labels.timestamp(startInd).'];
     values=[values; repmat(i,[length(endInd) 1])];
+    subject=[subject labels.subject(endInd)]; 
     
 end
 
 labels.value=values;
+labels.subject=subject;
 startStamps=startStamps([1:231 233:length(startStamps)]);
 
 lind=true(length(startStamps),3);
@@ -82,6 +85,7 @@ end
 newClips=0; % counter on added clips
 for i=1:length(labels.acce)
     display(i)
+    subject=labels.subject{i};
     acce=labels.acce{i};
     if isempty(acce)
         continue
@@ -106,6 +110,7 @@ for i=1:length(labels.acce)
         new_acce{i+newClips}=acce(a_ind,:);
         new_baro{i+newClips}=baro(b_ind,:);
         new_gyro{i+newClips}=gyro(g_ind,:);
+        new_subject{i+newClips}=subject;
         if numClips>1
             newClips=newClips+1;
         end
@@ -117,7 +122,7 @@ labels.baro=new_baro;
 labels.gyro=new_gyro;
 
 labels.value=repmat(9,[1,length(labels.acce)]);
-labels.subject=repmat(labels.subject(1),[1,length(labels.acce)]);
+labels.subject=new_subject;
 labels.text=repmat(labels.text(1),[1,length(labels.acce)]);
 labels.timestamp=repmat(labels.timestamp(1),[1,length(labels.acce)]);
 

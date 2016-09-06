@@ -23,7 +23,7 @@ clear all
 
 skip_like=0; % flag to not use fall-like data
 ACTnumber=1000;
-split=1; % flag to split data into test and train sets (25-75) and create cofnusion matrix
+split=0; % flag to split data into test and train sets (25-75) and create cofnusion matrix
 rmv_ACT=0; % flag to remove activities data
 class=0; % flag for fall classification
 
@@ -48,7 +48,7 @@ maxPrincRatio=1e-4;
 % loaded by extract_feature_phone_plus_labels
 
 % load labels_full.mat
-load labels_plus_data_ACT_rot.mat
+load labels_full_interp.mat
 
 % Can use either standard or jittered falls data
 % load labels_plus_data.mat
@@ -250,7 +250,7 @@ crate=(numel(L0)-sum(abs(bind-L0)))/numel(L0);
 %     'DCM', 'DCMed', 'DCCorrV', 'DCfit121',  'DCfit131', 'DCfit122',  'DCfit132',  'DCfit123', 'DCfit133',  'DCfit124',  'DCfit134', 'DCstd', 'DCskew', 'DCkurt', 'DDCM', 'DDCMed', 'DDCstd', 'DCFFT_re', 'DCFFT_im', 'DCFFT_abs'};
 
 if ~split
-    save class_params_ACT fvar b  nz_ind
+    save class_params_ACT_nobar fvar b  nz_ind
 end
     
 %end;
