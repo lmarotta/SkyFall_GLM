@@ -3,7 +3,9 @@
 
 load labels_full.mat
 
-X=rand(size(labels.acce,2))*180-90; % random angles between +/-90
+% X=rand(size(labels.acce,2))*180-90; % random angles between +/-90
+
+X=randi([-1 1],size(labels.acce,2),1)*90; % random angles -90/0/+90
 
 for i=1:size(labels.acce,2)
     if ~isempty(labels.acce{i}) && ~isempty(labels.gyro{i})
