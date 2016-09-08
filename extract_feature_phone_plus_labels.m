@@ -374,10 +374,10 @@ stdF= std(F);
 %%%%Standardize the result
 
 nzstd=stdF>eps*mean(stdF);
-% remove barometer features
-nzstd(1701:1781)=zeros(1,81);
-% remove time mean
-nzstd([1 851])=[0 0];
+% % remove barometer features
+% nzstd(1701:1781)=zeros(1,81);
+% % remove time mean
+% nzstd([1 851])=[0 0];
 mu=mu(nzstd);
 F=F(:,nzstd);
 fl = [];
