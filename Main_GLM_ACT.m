@@ -22,7 +22,7 @@
 clear all
 
 skip_like=0; % flag to not use fall-like data
-ACTnumber=1000;
+ACTnumber=500;
 split=0; % flag to split data into test and train sets (25-75) and create cofnusion matrix
 rmv_ACT=0; % flag to remove activities data
 class=0; % flag for fall classification
