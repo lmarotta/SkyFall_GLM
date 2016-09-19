@@ -12,6 +12,8 @@ fall_probe=[];
 acc_probe=[];
 gyr_probe=[];
 bar_probe=[];
+fall_probe_failure_counts = [];
+fall_probe_failure_gap = [];
 
 for i=1:length(Payload)
     % skip junk data
@@ -22,11 +24,10 @@ for i=1:length(Payload)
     temp=strsplit(Payload{i},{'{' '"' ':' ',' ' ' '[' ']' '}'});
     % for files exported after 07/12/16
     % if strcmp(Payload{i}(3:9),'fallnet')
-    
     % for files exported after 07/12/16
     if strcmp(Payload{i}(71:77),'fallnet')
         % only stores fall_probe data of the same size
-        % prevents errors if data contains probe data for 
+        % prevents errors if data contains probe data for
         % multiple sets of model parameters
         if size(temp,2)==size(fall_probe,2) || size(fall_probe,2)==0
             fall_probe=[fall_probe; temp];
@@ -37,6 +38,11 @@ for i=1:length(Payload)
         acc_probe=[acc_probe; temp];
     elseif strcmp(Payload{i}(71:78),'Pressure')
         bar_probe=[bar_probe; temp];
+    elseif strcmp(Payload{i}(3:18),'SAMPLES_EXPECTED')
+        fall_probe_failure_counts = [fall_probe_failure_counts; temp];
+    elseif strcmp(Payload{i}(3:10),'GAP_SIZE')
+        fall_probe_failure_gap = [fall_probe_failure_gap;temp];
+        
     else
         dummy=1;
     end
@@ -62,12 +68,12 @@ for i=1:size(acc_probe,1)
     Z=[Z; str2double(acc_probe(i,y+2*len+3:y+3*len+2)).'];
     NormalizedTimestamp=[NormalizedTimestamp; str2double(acc_probe(i,s+1:s+len)).'];
     eTimestamp=[eTimestamp; str2double(acc_probe(i,e+1:e+len)).'];
-%     NormalizedTimestamp=[NormalizedTimestamp; str2double(acc_probe(i,y+3*len+21:y+4*len+20)).'];
+    %     NormalizedTimestamp=[NormalizedTimestamp; str2double(acc_probe(i,y+3*len+21:y+4*len+20)).'];
 end
 
 NormalizedTimestamp=eTimestamp;
 % NormalizedTimestamp=(NormalizedTimestamp-min(NormalizedTimestamp))/10^9+min(eTimestamp);
-        
+
 save accTest NormalizedTimestamp X Y Z Data_type
 
 Data_type='Gyro';
@@ -125,26 +131,55 @@ if ~isempty(fall_probe)
     %Additional Start and End timestamps for the clip
     xs = find(strcmp(fall_probe(1,:),'EVALUATION_WINDOW_START'));
     xe = find(strcmp(fall_probe(1,:),'EVALUATION_WINDOW_END'));
-
+    
     labels.timestamp=str2double(fall_probe(:,x+1));
     labels.values=str2double(fall_probe(:,v+1:v+419));
     %when absolute time stamps are available for start and end
-%     labels.timestampSTART_END=[str2double(fall_probe(:,xs+1)) str2double(fall_probe(:,xe+1))]; 
-    labels.timestampSTART_END=[(str2double(fall_probe(:,x+1))-str2double(fall_probe(:,xe+1))) str2double(fall_probe(:,x+1))]; %TIMESTAMP(end) - EVALUATION_WINDOW_END (duration of window)
-
-
+    labels.timestampSTART_END=[str2double(fall_probe(:,xs+1)) str2double(fall_probe(:,xe+1))];
+    %labels.timestampSTART_END=[(str2double(fall_probe(:,x+1))-str2double(fall_probe(:,xe+1))) str2double(fall_probe(:,x+1))]; %TIMESTAMP(end) - EVALUATION_WINDOW_END (duration of window)
+    
+    
     %parse sample counts for each probe
     ac = find(strcmp(fall_probe(1,:),'ACCELEROMETER_READING_COUNT'));
     gc = find(strcmp(fall_probe(1,:),'GYROSCOPE_READING_COUNT'));
     bc = find(strcmp(fall_probe(1,:),'BAROMETER_READING_COUNT'));
-    labels.sensor_counts=[str2double(fall_probe(:,ac+1)) str2double(fall_probe(:,gc+1)) str2double(fall_probe(:,bc+1))]; 
-
-    save FallProbe_TestData labels
-
-    %histogram of duration of clips
-    td = (labels.timestampSTART_END(:,2)-labels.timestampSTART_END(:,1));
-    figure, histogram(td), xlabel('Clip Duration [s]'), ylabel('Frequency of clips')
-    figure, hold on, subplot(311), histogram(labels.sensor_counts(:,1)), title('acc'), xlabel('# of samples in clip')
-    subplot(312), histogram(labels.sensor_counts(:,2)), title('gyr')
-    subplot(313), histogram(labels.sensor_counts(:,3)), title('bar')
+    labels.sensor_counts=[str2double(fall_probe(:,ac+1)) str2double(fall_probe(:,gc+1)) str2double(fall_probe(:,bc+1))];
 end
+
+%Parses data from failure probe 
+if ~isempty(fall_probe_failure_counts)
+    x1=find(strcmp(fall_probe_failure_counts(1,:),'TIMESTAMP'));
+    x2=find(strcmp(fall_probe_failure_counts(1,:),'FAILURE_REASON'));
+    x3=find(strcmp(fall_probe_failure_counts(1,:),'SAMPLES_COUNT'));
+    
+    labels.failure.timestamp = str2double(fall_probe_failure_counts(:,x1+1));
+    labels.failure.reason = fall_probe_failure_counts(:,x2+1);
+    labels.failure.value = str2double(fall_probe_failure_counts(:,x3+1));
+end
+
+if ~isempty(fall_probe_failure_gap)
+    x1=find(strcmp(fall_probe_failure_gap(1,:),'TIMESTAMP'));
+    x2=find(strcmp(fall_probe_failure_gap(1,:),'FAILURE_REASON'));
+    x3=find(strcmp(fall_probe_failure_gap(1,:),'GAP_SIZE'));
+    
+    labels.failure.timestamp = [labels.failure.timestamp ; str2double(fall_probe_failure_gap(:,x1+1))];
+    labels.failure.reason = [labels.failure.reason; fall_probe_failure_gap(:,x2+1)];
+    labels.failure.value = [labels.failure.value; str2double(fall_probe_failure_gap(:,x3+1))];
+end
+
+save FallProbe_TestData labels
+
+%histogram of duration of clips
+td = (labels.timestampSTART_END(:,2)-labels.timestampSTART_END(:,1));
+figure, histogram(td), xlabel('Clip Duration [s]'), ylabel('Frequency of clips')
+figure, hold on, subplot(311), histogram(labels.sensor_counts(:,1)), title('acc'), xlabel('# of samples in clip')
+subplot(312), histogram(labels.sensor_counts(:,2)), title('gyr')
+subplot(313), histogram(labels.sensor_counts(:,3)), title('bar')
+
+%histogram of fallnet failures
+reasons = labels.failure.reason;
+unique_reasons =unique(reasons,'stable');
+%reasons_count=cellfun(@(x) sum(ismember(reasons,x)),unique_reasons,'un',0);
+
+B = categorical(reasons,unique_reasons);
+figure, histogram(B,'BarWidth',0.5)
