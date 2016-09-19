@@ -127,8 +127,11 @@ if ~isempty(fall_probe)
     xe = find(strcmp(fall_probe(1,:),'EVALUATION_WINDOW_END'));
 
     labels.timestamp=str2double(fall_probe(:,x+1));
-    labels.values=str2double(fall_probe(:,v+1:v+175));
-    labels.timestampSTART_END=[str2double(fall_probe(:,xs+1)) str2double(fall_probe(:,xe+1))]; 
+    labels.values=str2double(fall_probe(:,v+1:v+419));
+    %when absolute time stamps are available for start and end
+%     labels.timestampSTART_END=[str2double(fall_probe(:,xs+1)) str2double(fall_probe(:,xe+1))]; 
+    labels.timestampSTART_END=[(str2double(fall_probe(:,x+1))-str2double(fall_probe(:,xe+1))) str2double(fall_probe(:,x+1))]; %TIMESTAMP(end) - EVALUATION_WINDOW_END (duration of window)
+
 
     %parse sample counts for each probe
     ac = find(strcmp(fall_probe(1,:),'ACCELEROMETER_READING_COUNT'));
@@ -139,7 +142,7 @@ if ~isempty(fall_probe)
     save FallProbe_TestData labels
 
     %histogram of duration of clips
-    td = (labels.timestampSTART_END(:,2)-labels.timestampSTART_END(:,1))/1000;
+    td = (labels.timestampSTART_END(:,2)-labels.timestampSTART_END(:,1));
     figure, histogram(td), xlabel('Clip Duration [s]'), ylabel('Frequency of clips')
     figure, hold on, subplot(311), histogram(labels.sensor_counts(:,1)), title('acc'), xlabel('# of samples in clip')
     subplot(312), histogram(labels.sensor_counts(:,2)), title('gyr')
