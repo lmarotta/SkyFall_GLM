@@ -1,0 +1,222 @@
+% Loads a user-selected .txt file containing exported data from Fallnet
+% and sensor probes and separates probe data fro analysis
+
+clear all
+
+% load file
+[FileName,PathName,~] = uigetfile('*.txt');
+Payload=readtable([PathName '\' FileName],'Delimiter','\t');
+Probe = Payload.Probe;
+Payload=Payload.Payload;
+
+fall_probe=[];
+acc_probe=[];
+gyr_probe=[];
+bar_probe=[];
+fall_probe_failure_counts = [];
+fall_probe_failure_gap = [];
+
+for i=1:length(Payload)
+    % skip junk data
+    if length(Payload{i})<9
+        continue
+    end
+    
+    temp=strsplit(Payload{i},{'{' '"' ':' ',' ' ' '[' ']' '}'});
+    % for files exported after 07/12/16
+    % if strcmp(Payload{i}(3:9),'fallnet')
+    % for files exported after 07/12/16
+    if strcmp(Probe{i}(end-11:end),'FallNetProbe')
+        % only stores fall_probe data of the same size
+        % prevents errors if data contains probe data for
+        % multiple sets of model parameters
+        if size(temp,2)==size(fall_probe,2) || size(fall_probe,2)==0
+            fall_probe=[fall_probe; temp];
+        end
+    elseif strcmp(Probe{i}(60:68),'Gyroscope')
+        gyr_probe=[gyr_probe; temp];
+    elseif strcmp(Probe{i}(60:72),'Accelerometer')
+        acc_probe=[acc_probe; temp];
+    elseif strcmp(Probe{i}(60:67),'Pressure')
+        bar_probe=[bar_probe; temp];
+    elseif strcmp(Probe{i}(end-6:end),'Failure')
+        if find(strcmp(temp,'SAMPLES_EXPECTED'))
+            fall_probe_failure_counts = [fall_probe_failure_counts; temp];
+        else
+            fall_probe_failure_gap = [fall_probe_failure_gap; temp]; %'GAP_SIZE'
+        end
+        
+    else
+        dummy=1;
+    end
+    
+end
+
+% combine data from each sensor into single vectors
+
+Data_type='accelerometer';
+y=find(strcmp(acc_probe(1,:),'Y'));
+x=find(strcmp(acc_probe(1,:),'X'));
+s=find(strcmp(gyr_probe(1,:),'SENSOR_TIMESTAMP'));
+e=find(strcmp(acc_probe(1,:),'EVENT_TIMESTAMP'));
+len=x-y-1;
+X=[];
+Y=[];
+Z=[];
+NormalizedTimestamp=[];
+eTimestamp=[];
+for i=1:size(acc_probe,1)
+    Y=[Y; str2double(acc_probe(i,y+1:y+len)).'];
+    X=[X; str2double(acc_probe(i,y+len+2:y+2*len+1)).'];
+    Z=[Z; str2double(acc_probe(i,y+2*len+3:y+3*len+2)).'];
+    NormalizedTimestamp=[NormalizedTimestamp; str2double(acc_probe(i,s+1:s+len)).'];
+    eTimestamp=[eTimestamp; str2double(acc_probe(i,e+1:e+len)).'];
+    %     NormalizedTimestamp=[NormalizedTimestamp; str2double(acc_probe(i,y+3*len+21:y+4*len+20)).'];
+end
+
+NormalizedTimestamp=eTimestamp;
+% NormalizedTimestamp=(NormalizedTimestamp-min(NormalizedTimestamp))/10^9+min(eTimestamp);
+
+save accTest NormalizedTimestamp X Y Z Data_type
+
+Data_type='Gyro';
+y=find(strcmp(gyr_probe(1,:),'Y'));
+x=find(strcmp(gyr_probe(1,:),'X'));
+s=find(strcmp(gyr_probe(1,:),'SENSOR_TIMESTAMP'));
+e=find(strcmp(gyr_probe(1,:),'EVENT_TIMESTAMP'));
+len=x-y-1;
+X=[];
+Y=[];
+Z=[];
+NormalizedTimestamp=[];
+eTimestamp=[];
+for i=1:size(gyr_probe,1)
+    Y=[Y; str2double(gyr_probe(i,y+1:y+len)).'];
+    X=[X; str2double(gyr_probe(i,y+len+2:y+2*len+1)).'];
+    Z=[Z; str2double(gyr_probe(i,y+2*len+3:y+3*len+2)).'];
+    NormalizedTimestamp=[NormalizedTimestamp; str2double(gyr_probe(i,s+1:s+len)).'];
+    eTimestamp=[eTimestamp; str2double(gyr_probe(i,e+1:e+len)).'];
+end
+
+NormalizedTimestamp=eTimestamp;
+% NormalizedTimestamp=(NormalizedTimestamp-min(NormalizedTimestamp))/10^9+min(eTimestamp);
+
+save gyrTest NormalizedTimestamp X Y Z Data_type
+
+Data_type='barometer';
+s=find(strcmp(bar_probe(1,:),'SENSOR_TIMESTAMP'));
+x=find(strcmp(bar_probe(1,:),'PRESSURE'));
+a=find(strcmp(bar_probe(1,:),'ALTITUDE'));
+e=find(strcmp(bar_probe(1,:),'EVENT_TIMESTAMP'));
+len=x-e-1;
+Altitude=[];
+Pressure=[];
+tNormalizedTimestamp=[];
+eTimestamp=[];
+for i=1:size(bar_probe,1)
+    Altitude=[Altitude; str2double(bar_probe(i,a+1:a+len)).'];
+    Pressure=[Pressure; str2double(bar_probe(i,x+1:x+len)).'];
+    tNormalizedTimestamp=[tNormalizedTimestamp; str2double(bar_probe(i,s+1:s+len)).'];
+    eTimestamp=[eTimestamp; str2double(bar_probe(i,e+1:e+len)).'];
+end
+
+tNormalizedTimestamp=eTimestamp;
+% tNormalizedTimestamp=(tNormalizedTimestamp-min(tNormalizedTimestamp))/10^9+min(eTimestamp);
+
+save barTest tNormalizedTimestamp Altitude Pressure Data_type
+
+% separate timestamps and feature values from fall_probe and save in
+% labels structure
+
+if ~isempty(fall_probe)
+    x=find(strcmp(fall_probe(1,:),'EVALUATION_WINDOW_SIZE'));
+    v=find(strcmp(fall_probe(1,:),'FALL_VALUES'));
+    %Additional Start and End timestamps for the clip
+    xs = find(strcmp(fall_probe(1,:),'MIN_ABSOLUTE_TIMESTAMP'));
+    xe = find(strcmp(fall_probe(1,:),'MAX_ABSOLUTE_TIMESTAMP'));
+    
+    labels.winsize=str2double(fall_probe(:,x+1));
+    labels.values=str2double(fall_probe(:,v+1:v+419));
+    %when absolute time stamps are available for start and end
+    labels.timestampSTART_END=[str2double(fall_probe(:,xs+1)) str2double(fall_probe(:,xe+1))];
+    %labels.timestampSTART_END=[(str2double(fall_probe(:,x+1))-str2double(fall_probe(:,xe+1))) str2double(fall_probe(:,x+1))]; %TIMESTAMP(end) - EVALUATION_WINDOW_END (duration of window)
+    
+    
+    %parse sample counts for each probe
+    ac = find(strcmp(fall_probe(1,:),'ACCELEROMETER_READING_COUNT'));
+    gc = find(strcmp(fall_probe(1,:),'GYROSCOPE_READING_COUNT'));
+    bc = find(strcmp(fall_probe(1,:),'BAROMETER_READING_COUNT'));
+    labels.sensor_counts=[str2double(fall_probe(:,ac+1)) str2double(fall_probe(:,gc+1)) str2double(fall_probe(:,bc+1))];
+end
+
+%Parses data from failure probe 
+if ~isempty(fall_probe_failure_counts)
+    x1s=find(strcmp(fall_probe_failure_counts(1,:),'MIN_ABSOLUTE_TIMESTAMP'));
+    x1e=find(strcmp(fall_probe_failure_counts(1,:),'MAX_ABSOLUTE_TIMESTAMP'));
+    x2=find(strcmp(fall_probe_failure_counts(1,:),'FAILURE_REASON'));
+    x3=find(strcmp(fall_probe_failure_counts(1,:),'SAMPLES_COUNT'));
+    
+    labels.failure.timestamp = [str2double(fall_probe_failure_counts(:,x1s+1)) str2double(fall_probe_failure_counts(:,x1e+1))];
+    labels.failure.reason = fall_probe_failure_counts(:,x2+1);
+    labels.failure.value = str2double(fall_probe_failure_counts(:,x3+1));
+    
+end
+
+if ~isempty(fall_probe_failure_gap)
+    x1s=find(strcmp(fall_probe_failure_gap(1,:),'MIN_ABSOLUTE_TIMESTAMP'));
+    x1e=find(strcmp(fall_probe_failure_gap(1,:),'MAX_ABSOLUTE_TIMESTAMP'));
+    x2=find(strcmp(fall_probe_failure_gap(1,:),'FAILURE_REASON'));
+    x3=find(strcmp(fall_probe_failure_gap(1,:),'GAP_SIZE'));
+    
+    labels.failure.timestamp = [labels.failure.timestamp; str2double(fall_probe_failure_gap(:,x1s+1)) str2double(fall_probe_failure_gap(:,x1e+1))];
+    labels.failure.reason = [labels.failure.reason; fall_probe_failure_gap(:,x2+1)];
+    labels.failure.value = [labels.failure.value; str2double(fall_probe_failure_gap(:,x3+1))];
+    
+end
+
+%Look at a specific time range
+cutoff_start = datetime(2016,9,22,20,30,0,0);  %This is in UTC (+5h from Chicago time)
+cutoff_end = datetime(2016,9,22,22,30,0,0);  %This is in UTC (+5h from Chicago time)
+
+indstart = datetime(1970,1,1,0,0,0,labels.timestampSTART_END(:,1)) < cutoff_end & datetime(1970,1,1,0,0,0,labels.timestampSTART_END(:,1)) > cutoff_start;
+indend = datetime(1970,1,1,0,0,0,labels.timestampSTART_END(:,2)) < cutoff_end & datetime(1970,1,1,0,0,0,labels.timestampSTART_END(:,2)) > cutoff_start;
+labels.timestampSTART_END = labels.timestampSTART_END(indstart & indend,:);
+labels.winsize = labels.winsize(indstart & indend,:);
+labels.values = labels.values(indstart & indend,:);
+labels.sensor_counts = labels.sensor_counts(indstart & indend,:);
+
+indstart = datetime(1970,1,1,0,0,0,labels.failure.timestamp(:,1)) < cutoff_end & datetime(1970,1,1,0,0,0,labels.failure.timestamp(:,1)) > cutoff_start;
+indend = datetime(1970,1,1,0,0,0,labels.failure.timestamp(:,2)) < cutoff_end & datetime(1970,1,1,0,0,0,labels.failure.timestamp(:,2)) > cutoff_start;
+labels.failure.timestamp = labels.failure.timestamp(indstart & indend,:);
+labels.failure.reason = labels.failure.reason(indstart & indend, :);
+labels.failure.value = labels.failure.value(indstart & indend,:);
+
+save FallProbe_TestData labels
+
+%histogram of duration of clips
+td = (labels.timestampSTART_END(:,2)-labels.timestampSTART_END(:,1));
+figure, histogram(td), xlabel('Clip Duration [s]'), ylabel('Frequency of clips')
+figure, hold on, subplot(311), histogram(labels.sensor_counts(:,1)), title('acc'), xlabel('# of samples in clip')
+subplot(312), histogram(labels.sensor_counts(:,2)), title('gyr')
+subplot(313), histogram(labels.sensor_counts(:,3)), title('bar')
+
+%histogram of fallnet failures
+reasons = labels.failure.reason;
+unique_reasons =unique(reasons,'stable');
+%reasons_count=cellfun(@(x) sum(ismember(reasons,x)),unique_reasons,'un',0);
+
+B = categorical(reasons,unique_reasons);
+figure, histogram(B,'BarWidth',0.5)
+
+%% plot start and end timestamps for failure and success 
+
+figure
+plot(labels.timestampSTART_END(:,1),zeros(length(labels.timestampSTART_END(:,1)),1),'ob'), hold on
+plot(labels.timestampSTART_END(:,2),zeros(length(labels.timestampSTART_END(:,2)),1),'xb')
+
+plot(labels.failure.timestamp(:,1),ones(length(labels.failure.timestamp(:,1)),1),'or'), hold on
+plot(labels.failure.timestamp(:,2),ones(length(labels.failure.timestamp(:,2)),1),'xr')
+ylim([-0.5 1.5])
+
+figure, subplot(
+histogram(labels.

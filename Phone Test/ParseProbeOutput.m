@@ -6,6 +6,7 @@ clear all
 % load file
 [FileName,PathName,~] = uigetfile('*.txt');
 Payload=readtable([PathName '\' FileName],'Delimiter','\t');
+Probe = Payload.Probe;
 Payload=Payload.Payload;
 
 fall_probe=[];
@@ -25,23 +26,25 @@ for i=1:length(Payload)
     % for files exported after 07/12/16
     % if strcmp(Payload{i}(3:9),'fallnet')
     % for files exported after 07/12/16
-    if strcmp(Payload{i}(71:77),'fallnet')
+    if strcmp(Probe{i}(end-11:end),'FallNetProbe')
         % only stores fall_probe data of the same size
         % prevents errors if data contains probe data for
         % multiple sets of model parameters
         if size(temp,2)==size(fall_probe,2) || size(fall_probe,2)==0
             fall_probe=[fall_probe; temp];
         end
-    elseif strcmp(Payload{i}(71:79),'Gyroscope')
+    elseif strcmp(Probe{i}(60:68),'Gyroscope')
         gyr_probe=[gyr_probe; temp];
-    elseif strcmp(Payload{i}(71:83),'Accelerometer')
+    elseif strcmp(Probe{i}(60:72),'Accelerometer')
         acc_probe=[acc_probe; temp];
-    elseif strcmp(Payload{i}(71:78),'Pressure')
+    elseif strcmp(Probe{i}(60:67),'Pressure')
         bar_probe=[bar_probe; temp];
-    elseif strcmp(Payload{i}(3:18),'SAMPLES_EXPECTED')
-        fall_probe_failure_counts = [fall_probe_failure_counts; temp];
-    elseif strcmp(Payload{i}(3:10),'GAP_SIZE')
-        fall_probe_failure_gap = [fall_probe_failure_gap;temp];
+    elseif strcmp(Probe{i}(end-6:end),'Failure')
+        if find(strcmp(temp,'SAMPLES_EXPECTED'))
+            fall_probe_failure_counts = [fall_probe_failure_counts; temp];
+        else
+            fall_probe_failure_gap = [fall_probe_failure_gap; temp]; %'GAP_SIZE'
+        end
         
     else
         dummy=1;
@@ -126,13 +129,13 @@ save barTest tNormalizedTimestamp Altitude Pressure Data_type
 % labels structure
 
 if ~isempty(fall_probe)
-    x=find(strcmp(fall_probe(1,:),'TIMESTAMP'));
+    x=find(strcmp(fall_probe(1,:),'EVALUATION_WINDOW_SIZE'));
     v=find(strcmp(fall_probe(1,:),'FALL_VALUES'));
     %Additional Start and End timestamps for the clip
-    xs = find(strcmp(fall_probe(1,:),'EVALUATION_WINDOW_START'));
-    xe = find(strcmp(fall_probe(1,:),'EVALUATION_WINDOW_END'));
+    xs = find(strcmp(fall_probe(1,:),'MIN_ABSOLUTE_TIMESTAMP'));
+    xe = find(strcmp(fall_probe(1,:),'MAX_ABSOLUTE_TIMESTAMP'));
     
-    labels.timestamp=str2double(fall_probe(:,x+1));
+    labels.winsize=str2double(fall_probe(:,x+1));
     labels.values=str2double(fall_probe(:,v+1:v+419));
     %when absolute time stamps are available for start and end
     labels.timestampSTART_END=[str2double(fall_probe(:,xs+1)) str2double(fall_probe(:,xe+1))];
@@ -148,24 +151,45 @@ end
 
 %Parses data from failure probe 
 if ~isempty(fall_probe_failure_counts)
-    x1=find(strcmp(fall_probe_failure_counts(1,:),'TIMESTAMP'));
+    x1s=find(strcmp(fall_probe_failure_counts(1,:),'MIN_ABSOLUTE_TIMESTAMP'));
+    x1e=find(strcmp(fall_probe_failure_counts(1,:),'MAX_ABSOLUTE_TIMESTAMP'));
     x2=find(strcmp(fall_probe_failure_counts(1,:),'FAILURE_REASON'));
     x3=find(strcmp(fall_probe_failure_counts(1,:),'SAMPLES_COUNT'));
     
-    labels.failure.timestamp = str2double(fall_probe_failure_counts(:,x1+1));
+    labels.failure.timestamp = [str2double(fall_probe_failure_counts(:,x1s+1)) str2double(fall_probe_failure_counts(:,x1e+1))];
     labels.failure.reason = fall_probe_failure_counts(:,x2+1);
     labels.failure.value = str2double(fall_probe_failure_counts(:,x3+1));
+    
 end
 
 if ~isempty(fall_probe_failure_gap)
-    x1=find(strcmp(fall_probe_failure_gap(1,:),'TIMESTAMP'));
+    x1s=find(strcmp(fall_probe_failure_gap(1,:),'MIN_ABSOLUTE_TIMESTAMP'));
+    x1e=find(strcmp(fall_probe_failure_gap(1,:),'MAX_ABSOLUTE_TIMESTAMP'));
     x2=find(strcmp(fall_probe_failure_gap(1,:),'FAILURE_REASON'));
     x3=find(strcmp(fall_probe_failure_gap(1,:),'GAP_SIZE'));
     
-    labels.failure.timestamp = [labels.failure.timestamp ; str2double(fall_probe_failure_gap(:,x1+1))];
+    labels.failure.timestamp = [labels.failure.timestamp; str2double(fall_probe_failure_gap(:,x1s+1)) str2double(fall_probe_failure_gap(:,x1e+1))];
     labels.failure.reason = [labels.failure.reason; fall_probe_failure_gap(:,x2+1)];
     labels.failure.value = [labels.failure.value; str2double(fall_probe_failure_gap(:,x3+1))];
+    
 end
+
+%Look at a specific time range
+cutoff_start = datetime(2016,9,22,20,30,0,0);  %This is in UTC (+5h from Chicago time)
+cutoff_end = datetime(2016,9,22,22,30,0,0);  %This is in UTC (+5h from Chicago time)
+
+indstart = datetime(1970,1,1,0,0,0,labels.timestampSTART_END(:,1)) < cutoff_end & datetime(1970,1,1,0,0,0,labels.timestampSTART_END(:,1)) > cutoff_start;
+indend = datetime(1970,1,1,0,0,0,labels.timestampSTART_END(:,2)) < cutoff_end & datetime(1970,1,1,0,0,0,labels.timestampSTART_END(:,2)) > cutoff_start;
+labels.timestampSTART_END = labels.timestampSTART_END(indstart & indend,:);
+labels.winsize = labels.winsize(indstart & indend,:);
+labels.values = labels.values(indstart & indend,:);
+labels.sensor_counts = labels.sensor_counts(indstart & indend,:);
+
+indstart = datetime(1970,1,1,0,0,0,labels.failure.timestamp(:,1)) < cutoff_end & datetime(1970,1,1,0,0,0,labels.failure.timestamp(:,1)) > cutoff_start;
+indend = datetime(1970,1,1,0,0,0,labels.failure.timestamp(:,2)) < cutoff_end & datetime(1970,1,1,0,0,0,labels.failure.timestamp(:,2)) > cutoff_start;
+labels.failure.timestamp = labels.failure.timestamp(indstart & indend,:);
+labels.failure.reason = labels.failure.reason(indstart & indend, :);
+labels.failure.value = labels.failure.value(indstart & indend,:);
 
 save FallProbe_TestData labels
 
@@ -183,3 +207,18 @@ unique_reasons =unique(reasons,'stable');
 
 B = categorical(reasons,unique_reasons);
 figure, histogram(B,'BarWidth',0.5)
+
+%% plot start and end timestamps for failure and success 
+
+figure
+plot(labels.timestampSTART_END(:,1),zeros(length(labels.timestampSTART_END(:,1)),1),'ob'), hold on
+plot(labels.timestampSTART_END(:,2),zeros(length(labels.timestampSTART_END(:,2)),1),'xb')
+
+plot(labels.failure.timestamp(:,1),ones(length(labels.failure.timestamp(:,1)),1),'or'), hold on
+plot(labels.failure.timestamp(:,2),ones(length(labels.failure.timestamp(:,2)),1),'xr')
+ylim([-0.5 1.5])
+
+figure, subplot(2,1,1), hold on, title('success')
+histogram(labels.timestampSTART_END(:,2)-labels.timestampSTART_END(:,1))
+subplot(212), hold on, title('Failed')
+histogram(labels.failure.timestamp(:,2)-labels.failure.timestamp(:,1))
