@@ -262,11 +262,11 @@ end
 save FallProbe_TestData labels
 
 %Look at a specific time range
-cutoff_start = datetime(2016,9,28,16,30,0,0);  %This is in UTC (+5h from Chicago time)
-cutoff_end = datetime(2016,9,28,19,0,0,0);  %This is in UTC (+5h from Chicago time)
+cutoff_start = datetime(2016,9,28,16,30,0);  %This is in UTC (+5h from CDT, +6h from CST)
+cutoff_end = datetime(2016,9,28,19,0,0);  %This is in UTC (+5h from CDT, +6h from CST)
 
-indstart = datetime(1970,1,1,0,0,0,labels.timestampSTART_END(:,1)) < cutoff_end & datetime(1970,1,1,0,0,0,labels.timestampSTART_END(:,1)) > cutoff_start;
-indend = datetime(1970,1,1,0,0,0,labels.timestampSTART_END(:,2)) < cutoff_end & datetime(1970,1,1,0,0,0,labels.timestampSTART_END(:,2)) > cutoff_start;
+indstart = datetime(1970,1,1,0,0,labels.timestampSTART_END(:,1)/1000) < cutoff_end & datetime(1970,1,1,0,0,labels.timestampSTART_END(:,1)/1000) > cutoff_start;
+indend = datetime(1970,1,1,0,0,labels.timestampSTART_END(:,2)/1000) < cutoff_end & datetime(1970,1,1,0,0,labels.timestampSTART_END(:,2)/1000) > cutoff_start;
 labels.timestampSTART_END = labels.timestampSTART_END(indstart & indend,:);
 labels.winsize = labels.winsize(indstart & indend,:);
 labels.values = labels.values(indstart & indend,:);
@@ -274,8 +274,8 @@ labels.sensor_counts = labels.sensor_counts(indstart & indend,:);
 labels.duration = labels.duration(indstart & indend,:);
 labels.timestamp = labels.timestamp(indstart & indend,:);
 
-indstart = datetime(1970,1,1,0,0,0,labels.failure.timestamp(:,1)) < cutoff_end & datetime(1970,1,1,0,0,0,labels.failure.timestamp(:,1)) > cutoff_start;
-indend = datetime(1970,1,1,0,0,0,labels.failure.timestamp(:,2)) < cutoff_end & datetime(1970,1,1,0,0,0,labels.failure.timestamp(:,2)) > cutoff_start;
+indstart = datetime(1970,1,1,0,0,labels.failure.timestamp(:,1)/1000) < cutoff_end & datetime(1970,1,1,0,0,labels.failure.timestamp(:,1)/1000) > cutoff_start;
+indend = datetime(1970,1,1,0,0,labels.failure.timestamp(:,2)/1000) < cutoff_end & datetime(1970,1,1,0,0,labels.failure.timestamp(:,2)/1000) > cutoff_start;
 labels.failure.timestamp = labels.failure.timestamp(indstart & indend,:);
 labels.failure.reason = labels.failure.reason(indstart & indend, :);
 labels.failure.value = labels.failure.value(indstart & indend,:);
