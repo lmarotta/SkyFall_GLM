@@ -132,7 +132,7 @@ labels.baro = labels.baro(indtrain);
 
 %% Feature extraction
 
-[FN, fl, L, fold_id, muF, stdF, epsF, nzstd]=extract_feature_phone_plus_labels(labels, folds_nr, indtrain);
+[FN, fl, L, fold_id, muF, stdF, epsF, nzstd]=extract_feature_phone_plus_labels(labels, folds_nr);
 fvar.std= stdF;
 fvar.mu= muF;
 fvar.eps= epsF;
@@ -258,7 +258,10 @@ end
 %DSz=size(FN,1);
 %fldsz=round(DSz/folds);
 if split
-    F=csvread('full_feature_set_rot.csv');
+    javaaddpath('purple-robot-skyfall.jar');
+    save labels_struct_test labels_test
+    com.company.TrainFeatureExtractor.extractFeatures('labels_struct_test.mat', 'test_features.csv');
+    F=csvread('test_features.csv');
     F=F(indtest,1:1781);
 
     % find zeroed rows in F
