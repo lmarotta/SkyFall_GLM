@@ -1,5 +1,5 @@
 %%
-%load LabeledDataNov9
+%Current Labels
 %slip=1
 %trip=2;
 %rightfall=3;
@@ -8,6 +8,9 @@
 %triplike=6;
 %rightfalllike=7;
 %leftfalllike=8;
+%Activities=9; (everything else)
+
+%Original (Momo's) labels for activities
 %walk_start=9;
 %walk_end=10;
 %stairsup_start=11;
@@ -21,11 +24,8 @@
 
 clear all
 
-skip_like=0; % flag to not use fall-like data
-ACTnumber=500;
-split=0; % flag to split data into test and train sets (25-75) and create cofnusion matrix
-rmv_ACT=0; % flag to remove activities data
-class=0; % flag for fall classification
+split=0; %flag to split data into test and train sets (25-75) and create cofnusion matrix
+class=0; % flag for fall classification (rather than detection only)
 
 addpath(genpath('./glmnet_matlab/'))
 % rng(10001)
@@ -48,37 +48,8 @@ maxPrincRatio=1e-4;
 % loaded by extract_feature_phone_plus_labels
 
 % load labels_full.mat
-load labels_full_interp.mat
-
-% Can use either standard or jittered falls data
-% load labels_plus_data.mat
-% load labels_plus_data_jittered_Unif
-% 
-% % load Activities data - used as non falls
-% ACT=load('labels_plus_data_ACT.mat');
-% ACTnumber=min([ACTnumber length(ACT.labels.subject)]);
-% 
-% %% Merge Falls and Activities Data
-% 
-% labels.value=[labels.value ACT.labels.value(1:ACTnumber)];
-% labels.subject=[labels.subject ACT.labels.subject(1:ACTnumber)];
-% labels.timestamp=[labels.timestamp ACT.labels.timestamp(1:ACTnumber)];
-% labels.text=[labels.text ACT.labels.text(1:ACTnumber)];
-% labels.acce=[labels.acce ACT.labels.acce(1:ACTnumber)];
-% labels.baro=[labels.baro ACT.labels.baro(1:ACTnumber)];
-% labels.gyro=[labels.gyro ACT.labels.gyro(1:ACTnumber)];
-% if skip_like
-%     nlike_inds=find(labels.value<5 | labels.value>8);
-% 
-%     labels.value=labels.value(nlike_inds);
-%     labels.subject=labels.subject(nlike_inds);
-%     labels.timestamp=labels.timestamp(nlike_inds);
-%     labels.text=labels.text(nlike_inds);
-%     labels.acce=labels.acce(nlike_inds);
-%     labels.baro=labels.baro(nlike_inds);
-%     labels.gyro=labels.gyro(nlike_inds);
-% end
-% 
+load labels_full.mat
+ 
 if split
     %Take 75% of original data for training 
     inds = randperm(length(labels.timestamp));
@@ -89,13 +60,6 @@ else
     indtest=[];
 end
 
-if rmv_ACT
-    train_ACT=labels.value(indtrain)==9;
-    indtrain(train_ACT)=[];
-    
-    test_ACT=labels.value(indtest)==9;
-    indtest(test_ACT)=[]; 
-end
 
 % 
 labels_test=labels;
@@ -108,19 +72,7 @@ labels_test.text = labels.text(indtest);
 labels_test.acce = labels.acce(indtest);
 labels_test.gyro = labels.gyro(indtest);
 labels_test.baro = labels.baro(indtest);
-% 
-inds=cellfun(@(x,y,z) length(x)<100 | length(y)<100 | length(z)<10,labels_test.acce,labels_test.gyro,labels_test.baro);
-inds=~inds;
-labels_test.timestamp = labels_test.timestamp(inds);
-labels_test.value = labels_test.value(inds);
-labels_test.subject = labels_test.subject(inds);
-labels_test.text = labels_test.text(inds);
-labels_test.acce = labels_test.acce(inds);
-labels_test.gyro = labels_test.gyro(inds);
-labels_test.baro = labels_test.baro(inds);
-% 
-% % save indstest_act.mat indstest labels
-% 
+
 %TRAIN DATA
 labels.timestamp = labels.timestamp(indtrain);
 labels.value = labels.value(indtrain);
@@ -132,34 +84,32 @@ labels.baro = labels.baro(indtrain);
 
 %% Feature extraction
 
-[FN, fl, L, fold_id, muF, stdF, epsF, nzstd]=extract_feature_phone_plus_labels(labels, folds_nr);
+[FN, L, fold_id, muF, stdF, epsF, nzstd]=extract_features(labels, folds_nr);
 fvar.std= stdF;
 fvar.mu= muF;
 fvar.eps= epsF;
 fvar.nzstd= nzstd;
-fvar.fl = fl;
 
-FSz= size(FN,2);
-DSz= size(FN,1);
+FSz= size(FN,2); %feature size
+DSz= size(FN,1); %dataset size
 
 % Assign fall categories as 2 (falls and fall-like) or 1 (non-fall)
-LB=(L<9)+1;
+LB=(L<9)+1;  %binary labeling 
+
+%fall classification labels
 LF=L;
 LF(L>4 & L<9)=5;
-%uncomment for fall-like/activities separate 
-% LF(L>4)=5;
-%uncomment for fall detection
+
 if ~class
     LF=LB;
 end
 
 
-alpha=linspace(0.5, 1, nalpha);
+alpha=linspace(0.5, 1, nalpha); %elastic net hyperparam
 alpha=alpha(end:-1:1);
 d=cell(nalpha, 1);
 opts=glmnetSet;
 opts.nlambda= nlambda;
-
 
 min_err_iter= zeros(nalpha, 1);
 lam_vect= zeros(nalpha, 1);
@@ -171,9 +121,9 @@ for i=1: nalpha
     opts.alpha= alpha(i);
     
     if max(LF)>2
-        d{i}= cvglmnet(FN,LF,'multinomial',opts,'class',folds_nr,fold_id);
+        d{i}= cvglmnet(FN,LF,'multinomial',opts,'class',folds_nr,fold_id); %fall classification
     else
-        d{i}= cvglmnet(FN,LF,'binomial',opts,'class',folds_nr,fold_id);
+        d{i}= cvglmnet(FN,LF,'binomial',opts,'class',folds_nr,fold_id); %fall detection model
     end;
     
     %cvmMat{i=d{i}.cvm;
@@ -245,27 +195,23 @@ bind=ceil(d-0.5)';
 L0=(LF-1);
 crate=(numel(L0)-sum(abs(bind-L0)))/numel(L0);
 
-% Feature_Labels={'DCM',  'DCMed', 'DCFFT_re', 'DCFFT_im',  'DCFFT_abs', 'DCfit121', 'DCfit131',  'DCfit141', 'DCfit122', 'DCfit132',  'DCfit142', 'DCfit123', 'DCfit133', 'DCfit143', 'DCCorrV', 'DCstd', 'DCS', 'DCK', 'DDCM', 'DDCMed', 'DDCCorrV', 'DDCstd', 'DDCS', 'DDCK', 'DDCFFT_re', 'DDCFFT_im',  'DDCFFT_abs', 'DDCfit121', 'DDCfit131',  'DDCfit141', 'DDCfit122', 'DDCfit132',  'DDCfit142', 'DDCfit123', 'DDCfit133',  'DDCfit143' ...
-%     'DCM',  'DCMed', 'DCFFT_re', 'DCFFT_im',  'DCFFT_abs', 'DCfit121', 'DCfit131',  'DCfit141', 'DCfit122', 'DCfit132',  'DCfit142', 'DCfit123', 'DCfit133',  'DCfit143',  'DCCorrV', 'DCstd', 'DCS', 'DCK', 'DDCM', 'DDCMed', 'DDCCorrV', 'DDCstd', 'DDCS', 'DDCK', 'DDCFFT_re', 'DDCFFT_im',  'DDCFFT_abs', 'DDCfit121', 'DDCfit131',  'DDCfit141', 'DDCfit122', 'DDCfit132',  'DDCfit142', 'DDCfit123', 'DDCfit133',  'DDCfit143' ...
-%     'DCM', 'DCMed', 'DCCorrV', 'DCfit121',  'DCfit131', 'DCfit122',  'DCfit132',  'DCfit123', 'DCfit133',  'DCfit124',  'DCfit134', 'DCstd', 'DCskew', 'DCkurt', 'DDCM', 'DDCMed', 'DDCstd', 'DCFFT_re', 'DCFFT_im', 'DCFFT_abs'};
 
 if ~split
     save class_params_ACT_nobar fvar b  nz_ind
 end
     
 %end;
-%% Genrating Random n folds
-%DSz=size(FN,1);
-%fldsz=round(DSz/folds);
+%% Testing the model on Test Data (if split is set to 1)
 if split
     javaaddpath('purple-robot-skyfall.jar');
-    save labels_struct_test labels_test
+    labels = labels_test;   %because java code expects labels structure
+    save labels_struct_test labels
     com.company.TrainFeatureExtractor.extractFeatures('labels_struct_test.mat', 'test_features.csv');
     F=csvread('test_features.csv');
-    F=F(indtest,1:1781);
+    F=F(:,1:1781);
 
-    % find zeroed rows in F
-    z_inds=max(abs(F).')==0;
+    % find zeroed rows in F (feature cannot be calculated)
+    z_inds=max(abs(F).')==0; 
 
     F(z_inds,:)=[];
     F=F(:,fvar.nzstd);
@@ -291,6 +237,7 @@ if split
         id= ceil(conf-0.5);
         
         isfall = labels_test.value < 9;
+        isfall = isfall(~z_inds);
         fall_err = sum(~id(isfall))/sum(isfall);
         nfall_err = sum(id(~isfall))/sum(~isfall);
         err = (sum(id.' ~= isfall))/length(id); %error rate

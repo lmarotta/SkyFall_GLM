@@ -5,13 +5,13 @@ clear all
 
 % load file
 [FileName,PathName,~] = uigetfile('*.txt');
-PayloadTable=readtable([PathName '\' FileName],'Delimiter','\t');
+PayloadTable=readtable([PathName '/' FileName],'Delimiter','\t');
 Probe = PayloadTable.Probe;
 Payload=PayloadTable.Payload;
 
 %load current fall model file from github
 [FileName,PathName,~] = uigetfile('class_params*.mat');
-model=load([PathName '\' FileName]);
+model=load([PathName '/' FileName]);
 Nfeatures = length(model.b);
 
 fall_probe=[];
