@@ -26,6 +26,8 @@ clear all
 
 split=1; %flag to split data into test and train sets (25-75) and create cofnusion matrix
 class=0; % flag for fall classification (rather than detection only)
+fall_like=9; % 5 to set as non-fall, 9 to set as fall
+remove_falllike = 1;    
 
 addpath(genpath('./glmnet_matlab/'))
 % rng(10001)
@@ -48,7 +50,7 @@ maxPrincRatio=1e-4;
 % loaded by extract_feature_phone_plus_labels
 
 % load labels_full.mat
-load labels_full.mat
+load labels_full_whome.mat
  
 if split
     %Take 75% of original data for training 
@@ -63,12 +65,12 @@ end
 
 % 
 labels_test=labels;
+if remove_falllike
 % 
 %TEST DATA
 labels_test.timestamp = labels.timestamp(indtest);
 labels_test.value = labels.value(indtest);
 labels_test.subject = labels.subject(indtest);
-labels_test.text = labels.text(indtest);
 labels_test.acce = labels.acce(indtest);
 labels_test.gyro = labels.gyro(indtest);
 labels_test.baro = labels.baro(indtest);
@@ -77,7 +79,6 @@ labels_test.baro = labels.baro(indtest);
 labels.timestamp = labels.timestamp(indtrain);
 labels.value = labels.value(indtrain);
 labels.subject = labels.subject(indtrain);
-labels.text = labels.text(indtrain);
 labels.acce = labels.acce(indtrain);
 labels.gyro = labels.gyro(indtrain);
 labels.baro = labels.baro(indtrain);
@@ -94,7 +95,7 @@ FSz= size(FN,2); %feature size
 DSz= size(FN,1); %dataset size
 
 % Assign fall categories as 2 (falls and fall-like) or 1 (non-fall)
-LB=(L<9)+1;  %binary labeling 
+LB=(L<fall_like)+1;  %binary labeling 
 
 %fall classification labels
 LF=L;
@@ -172,7 +173,7 @@ for i=1: nalpha
         d_nz{i}= cvglmnet(FN_nz, LF, 'binomial', opts, 'class', folds_nr, fold_id);
     end;
     %cvmMat{i=d{i}.cvm;
-    err_now= min(d_nz{i}.cvm)
+    err_now= min(d_nz{i}.cvm) %mean cross validation error
     alp_now= alpha(i)
     min_err_iter_nz(i)= err_now;
     lam_vect_nz(i)= d_nz{i}.lambda_min;
@@ -196,9 +197,9 @@ L0=(LF-1);
 crate=(numel(L0)-sum(abs(bind-L0)))/numel(L0);
 
 
-if ~split
+%if ~split
     save class_params_ACT_nobar fvar b  nz_ind
-end
+%end
     
 %end;
 %% Testing the model on Test Data (if split is set to 1)
@@ -241,7 +242,7 @@ if split
         fall_err = sum(~id(isfall))/sum(isfall);
         nfall_err = sum(id(~isfall))/sum(~isfall);
         err = (sum(id.' ~= isfall))/length(id); %error rate
-        confmat(:,:)=confusionmat(isfall],[1; id==1]);
+        confmat(:,:)=confusionmat(isfall,id==1);
         figure; imagesc(confmat./repmat(sum(confmat,2),[1 2])); colorbar; caxis([0 1])
     end
     

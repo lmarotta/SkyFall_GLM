@@ -23,8 +23,8 @@ fall_probe_failure_gap = [];
 fall_probe_failure_interp =[];
 fall_probe_failure_other =[];
 
-cutoff_start = datetime(2016,10,5,1,0,0,0);  %This is in UTC (+5h from Chicago time)
-cutoff_end = datetime(2016,10,5,13,0,0,0);  %This is in UTC (+5h from Chicago time)
+cutoff_start = datetime(2016,10,4,22,0,0,0);  %This is in UTC (+5h from Chicago time)
+cutoff_end = datetime(2016,10,5,0,0,0,0);  %This is in UTC (+5h from Chicago time)
 
 timestr=cellfun(@(x) strsplit(x(strfind(x,'"TIMESTAMP"'):strfind(x,'"TIMESTAMP"')+100),{':' ','}),Payload,'UniformOutput',false);
 timestamp=cellfun(@(x) str2double(x{:,2}),timestr);
@@ -54,7 +54,7 @@ failure_value = -ones(length(ind_failures),1);
 failure_duration = -ones(length(ind_failures),3); 
 failure_evalstart = -ones(length(ind_failures),1); %timestamp when the model started to evaluate 
 
-parfor ind=1:length(ind_correct)
+for ind=1:length(ind_correct)
     
     i_correct = ind_correct(ind); %index
     temp_correct=strsplit(Payload{i_correct},{'{' '"' ':' ',' ' ' '[' ']' '}'}); 
@@ -84,13 +84,13 @@ parfor ind=1:length(ind_correct)
     predd = find(strcmp(temp_correct,'PREDICT_DURATION'));
     duration(ind,:)=[str2double(temp_correct(prepd+1)) str2double(temp_correct(verifd+1)) str2double(temp_correct(predd+1))];
     
-    accstart = find(strcmp(temp_correct,'ACCELEROMETER_SAMPLES'))
-    gyrstart = find(strcmp(temp_correct,'GYROSCOPE_SAMPLES'))
-    barstart = find(strcmp(temp_correct,'BAROMETER_SAMPLES'))
+    accstart = find(strcmp(temp_correct,'ACCELEROMETER_SAMPLES'));
+    gyrstart = find(strcmp(temp_correct,'GYROSCOPE_SAMPLES'));
+    barstart = find(strcmp(temp_correct,'BAROMETER_SAMPLES'));
     sensortimestamps = find(strcmp(temp_correct,'TIMESTAMPS'));
-    ix = find(strcmp(temp_correct,'X'))
-    iy = find(strcmp(temp_correct,'Y'))
-    iz = find(strcmp(temp_correct,'Z'))
+    ix = find(strcmp(temp_correct,'X'));
+    iy = find(strcmp(temp_correct,'Y'));
+    iz = find(strcmp(temp_correct,'Z'));
     
     ixacc = ix(find(ix > accstart,1));
     iyacc = iy(find(iy > accstart,1));
@@ -131,7 +131,7 @@ labels.gyro = gyro;
 labels.baro = baro;
 
 
-parfor ind=1:length(ind_failures)
+for ind=1:length(ind_failures)
     i = ind_failures(ind); %index
     temp=strsplit(Payload{i},{'{' '"' ':' ',' ' ' '[' ']' '}'});
     
