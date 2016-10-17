@@ -23,8 +23,8 @@ fall_probe_failure_gap = [];
 fall_probe_failure_interp =[];
 fall_probe_failure_other =[];
 
-cutoff_start = datetime(2016,10,4,22,0,0,0);  %This is in UTC (+5h from Chicago time)
-cutoff_end = datetime(2016,10,5,0,0,0,0);  %This is in UTC (+5h from Chicago time)
+cutoff_start = datetime(2016,10,12,23,30,0,0);  %This is in UTC (+5h from Chicago time)
+cutoff_end = datetime(2016,10,13,1,30,0,0);  %This is in UTC (+5h from Chicago time)
 
 timestr=cellfun(@(x) strsplit(x(strfind(x,'"TIMESTAMP"'):strfind(x,'"TIMESTAMP"')+100),{':' ','}),Payload,'UniformOutput',false);
 timestamp=cellfun(@(x) str2double(x{:,2}),timestr);
