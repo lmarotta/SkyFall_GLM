@@ -228,7 +228,7 @@ labels.failure.value = failure_value;
 labels.failure.duration = failure_duration; 
 labels.failure.evalstart = failure_evalstart; %timestamp when the model started to evaluate 
 
-save FallProbe_TestData labels
+save fall_data_unlabeled labels
 
 % label activities data
 if ~isempty(fall_labels)
@@ -255,8 +255,10 @@ if ~isempty(fall_labels)
             
             if ~clip_found
                 % current sensors data
-                curr_clip_start = labels.evalstart(j);        
-                curr_clip_end = curr_clip_start + labels.winsize(j)*1000;
+                %curr_clip_start = labels.evalstart(j);        
+                %curr_clip_end = curr_clip_start + labels.winsize(j)*1000;
+                curr_clip_start = labels.timestampSTART_END(j,1);        
+                curr_clip_end = labels.timestampSTART_END(j,2);
 
                 if fall_start > curr_clip_start && fall_start < curr_clip_end
 
@@ -274,8 +276,31 @@ if ~isempty(fall_labels)
                         keep_ind(j+1) = 1;
                         type_str = [type_str; curr_type];
                         location = [location; curr_loc];
-                        subject = [subject; curr_subj];                    
-
+                        subject = [subject; curr_subj]; 
+                        
+                        % plot 1 fall split into 2 clips
+                        clip1 = labels.acce{j};
+                        clip2 = labels.acce{j+1}; 
+                        %t1 = 1:size(clip1,1);
+                        %t2 = 1:size(clip2,1);
+                        next_clip_start = labels.timestampSTART_END(j+1,1);
+                        t1 = clip1(:,1)*1000 + curr_clip_start;
+                        t2 = clip2(:,1)*1000 + next_clip_start;
+                        plot_title = strcat(curr_type,{' '},curr_loc);
+                        
+                        figure, subplot(2,1,1), plot(t1,clip1(:,2), t1,clip1(:,3), t1,clip1(:,4)), legend('X','Y','Z')
+                        title(plot_title)
+                        y1=get(gca,'ylim'); hold on, plot([fall_start fall_start],y1)
+                        subplot(2,1,2), plot(t2,clip2(:,2), t2,clip2(:,3), t2,clip2(:,4))
+                        y1=get(gca,'ylim'); hold on, plot([fall_end fall_end],y1)
+                    else
+                        clip = labels.acce{j};
+                        t = clip(:,1)*1000 + curr_clip_start;
+                        plot_title = strcat(curr_type,{' '},curr_loc);
+                        figure, plot(t,clip(:,2), t,clip(:,3), t,clip(:,4)), legend('X','Y','Z')
+                        title(plot_title)
+                        y1=get(gca,'ylim'); hold on, plot([fall_start fall_start],y1)
+                        y1=get(gca,'ylim'); hold on, plot([fall_end fall_end],y1)
                     end
 
                 end
