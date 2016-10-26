@@ -4,8 +4,9 @@
 clear all
 
 % flags
-filter_by_time = 0;
-labels_offset = 396000; % time of labels delay
+filter_by_time = 0; % flag to cut spesific data range
+labels_offset = 0; % time of labels delay
+plot_data = 1; % flag to plot parsed data
 
 % load file
 [FileName,PathName,~] = uigetfile('*.txt');
@@ -289,65 +290,69 @@ if ~isempty(fall_labels)
                         location = [location; curr_loc];
                         subject = [subject; curr_subj]; 
                         
-                        % plot 1 fall split into 2 clips for pouch location
-                        if strcmp(curr_loc, 'pouch')
-                            clip0 = labels.gyro{j-1};
-                            clip1 = labels.gyro{j};
-                            clip2 = labels.gyro{j+1}; 
-                            acc_clip0 = labels.acce{j-1};
-                            acc_clip1 = labels.acce{j};
-                            acc_clip2 = labels.acce{j+1}; 
-                            %t1 = 1:size(clip1,1);
-                            %t2 = 1:size(clip2,1);
-                            prev_clip_start = labels.timestampSTART_END(j-1,1);
-                            next_clip_start = labels.timestampSTART_END(j+1,1);
-                            t0 = clip0(:,1)*1000 + prev_clip_start;
-                            t1 = clip1(:,1)*1000 + curr_clip_start;
-                            t2 = clip2(:,1)*1000 + next_clip_start;
-                            
-                            acc_t0 = acc_clip0(:,1)*1000 + prev_clip_start;
-                            acc_t1 = acc_clip1(:,1)*1000 + curr_clip_start;
-                            acc_t2 = acc_clip2(:,1)*1000 + next_clip_start;
-                            
-                            plot_title = strcat(curr_type,{' '},curr_loc);
-                            
-                            figure, subplot(3,2,1), plot(t0,clip0(:,2), t0,clip0(:,3), t0,clip0(:,4)), legend('X','Y','Z')
-                            title(plot_title)
-                            subplot(3,2,3), plot(t1,clip1(:,2), t1,clip1(:,3), t1,clip1(:,4))                            
-                            y1=get(gca,'ylim'); hold on, plot([fall_start fall_start],y1)
-                            subplot(3,2,5), plot(t2,clip2(:,2), t2,clip2(:,3), t2,clip2(:,4))
-                            y1=get(gca,'ylim'); hold on, plot([fall_end fall_end],y1)
-                            
-                            subplot(3,2,2), plot(acc_t0,acc_clip0(:,2), acc_t0,acc_clip0(:,3), acc_t0,acc_clip0(:,4))
-                            subplot(3,2,4), plot(acc_t1,acc_clip1(:,2), acc_t1,acc_clip1(:,3), acc_t1,acc_clip1(:,4))                            
-                            y1=get(gca,'ylim'); hold on, plot([fall_start fall_start],y1)
-                            subplot(3,2,6), plot(acc_t2,acc_clip2(:,2), acc_t2,acc_clip2(:,3), acc_t2,acc_clip2(:,4))
-                            y1=get(gca,'ylim'); hold on, plot([fall_end fall_end],y1)
+                        if plot_data
+                            % plot 1 fall split into 2 clips for pouch location
+                            if strcmp(curr_loc, 'pouch')
+                                clip0 = labels.gyro{j-1};
+                                clip1 = labels.gyro{j};
+                                clip2 = labels.gyro{j+1}; 
+                                acc_clip0 = labels.acce{j-1};
+                                acc_clip1 = labels.acce{j};
+                                acc_clip2 = labels.acce{j+1}; 
+                                %t1 = 1:size(clip1,1);
+                                %t2 = 1:size(clip2,1);
+                                prev_clip_start = labels.timestampSTART_END(j-1,1);
+                                next_clip_start = labels.timestampSTART_END(j+1,1);
+                                t0 = clip0(:,1)*1000 + prev_clip_start;
+                                t1 = clip1(:,1)*1000 + curr_clip_start;
+                                t2 = clip2(:,1)*1000 + next_clip_start;
+
+                                acc_t0 = acc_clip0(:,1)*1000 + prev_clip_start;
+                                acc_t1 = acc_clip1(:,1)*1000 + curr_clip_start;
+                                acc_t2 = acc_clip2(:,1)*1000 + next_clip_start;
+
+                                plot_title = strcat(curr_type,{' '},curr_loc);
+
+                                figure, subplot(3,2,1), plot(t0,clip0(:,2), t0,clip0(:,3), t0,clip0(:,4)), legend('X','Y','Z')
+                                title(plot_title)
+                                subplot(3,2,3), plot(t1,clip1(:,2), t1,clip1(:,3), t1,clip1(:,4))                            
+                                y1=get(gca,'ylim'); hold on, plot([fall_start fall_start],y1)
+                                subplot(3,2,5), plot(t2,clip2(:,2), t2,clip2(:,3), t2,clip2(:,4))
+                                y1=get(gca,'ylim'); hold on, plot([fall_end fall_end],y1)
+
+                                subplot(3,2,2), plot(acc_t0,acc_clip0(:,2), acc_t0,acc_clip0(:,3), acc_t0,acc_clip0(:,4))
+                                subplot(3,2,4), plot(acc_t1,acc_clip1(:,2), acc_t1,acc_clip1(:,3), acc_t1,acc_clip1(:,4))                            
+                                y1=get(gca,'ylim'); hold on, plot([fall_start fall_start],y1)
+                                subplot(3,2,6), plot(acc_t2,acc_clip2(:,2), acc_t2,acc_clip2(:,3), acc_t2,acc_clip2(:,4))
+                                y1=get(gca,'ylim'); hold on, plot([fall_end fall_end],y1)
+                            end
                         end
                     else
-                        if strcmp(curr_loc, 'pouch')
-                            clip0 = labels.gyro{j-1};
-                            clip = labels.gyro{j};
-                            acc_clip0 = labels.acce{j-1};
-                            acc_clip = labels.acce{j};
-                            prev_clip_start = labels.timestampSTART_END(j-1,1);
-                            t0 = clip0(:,1)*1000 + prev_clip_start;
-                            t = clip(:,1)*1000 + curr_clip_start;
-                            
-                            acc_t0 = acc_clip0(:,1)*1000 + prev_clip_start;
-                            acc_t = acc_clip(:,1)*1000 + curr_clip_start;
-                            plot_title = strcat(curr_type,{' '},curr_loc);
-                            
-                            figure, subplot(2,2,1), plot(t0,clip0(:,2), t0,clip0(:,3), t0,clip0(:,4)), legend('X','Y','Z')
-                            title(plot_title)
-                            subplot(2,2,3), plot(t,clip(:,2), t,clip(:,3), t,clip(:,4))                           
-                            y1=get(gca,'ylim'); hold on, plot([fall_start fall_start],y1)
-                            y1=get(gca,'ylim'); hold on, plot([fall_end fall_end],y1)
-                            
-                            subplot(2,2,2), plot(acc_t0,acc_clip0(:,2), acc_t0,acc_clip0(:,3), acc_t0,acc_clip0(:,4))
-                            subplot(2,2,4), plot(acc_t,acc_clip(:,2), acc_t,acc_clip(:,3), acc_t,acc_clip(:,4))                           
-                            y1=get(gca,'ylim'); hold on, plot([fall_start fall_start],y1)
-                            y1=get(gca,'ylim'); hold on, plot([fall_end fall_end],y1)
+                        if plot_data
+                            if strcmp(curr_loc, 'pouch')
+                                clip0 = labels.gyro{j-1};
+                                clip = labels.gyro{j};
+                                acc_clip0 = labels.acce{j-1};
+                                acc_clip = labels.acce{j};
+                                prev_clip_start = labels.timestampSTART_END(j-1,1);
+                                t0 = clip0(:,1)*1000 + prev_clip_start;
+                                t = clip(:,1)*1000 + curr_clip_start;
+
+                                acc_t0 = acc_clip0(:,1)*1000 + prev_clip_start;
+                                acc_t = acc_clip(:,1)*1000 + curr_clip_start;
+                                plot_title = strcat(curr_type,{' '},curr_loc);
+
+                                figure, subplot(2,2,1), plot(t0,clip0(:,2), t0,clip0(:,3), t0,clip0(:,4)), legend('X','Y','Z')
+                                title(plot_title)
+                                subplot(2,2,3), plot(t,clip(:,2), t,clip(:,3), t,clip(:,4))                           
+                                y1=get(gca,'ylim'); hold on, plot([fall_start fall_start],y1)
+                                y1=get(gca,'ylim'); hold on, plot([fall_end fall_end],y1)
+
+                                subplot(2,2,2), plot(acc_t0,acc_clip0(:,2), acc_t0,acc_clip0(:,3), acc_t0,acc_clip0(:,4))
+                                subplot(2,2,4), plot(acc_t,acc_clip(:,2), acc_t,acc_clip(:,3), acc_t,acc_clip(:,4))                           
+                                y1=get(gca,'ylim'); hold on, plot([fall_start fall_start],y1)
+                                y1=get(gca,'ylim'); hold on, plot([fall_end fall_end],y1)
+                            end
                         end
                     end
 
@@ -432,12 +437,12 @@ if ~isempty(activity_labels)
 
                 if curr_act_start > curr_clip_start && curr_act_start < curr_clip_end
                     % beginning of the activity
-                    ind_act_start = j; 
+                    ind_act_start = j+1; 
                 end
                 
                 if curr_act_end > curr_clip_start && curr_act_end < curr_clip_end
                     % end of the activity
-                    ind_act_end = j;
+                    ind_act_end = j-1;
                     
                     keep_ind(ind_act_start:ind_act_end) = 1;
                     num_clips = ind_act_end - ind_act_start + 1;
@@ -452,20 +457,22 @@ if ~isempty(activity_labels)
                     location = [location; cl];
                     subject = [subject; cs];
                     
-                    curr_data_ind = j+1;
+                    curr_data_ind = j;
                     act_found = 1;
                     
                     % plot activity
-                    plot_data = labels.acce(ind_act_start:ind_act_end);
-                    % convert timestamps to absolute
-                    for k=1:length(plot_data)
-                        plot_data{k}(:,1) = plot_data{k}(:,1)*1000 + labels.timestampSTART_END(ind_act_start+k,1);
-                    end                
-                    plot_data = cell2mat(plot_data);
-                    t = plot_data(:,1);
-                    plot_title = strcat(curr_type,{' '},curr_loc);
-                    figure, plot(t,plot_data(:,2), t,plot_data(:,3), t,plot_data(:,4)), legend('X','Y','Z')
-                    title(plot_title);
+                    if plot_data
+                        data_to_plot = labels.acce(ind_act_start:ind_act_end);
+                        % convert timestamps to absolute
+                        for k=1:length(data_to_plot)
+                            data_to_plot{k}(:,1) = data_to_plot{k}(:,1)*1000 + labels.timestampSTART_END(ind_act_start+k,1);
+                        end                
+                        data_to_plot = cell2mat(data_to_plot);
+                        t = data_to_plot(:,1);
+                        plot_title = strcat(curr_type,{' '},curr_loc);
+                        figure, plot(t,data_to_plot(:,2), t,data_to_plot(:,3), t,data_to_plot(:,4)), legend('X','Y','Z')
+                        title(plot_title);
+                    end
                 end                  
             else
                 break;
