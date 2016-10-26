@@ -5,6 +5,7 @@ clear all
 
 % flags
 filter_by_time = 0;
+labels_offset = 396000; % time of labels delay
 
 % load file
 [FileName,PathName,~] = uigetfile('*.txt');
@@ -76,7 +77,7 @@ activity_location = cell(length(activity_labels),1);
 activity_start_end = -ones(length(activity_labels),2);
 
 for i=1:length(activity_labels)
-    temp=strsplit(activity_labels{i},{'{' '"' ':' ',' ' ' '[' ']' '}'});
+    temp=strsplit(activity_labels{i},{'{' '"' ':' ',' '[' ']' '}'});
     
     ts_start = find(strcmp(temp,'start'));
     ts_end = find(strcmp(temp,'end'));
@@ -230,7 +231,7 @@ labels.failure.evalstart = failure_evalstart; %timestamp when the model started 
 
 save fall_data_unlabeled labels
 
-% label activities data
+%% label activities data
 if ~isempty(fall_labels)
     
     keep_ind = zeros(length(labels.winsize),1);
@@ -244,8 +245,8 @@ if ~isempty(fall_labels)
     curr_data_ind = 1;
     for i=1:length(fall_labels)
         % current labels data
-        fall_start = fall_start_end(i,1);
-        fall_end = fall_start_end(i,2);
+        fall_start = fall_start_end(i,1)-labels_offset;
+        fall_end = fall_start_end(i,2)-labels_offset;
         curr_type = fall_types(i);
         curr_loc = fall_location(i);
         curr_subj = fall_subject(i);        
@@ -261,14 +262,24 @@ if ~isempty(fall_labels)
                 curr_clip_end = labels.timestampSTART_END(j,2);
 
                 if fall_start > curr_clip_start && fall_start < curr_clip_end
+                    
+                    % pull previous clip 
+                    %{
+                    keep_ind(j-1) = 1;
+                    type_str = [type_str; curr_type];
+                    location = [location; curr_loc];
+                    subject = [subject; curr_subj];
+                    %}
 
+                    %pull clip where start of the fall is marked
                     keep_ind(j) = 1;
                     type_str = [type_str; curr_type];
                     location = [location; curr_loc];
                     subject = [subject; curr_subj];                
 
                     clip_found = 1;
-                    curr_data_ind = j+1;
+                    curr_data_ind = j+1;                    
+                    
 
                     if fall_end > curr_clip_end
                         curr_data_ind = j+2;
@@ -278,29 +289,66 @@ if ~isempty(fall_labels)
                         location = [location; curr_loc];
                         subject = [subject; curr_subj]; 
                         
-                        % plot 1 fall split into 2 clips
-                        clip1 = labels.acce{j};
-                        clip2 = labels.acce{j+1}; 
-                        %t1 = 1:size(clip1,1);
-                        %t2 = 1:size(clip2,1);
-                        next_clip_start = labels.timestampSTART_END(j+1,1);
-                        t1 = clip1(:,1)*1000 + curr_clip_start;
-                        t2 = clip2(:,1)*1000 + next_clip_start;
-                        plot_title = strcat(curr_type,{' '},curr_loc);
-                        
-                        figure, subplot(2,1,1), plot(t1,clip1(:,2), t1,clip1(:,3), t1,clip1(:,4)), legend('X','Y','Z')
-                        title(plot_title)
-                        y1=get(gca,'ylim'); hold on, plot([fall_start fall_start],y1)
-                        subplot(2,1,2), plot(t2,clip2(:,2), t2,clip2(:,3), t2,clip2(:,4))
-                        y1=get(gca,'ylim'); hold on, plot([fall_end fall_end],y1)
+                        % plot 1 fall split into 2 clips for pouch location
+                        if strcmp(curr_loc, 'pouch')
+                            clip0 = labels.gyro{j-1};
+                            clip1 = labels.gyro{j};
+                            clip2 = labels.gyro{j+1}; 
+                            acc_clip0 = labels.acce{j-1};
+                            acc_clip1 = labels.acce{j};
+                            acc_clip2 = labels.acce{j+1}; 
+                            %t1 = 1:size(clip1,1);
+                            %t2 = 1:size(clip2,1);
+                            prev_clip_start = labels.timestampSTART_END(j-1,1);
+                            next_clip_start = labels.timestampSTART_END(j+1,1);
+                            t0 = clip0(:,1)*1000 + prev_clip_start;
+                            t1 = clip1(:,1)*1000 + curr_clip_start;
+                            t2 = clip2(:,1)*1000 + next_clip_start;
+                            
+                            acc_t0 = acc_clip0(:,1)*1000 + prev_clip_start;
+                            acc_t1 = acc_clip1(:,1)*1000 + curr_clip_start;
+                            acc_t2 = acc_clip2(:,1)*1000 + next_clip_start;
+                            
+                            plot_title = strcat(curr_type,{' '},curr_loc);
+                            
+                            figure, subplot(3,2,1), plot(t0,clip0(:,2), t0,clip0(:,3), t0,clip0(:,4)), legend('X','Y','Z')
+                            title(plot_title)
+                            subplot(3,2,3), plot(t1,clip1(:,2), t1,clip1(:,3), t1,clip1(:,4))                            
+                            y1=get(gca,'ylim'); hold on, plot([fall_start fall_start],y1)
+                            subplot(3,2,5), plot(t2,clip2(:,2), t2,clip2(:,3), t2,clip2(:,4))
+                            y1=get(gca,'ylim'); hold on, plot([fall_end fall_end],y1)
+                            
+                            subplot(3,2,2), plot(acc_t0,acc_clip0(:,2), acc_t0,acc_clip0(:,3), acc_t0,acc_clip0(:,4))
+                            subplot(3,2,4), plot(acc_t1,acc_clip1(:,2), acc_t1,acc_clip1(:,3), acc_t1,acc_clip1(:,4))                            
+                            y1=get(gca,'ylim'); hold on, plot([fall_start fall_start],y1)
+                            subplot(3,2,6), plot(acc_t2,acc_clip2(:,2), acc_t2,acc_clip2(:,3), acc_t2,acc_clip2(:,4))
+                            y1=get(gca,'ylim'); hold on, plot([fall_end fall_end],y1)
+                        end
                     else
-                        clip = labels.acce{j};
-                        t = clip(:,1)*1000 + curr_clip_start;
-                        plot_title = strcat(curr_type,{' '},curr_loc);
-                        figure, plot(t,clip(:,2), t,clip(:,3), t,clip(:,4)), legend('X','Y','Z')
-                        title(plot_title)
-                        y1=get(gca,'ylim'); hold on, plot([fall_start fall_start],y1)
-                        y1=get(gca,'ylim'); hold on, plot([fall_end fall_end],y1)
+                        if strcmp(curr_loc, 'pouch')
+                            clip0 = labels.gyro{j-1};
+                            clip = labels.gyro{j};
+                            acc_clip0 = labels.acce{j-1};
+                            acc_clip = labels.acce{j};
+                            prev_clip_start = labels.timestampSTART_END(j-1,1);
+                            t0 = clip0(:,1)*1000 + prev_clip_start;
+                            t = clip(:,1)*1000 + curr_clip_start;
+                            
+                            acc_t0 = acc_clip0(:,1)*1000 + prev_clip_start;
+                            acc_t = acc_clip(:,1)*1000 + curr_clip_start;
+                            plot_title = strcat(curr_type,{' '},curr_loc);
+                            
+                            figure, subplot(2,2,1), plot(t0,clip0(:,2), t0,clip0(:,3), t0,clip0(:,4)), legend('X','Y','Z')
+                            title(plot_title)
+                            subplot(2,2,3), plot(t,clip(:,2), t,clip(:,3), t,clip(:,4))                           
+                            y1=get(gca,'ylim'); hold on, plot([fall_start fall_start],y1)
+                            y1=get(gca,'ylim'); hold on, plot([fall_end fall_end],y1)
+                            
+                            subplot(2,2,2), plot(acc_t0,acc_clip0(:,2), acc_t0,acc_clip0(:,3), acc_t0,acc_clip0(:,4))
+                            subplot(2,2,4), plot(acc_t,acc_clip(:,2), acc_t,acc_clip(:,3), acc_t,acc_clip(:,4))                           
+                            y1=get(gca,'ylim'); hold on, plot([fall_start fall_start],y1)
+                            y1=get(gca,'ylim'); hold on, plot([fall_end fall_end],y1)
+                        end
                     end
 
                 end
@@ -324,6 +372,7 @@ if ~isempty(fall_labels)
     end
 end
 
+%%
 keep_ind = logical(keep_ind);
 keep_failure = logical(keep_failure);
 
@@ -351,19 +400,118 @@ save falls_data data
 
 
 
-% label activities data
-%{
-keep_ind = zeros(length(labels.winsize),1);
+%% label activities data
+if ~isempty(activity_labels)
+    
+    keep_ind = zeros(length(labels.winsize),1);
+    location = {};
+    subject = {};
+    type = [];
+    type_str = {};
+    
+    keep_failure = zeros(length(ind_failures));
+    
+    curr_data_ind = 1;
+    for i=1:length(activity_labels)
+        % current labels data
+        curr_act_start = activity_start_end(i,1) - labels_offset;
+        curr_act_end = activity_start_end(i,2) - labels_offset;
+        curr_type = activity_types(i);
+        curr_loc = activity_location(i);
+        curr_subj = activity_subject(i);        
+      
+        act_found = 0;
+        for j=curr_data_ind:length(ind_correct)
+            
+            if ~act_found
+                % current sensors data
+                %curr_clip_start = labels.evalstart(j);        
+                %curr_clip_end = curr_clip_start + labels.winsize(j)*1000;
+                curr_clip_start = labels.timestampSTART_END(j,1);        
+                curr_clip_end = labels.timestampSTART_END(j,2);
 
-curr_act_start = activity_start_end(1,1);
-curr_act_end = activity_start_end(1,2);
-for i=1:length(labels.winsize)
-    
-    
-    
-    
+                if curr_act_start > curr_clip_start && curr_act_start < curr_clip_end
+                    % beginning of the activity
+                    ind_act_start = j; 
+                end
+                
+                if curr_act_end > curr_clip_start && curr_act_end < curr_clip_end
+                    % end of the activity
+                    ind_act_end = j;
+                    
+                    keep_ind(ind_act_start:ind_act_end) = 1;
+                    num_clips = ind_act_end - ind_act_start + 1;
+                    ct = cell(num_clips,1);
+                    ct(:) = {curr_type};
+                    cl = cell(num_clips,1);
+                    cl(:) = {curr_loc};
+                    cs = cell(num_clips,1);
+                    cs(:) = {curr_subj};
+                    
+                    type_str = [type_str; ct];
+                    location = [location; cl];
+                    subject = [subject; cs];
+                    
+                    curr_data_ind = j+1;
+                    act_found = 1;
+                    
+                    % plot activity
+                    plot_data = labels.acce(ind_act_start:ind_act_end);
+                    % convert timestamps to absolute
+                    for k=1:length(plot_data)
+                        plot_data{k}(:,1) = plot_data{k}(:,1)*1000 + labels.timestampSTART_END(ind_act_start+k,1);
+                    end                
+                    plot_data = cell2mat(plot_data);
+                    t = plot_data(:,1);
+                    plot_title = strcat(curr_type,{' '},curr_loc);
+                    figure, plot(t,plot_data(:,2), t,plot_data(:,3), t,plot_data(:,4)), legend('X','Y','Z')
+                    title(plot_title);
+                end                  
+            else
+                break;
+            end 
+        end
+        
+        
+        % look for failures in the labeled range (aasumes there are not a
+        % lot of failures)     
+        for j=1:length(ind_failures)
+            curr_clip_start = labels.failure.evalstart(j);
+            curr_clip_end = curr_clip_start + 5000;
+            if curr_clip_start > curr_act_start && curr_clip_start < curr_act_end
+                keep_failure(j) = 1;
+            end
+        end
+        
+        
+    end
 end
-%}
+%%
+keep_ind = logical(keep_ind);
+keep_failure = logical(keep_failure);
+
+actdata.winsize = labels.winsize(keep_ind);
+actdata.features = labels.features(keep_ind); %fallnet model features
+actdata.timestampSTART_END = labels.timestampSTART_END(keep_ind); %fallnet model features
+actdata.evalstart = labels.evalstart(keep_ind);  %timestamp when the model started to evaluate  
+actdata.sensor_counts = labels.sensor_counts(keep_ind); % # of samples per sensor
+actdata.duration = labels.duration(keep_ind);  %evaluation time for each record (preparation, verification, evaluation)  
+actdata.acce = labels.acce(keep_ind);      %sensor data for each window
+actdata.gyro = labels.gyro(keep_ind);
+actdata.baro = labels.baro(keep_ind);
+
+actdata.type_str = type_str;
+actdata.subject = subject;
+actdata.location = location;
+
+actdata.failure.timestampSTART_END = labels.failure.timestampSTART_END(keep_failure); %start and end timestamps for sensor data in the window
+actdata.failure.reason = labels.failure.reason(keep_failure);
+actdata.failure.value = labels.failure.value(keep_failure);
+actdata.failure.duration = labels.failure.duration(keep_failure); 
+actdata.failure.evalstart = labels.failure.evalstart(keep_failure); %timestamp when the model started to evaluate 
+
+save activities_data actdata
+
 
 
 
