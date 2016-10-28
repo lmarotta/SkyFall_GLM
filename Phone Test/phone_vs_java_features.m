@@ -1,8 +1,14 @@
 load PhoneProbe_data_plus_features;
+load features_labels_full;
+load class_params_ACT_nobar;
 
-javaFeatures = csvread('java_features.csv');
-javaFeatures = javaFeatures(:,1:end-1); %delete last column with all zeros
-phoneFeatures = labels.values;
+features_labels = featuresLabels(:,fvar.nzstd);
+features_labels = features_labels(:,nz_ind);
+
+%javaFeatures = csvread('java_features.csv');
+%javaFeatures = javaFeatures(:,1:end-1); %delete last column with all zeros
+javaFeatures = labels.FN;
+phoneFeatures = labels.features;
 phoneFeatures = phoneFeatures(:,2:end); %delete first column with all zeros
 
 %transpose the java matrix to find clips (columns) with all zero indices
@@ -17,13 +23,22 @@ title('Ratios Phone VS Java Features')
 xlabel('Features')
 ylabel('Feature Value')
 
+badFeaturesRatioInd = mean(ratios_phone_vs_java) > 2 | mean(ratios_phone_vs_java) < -2;
+badFeaturesRatio = features_labels(badFeaturesRatioInd);
+
 errors = (phoneFeaturesNZ-javaFeaturesNZ)./phoneFeaturesNZ;
-figure, bar(mean(errors)), ylim([-1 3])
+figure, bar(mean(errors))%, ylim([-1 3])
 title('Errors Phone VS Java Features')
 xlabel('Features')
 ylabel('Error Value')
 
-%%Phone features vs Matlab features 
+badFeaturesErrorsInd = mean(errors) > 2 | mean(errors) < -2;
+badFeaturesErrors = features_labels(badFeaturesErrorsInd);
+
+
+
+%%Phone features vs Matlab features
+%{
 matlabFeaturesNZ = labels.FN(ind,:);
 ratios_phone_vs_matlab = phoneFeaturesNZ.*(matlabFeaturesNZ.^-1);
 figure, bar(mean(ratios_phone_vs_matlab))%, ylim([-1 3])
@@ -32,7 +47,7 @@ xlabel('Features')
 ylabel('Feature Value')
 
 errors = (phoneFeaturesNZ-matlabFeaturesNZ)./phoneFeaturesNZ;
-figure, bar(mean(errors)), ylim([-1 3])
+figure, bar(mean(errors))%, ylim([-1 3])
 title('Errors Phone VS Matlab Features')
 xlabel('Features')
 ylabel('Error Value')
@@ -45,7 +60,8 @@ xlabel('Features')
 ylabel('Feature Value')
 
 errors = (javaFeaturesNZ-matlabFeaturesNZ)./javaFeaturesNZ;
-figure, bar(mean(errors)), ylim([-1 3])
+figure, bar(mean(errors))%, ylim([-1 3])
 title('Errors Java VS Matlab Features')
 xlabel('Features')
 ylabel('Error Value')
+%}
