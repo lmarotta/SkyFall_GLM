@@ -1,7 +1,9 @@
 % Loads a user-selected .txt file containing exported data from Fallnet
-% and sensor probes and separates probe data fro analysis
+% and sensor probes and separates probe data for analysis
 
 clear all
+
+offset=395000; % offset for data from 10-24-2016: 395000; 0 otherwise
 
 % flags
 filter_by_time = 0; % flag to cut spesific data range
@@ -94,6 +96,7 @@ for i=1:length(activity_labels)
     activity_location(i) = temp(loc+2);
 end
 
+activity_start_end=activity_start_end-offset;
 
 %indices of correct and failure records
 correct = cellfun(@(x) isempty(strfind(x,'Failure')),data_probe);
@@ -401,9 +404,52 @@ data.failure.value = labels.failure.value(keep_failure);
 data.failure.duration = labels.failure.duration(keep_failure); 
 data.failure.evalstart = labels.failure.evalstart(keep_failure); %timestamp when the model started to evaluate 
 
+% Values field for data
+data.value=get_value(data.type_str);
+
 save falls_data data
 
+%% Identify activities data to include with falls
+close all
 
+falls_size=sum(keep_ind);
+subject={};
+
+subjs=unique(activity_subject);
+subj_counts=zeros(1,length(subjs));
+for indSubj=1:length(subjs)
+    Subj_inds=strcmp(subjs{indSubj},activity_subject);
+    start_ind=find(Subj_inds,1);
+    end_ind=find(Subj_inds,1,'last');
+    start_time=activity_start_end(start_ind,1);
+    end_time=activity_start_end(end_ind,2);
+    
+    keep_ind=keep_ind | (start_time<labels.timestampSTART_END(:,2) & end_time>labels.timestampSTART_END(:,1));
+    subj_counts(indSubj)=sum(keep_ind)-falls_size-sum(subj_counts(1:indSubj-1));
+end
+
+data.winsize = labels.winsize(keep_ind);
+data.features = labels.features(keep_ind); %fallnet model features
+data.timestampSTART_END = labels.timestampSTART_END(keep_ind); %fallnet model features
+data.evalstart = labels.evalstart(keep_ind);  %timestamp when the model started to evaluate  
+data.sensor_counts = labels.sensor_counts(keep_ind); % # of samples per sensor
+data.duration = labels.duration(keep_ind);  %evaluation time for each record (preparation, verification, evaluation)  
+data.acce = labels.acce(keep_ind);      %sensor data for each window
+data.gyro = labels.gyro(keep_ind);
+data.baro = labels.baro(keep_ind);
+
+act_size=sum(keep_ind)-falls_size;
+
+data.subject = [data.subject; cell(act_size,1)];
+for i=1:length(subjs)
+    data.subject(falls_size+1+sum(subj_counts(1:i-1)):falls_size+sum(subj_counts(1:i)))=subjs(i);
+end
+data.type_str(falls_size+1:falls_size+act_size) = ({'Non-Fall'});
+data.location(falls_size+1:falls_size+act_size) = ({'NA'});
+
+data.value=[data.value; repmat(9,[act_size 1])];
+
+save falls_act_data data
 
 %% label activities data
 if ~isempty(activity_labels)
@@ -516,6 +562,8 @@ actdata.failure.reason = labels.failure.reason(keep_failure);
 actdata.failure.value = labels.failure.value(keep_failure);
 actdata.failure.duration = labels.failure.duration(keep_failure); 
 actdata.failure.evalstart = labels.failure.evalstart(keep_failure); %timestamp when the model started to evaluate 
+
+actdata.value=get_value(actdata.type_str);
 
 save activities_data actdata
 
