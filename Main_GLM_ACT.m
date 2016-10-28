@@ -29,6 +29,7 @@ class=0; % flag for fall classification (rather than detection only)
 fall_like=9; % 5 to set as non-fall, 9 to set as fall
 remove_falllike = 0;
 remove_activities = 0;
+java_feat=0;
 
 addpath(genpath('./glmnet_matlab/'))
 % rng(10001)
@@ -55,7 +56,8 @@ nruns = 5;  %how many runs the classification model is trained/tested
 
 % for r = 1:nruns
 
-load labels_full.mat
+load new_labels
+% load labels_full.mat
 % load labels_full_whome.mat
 
 
@@ -82,11 +84,11 @@ end
 
 if split
     %Take 75% of original data for training
-    inds = randperm(length(labels.timestamp));
+    inds = randperm(length(labels.acce));
     indtrain = inds(1:round(0.75*length(inds)));
     indtest = inds(round(0.75*length(inds))+1:end);
 else
-    indtrain = 1:length(labels.timestamp);
+    indtrain = 1:length(labels.acce);
     indtest=[];
 end
 
@@ -96,7 +98,7 @@ labels_test=labels;
 
 %
 %TEST DATA
-labels_test.timestamp = labels.timestamp(indtest);
+% labels_test.timestamp = labels.timestamp(indtest);
 labels_test.value = labels.value(indtest);
 labels_test.subject = labels.subject(indtest);
 labels_test.acce = labels.acce(indtest);
@@ -104,7 +106,7 @@ labels_test.gyro = labels.gyro(indtest);
 labels_test.baro = labels.baro(indtest);
 
 %TRAIN DATA
-labels.timestamp = labels.timestamp(indtrain);
+% labels.timestamp = labels.timestamp(indtrain);
 labels.value = labels.value(indtrain);
 labels.subject = labels.subject(indtrain);
 labels.acce = labels.acce(indtrain);
@@ -113,7 +115,7 @@ labels.baro = labels.baro(indtrain);
 
 %% Feature extraction
 
-[FN, L, fold_id, muF, stdF, epsF, nzstd]=extract_features(labels, folds_nr);
+[FN, L, fold_id, muF, stdF, epsF, nzstd]=extract_feature_matlab(labels, folds_nr);
 fvar.std= stdF;
 fvar.mu= muF;
 fvar.eps= epsF;
@@ -233,22 +235,31 @@ save class_params_ACT_nobar fvar b  nz_ind
 %end;
 %% Testing the model on Test Data (if split is set to 1)
 if split
-    javaaddpath('purple-robot-skyfall.jar');
-    labels = labels_test;   %because java code expects labels structure
-    save labels_struct_test labels
-    com.company.TrainFeatureExtractor.extractFeatures('labels_struct_test.mat', 'test_features.csv');
-    F=csvread('test_features.csv');
-    F=F(:,1:1781);
-    
-    % find zeroed rows in F (feature cannot be calculated)
-    z_inds=max(abs(F).')==0;
-    
-    F(z_inds,:)=[];
-    F=F(:,fvar.nzstd);
-    dsz= size(F,1);
-    v1= ones(dsz,1);
-    FN=(F-v1*fvar.mu)./(v1*fvar.std);
-    FN_nz=FN(:,nz_ind);
+    if java_feat
+        javaaddpath('purple-robot-skyfall.jar');
+        labels = labels_test;   %because java code expects labels structure
+        save labels_struct_test labels
+        com.company.TrainFeatureExtractor.extractFeatures('labels_struct_test.mat', 'test_features.csv');
+        F=csvread('test_features.csv');
+        F=F(:,1:1781);
+        
+        % find zeroed rows in F (feature cannot be calculated)
+        z_inds=max(abs(F).')==0;
+
+        F(z_inds,:)=[];
+        F=F(:,fvar.nzstd);
+        dsz= size(F,1);
+        v1= ones(dsz,1);
+        FN=(F-v1*fvar.mu)./(v1*fvar.std);
+        FN_nz=FN(:,nz_ind);
+    else
+        F=[];
+        for i=1:length(labels_test.acce)
+            F=[F; extract_feature_test_phone(labels_test.acce{i}, labels_test.gyro{i}, labels_test.baro{i},fvar)];
+        end
+        FN_nz=F(:,nz_ind);
+        z_inds=zeros(1,length(labels_test.value));
+    end
     
     if class
         conf(:,1)=glmval(b{1},FN_nz,'logit');
@@ -269,13 +280,13 @@ if split
         figure; imagesc(confmat./repmat(sum(confmat,2),[1 5])); colorbar; caxis([0 1])
     else
         conf= glmval(b, FN_nz, 'logit');
-        id= ceil(conf-0.5);
+        id= ceil(conf-0.5); 
         
         isfall = labels_test.value < 9;
         isfall = isfall(~z_inds);
         fall_err = sum(~id(isfall))/sum(isfall);
         nfall_err = sum(id(~isfall))/sum(~isfall);
-        err = (sum(id.' ~= isfall))/length(id); %error rate
+        err = (sum(id ~= isfall))/length(id); %error rate
         confmat(:,:)=confusionmat(isfall,id==1);
         %plot confusion matrix
         activities = {'Non-Fall','Fall'};

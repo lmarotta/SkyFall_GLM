@@ -57,10 +57,20 @@ for i=1:labelsNum
             %% median
             DCMed= median(data{j},1);
             %%  the real, imaginary and absolute value of the first 40 components   of fast fourier transform
-            DCFFT= fft(data{j},40);
-            DCFFT_re= real(DCFFT(:)');
-            DCFFT_im= imag(DCFFT(:)');
-            DCFFT_abs= abs(DCFFT(:)');
+%             DCFFT= fft(data{j},40);
+%             DCFFT_re= real(DCFFT(:)');
+%             DCFFT_im= imag(DCFFT(:)');
+%             DCFFT_abs= abs(DCFFT(:)');
+
+            DCFFT= fft(data{j});
+            DCFFT_re=[];
+            DCFFT_im=[];
+            DCFFT_abs=[];
+            for i=1:40
+                DCFFT_re= [DCFFT_re trapz(real(DCFFT(floor(length(DCFFT)/40*(i-1)+1):floor(length(DCFFT)/40*i))'))];
+                DCFFT_im= [DCFFT_im trapz(imag(DCFFT(floor(length(DCFFT)/40*(i-1)+1):floor(length(DCFFT)/40*i))'))];
+                DCFFT_abs= [DCFFT_abs trapz(abs(DCFFT(floor(length(DCFFT)/40*(i-1)+1):floor(length(DCFFT)/40*i))'))];
+            end
             
             %% Fitting the recodings as the function of time
 %             bnum=100;
