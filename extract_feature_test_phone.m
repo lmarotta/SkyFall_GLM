@@ -46,15 +46,22 @@ if size(gyro_data,1)>=100 && size( accel_data ,1)>=100 && size( baro_data,1 )>=1
             %% median
             DCMed= median(data{j},1);
             %%  the real, imaginary and absolute value of the first 40 components   of fast fourier transform
-            DCFFT= fft(data{j});
-            DCFFT_re=[];
-            DCFFT_im=[];
-            DCFFT_abs=[];
-            for i=1:40
-                DCFFT_re= [DCFFT_re trapz(real(DCFFT(floor(length(DCFFT)/40*(i-1)+1):floor(length(DCFFT)/40*i))'))];
-                DCFFT_im= [DCFFT_im trapz(imag(DCFFT(floor(length(DCFFT)/40*(i-1)+1):floor(length(DCFFT)/40*i))'))];
-                DCFFT_abs= [DCFFT_abs trapz(abs(DCFFT(floor(length(DCFFT)/40*(i-1)+1):floor(length(DCFFT)/40*i))'))];
-            end
+            DCFFT= fft(data{j},40);
+            DCFFT_re= real(DCFFT(:)');
+            DCFFT_im= imag(DCFFT(:)');
+            DCFFT_abs= abs(DCFFT(:)');
+            
+%             DCFFT= fft(data{j});
+%             DCFFT_re=[];
+%             DCFFT_im=[];
+%             DCFFT_abs=[];
+%             for ii=1:40
+%                 for jj=1:3
+%                     DCFFT_re= [DCFFT_re trapz(real(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
+%                     DCFFT_im= [DCFFT_im trapz(imag(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
+%                     DCFFT_abs= [DCFFT_abs trapz(abs(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
+%                 end
+%             end
             
             %% Fitting the recodings as the function of time
 %             bnum=100;
@@ -123,6 +130,18 @@ if size(gyro_data,1)>=100 && size( accel_data ,1)>=100 && size( baro_data,1 )>=1
             DDCFFT_re= real(DDCFFT(:)');
             DDCFFT_im= imag(DDCFFT(:)');
             DDCFFT_abs= abs(DDCFFT(:)');
+                 
+%             DDCFFT= fft(DSLN);
+%             DDCFFT_re=[];
+%             DDCFFT_im=[];
+%             DDCFFT_abs=[];
+%             for ii=1:40
+%                 for jj=1:3
+%                     DDCFFT_re= [DDCFFT_re trapz(real(DDCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DDCFFT)/40*ii),jj)'))];
+%                     DDCFFT_im= [DDCFFT_im trapz(imag(DDCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DDCFFT)/40*ii),jj)'))];
+%                     DDCFFT_abs= [DDCFFT_abs trapz(abs(DDCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DDCFFT)/40*ii),jj)'))];
+%                 end
+%             end
             %% Fitting the derivatives of recording signals as a function of time
             TD= stamp{j}(IDSL)-stamp{j}(ind(1));
 %             bnum=100;
