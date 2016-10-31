@@ -1,5 +1,27 @@
+clear all;
+
 load fall_data_unlabeled
-load falllabels_101816
+load falllabels
+
+%% get activities data
+load falls_act_data
+
+data_ind = find(data.value==9,1);
+data.acce = data.acce(data_ind:end);
+data.gyro = data.gyro(data_ind:end);
+data.baro = data.baro(data_ind:end);
+data.value = data.value(data_ind:end);
+data.type_str = data.type_str(data_ind:end);
+data.location = data.location(data_ind:end);
+data.subject = data.subject(data_ind:end);
+data = rmfield(data, 'winsize');
+data = rmfield(data, 'features');
+data = rmfield(data, 'timestampSTART_END');
+data = rmfield(data, 'evalstart');
+data = rmfield(data, 'sensor_counts');
+data = rmfield(data, 'duration');
+
+%%
 
 num_falls = length(falllabels.types);
 
@@ -12,7 +34,9 @@ baro = cell(num_falls,1);
 curr_data_ind = 1;
 for i=1:length(falllabels.types)
     % current labels data
-    fall_start = falllabels.start_true(i);
+    fall_start = falllabels.start_end_marked(i,1);
+    % for manually marked falls uncomment the following line
+    % fall_start = falllabels.start_true(i);
     fall_end = falllabels.start_end_marked(i,2);
 
     clip_found = 0;
@@ -159,12 +183,13 @@ for i=1:length(falllabels.types)
 end
 
 %put all data into one structure
-data.acce = acce;      %sensor data for each window
-data.gyro = gyro;
-data.baro = baro;
+data.acce = [acce; data.acce];     %sensor data for each window
+data.gyro = [gyro; data.gyro];
+data.baro = [baro; data.baro];
 
-data.type_str = falllabels.types;
-data.subject = falllabels.subject;
-data.location = falllabels.location;
+data.type_str = [falllabels.types; data.type_str];
+data.subject = [falllabels.subject; data.subject];
+data.location = [falllabels.location; data.location];
+data.value = [get_value(falllabels.types); data.value];
 
-save falls_data_10sec data
+save falls_data_10sec_102616 data

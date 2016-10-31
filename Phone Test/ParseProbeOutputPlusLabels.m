@@ -3,7 +3,7 @@
 
 clear all
 
-offset=395000; % offset for data from 10-24-2016: 395000; 0 otherwise
+offset=0; % offset for data from 10-24-2016: 396000; 0 otherwise
 
 % flags
 filter_by_time = 0; % flag to cut spesific data range
@@ -72,6 +72,16 @@ for i=1:length(fall_labels)
     loc = find(strcmp(temp,'phone location'));
     fall_location(i) = temp(loc+2);
 end
+
+fall_start_end = fall_start_end - offset;
+
+falllabels.types = fall_types;
+falllabels.start_end_marked = fall_start_end;
+falllabels.location = fall_location;
+falllabels.subject = fall_subject;
+
+save falllabels falllabels
+
 
 % parse activities labels
 activity_types = cell(length(activity_labels),1);
@@ -410,7 +420,7 @@ data.value=get_value(data.type_str);
 save falls_data data
 
 %% Identify activities data to include with falls
-close all
+%close all
 
 falls_size=sum(keep_ind);
 subject={};
