@@ -32,7 +32,7 @@ remove_activities = 0;
 java_feat=0;
 
 addpath(genpath('./glmnet_matlab/'))
-% rng(10001)
+rng(10001)
 %% Initialization
 
 Twin = 2000;
@@ -115,7 +115,11 @@ labels.baro = labels.baro(indtrain);
 
 %% Feature extraction
 
-[FN, L, fold_id, muF, stdF, epsF, nzstd]=extract_feature_matlab(labels, folds_nr);
+if java_feat
+    [FN, L, fold_id, muF, stdF, epsF, nzstd]=extract_features(labels, folds_nr);
+else
+    [FN, L, fold_id, muF, stdF, epsF, nzstd]=extract_feature_matlab(labels, folds_nr);
+end
 fvar.std= stdF;
 fvar.mu= muF;
 fvar.eps= epsF;
@@ -169,6 +173,7 @@ end;
 %[min_err,alp_ind]=  min(m_col);
 
 
+
 accuracy=(1-min_err)*100
 std= d{alp_ind}.cvsd(lam_ind(alp_ind))*100
 alp_opt= alpha(alp_ind)
@@ -176,6 +181,9 @@ lam_opt= d{alp_ind}.lambda(lam_ind(alp_ind))
 sparsity= 100*(FSz-d{alp_ind}.nzero(lam_ind(alp_ind)))/FSz
 
 pred= cvglmnetPredict(d{alp_ind},[],lam_opt,'nonzero');
+% ignore second loop
+b= glmnetPredict(d_nz{alp_ind}.glmnet_fit,[],lam_opt,'coefficients');
+
 
 if max(LF)>2
     pred_Mat=cell2mat(pred);
@@ -221,6 +229,7 @@ lam_opt_nz= d_nz{alp_ind_nz}.lambda(lam_ind_nz(alp_ind_nz))
 
 pred= cvglmnetPredict(d_nz{alp_ind_nz},[],lam_opt_nz,'nonzero');
 b= glmnetPredict(d_nz{alp_ind_nz}.glmnet_fit,[],lam_opt_nz,'coefficients');
+
 %This part might be removed
 % d= glmval(b, FN_nz, 'logit');
 % bind=ceil(d-0.5)';
