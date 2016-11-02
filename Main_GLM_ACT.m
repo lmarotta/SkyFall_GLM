@@ -89,7 +89,7 @@ if split
     %Take 75% of original data for training
     subj=unique(labels.subject);
     rand_subj=subj(ceil(length(subj)*rand(1)));
-    rand_subj='CF025';
+    rand_subj='CF026';
     
     indtrain = find(~strcmp(labels.subject,rand_subj));
     indtest = find(strcmp(labels.subject,rand_subj));
@@ -181,8 +181,6 @@ end;
 
 [min_err, alp_ind]= min(min_err_iter);
 %[min_err,alp_ind]=  min(m_col);
-
-
 
 accuracy=(1-min_err)*100
 std= d{alp_ind}.cvsd(lam_ind(alp_ind))*100
