@@ -1,0 +1,81 @@
+%% TrainingDataSetup
+
+filenames=dir('falls_data_10sec_*.mat');
+
+for indF=1:length(filenames)
+    d=load(filenames(indF).name);
+    
+    if indF==1, data=d.data;
+    else
+    
+        data.acce=[data.acce; d.data.acce];
+        data.gyro=[data.gyro; d.data.gyro];
+        data.baro=[data.baro; d.data.baro];
+
+        data.value=[data.value; d.data.value];
+        data.subject=[data.subject; d.data.subject];
+        data.location=[data.location; d.data.location];
+        data.type_str=[data.type_str; d.data.type_str];
+    end
+    
+end
+
+empty_inds=cellfun(@isempty, data.acce) | cellfun(@isempty, data.gyro) | cellfun(@isempty, data.baro);
+data.acce(empty_inds)=[];
+data.gyro(empty_inds)=[];
+data.baro(empty_inds)=[];
+data.value(empty_inds)=[];
+data.subject(empty_inds)=[];
+data.location(empty_inds)=[];
+data.type_str(empty_inds)=[];
+
+% separate falls and non-falls
+fall_inds=data.value~=9;
+falls_data.acce=data.acce(fall_inds);
+falls_data.gyro=data.gyro(fall_inds);
+falls_data.baro=data.baro(fall_inds);
+falls_data.value=data.value(fall_inds);
+falls_data.subject=data.subject(fall_inds);
+falls_data.location=data.location(fall_inds);
+falls_data.type_str=data.type_str(fall_inds);
+
+act_data.acce=data.acce(~fall_inds);
+act_data.gyro=data.gyro(~fall_inds);
+act_data.baro=data.baro(~fall_inds);
+act_data.value=data.value(~fall_inds);
+act_data.subject=data.subject(~fall_inds);
+act_data.location=data.location(~fall_inds);
+act_data.type_str=data.type_str(~fall_inds);
+
+falls_data=JitterClips_new(falls_data,10);
+
+data.acce=[falls_data.acce; act_data.acce];
+data.gyro=[falls_data.gyro; act_data.gyro];
+data.baro=[falls_data.baro; act_data.baro];
+data.value=[falls_data.value; act_data.value];
+data.subject=[falls_data.subject; act_data.subject];
+data.location=[falls_data.location; act_data.location];
+data.type_str=[falls_data.type_str; act_data.type_str];
+
+[acce, gyro, baro]=InterpData(data);
+
+data.acce=acce;
+data.gyro=gyro;
+data.baro=baro;
+
+empty_inds=cellfun(@isempty, data.acce) | cellfun(@isempty, data.gyro) | cellfun(@isempty, data.baro);
+data.acce(empty_inds)=[];
+data.gyro(empty_inds)=[];
+data.baro(empty_inds)=[];
+data.value(empty_inds)=[];
+data.subject(empty_inds)=[];
+data.location(empty_inds)=[];
+data.type_str(empty_inds)=[];
+
+%% Remove duplicates
+
+
+
+
+labels=data;
+save Training_Data labels

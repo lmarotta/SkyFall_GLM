@@ -1,30 +1,34 @@
 %% InterpData
+function [acce, gyro, baro]=InterpData(labels)
 
-load labels_full_rot.mat
+acce=cell(length(labels.acce),1);
+gyro=cell(length(labels.acce),1);
+baro=cell(length(labels.acce),1);
+
 
 t=0:.02:4.98;
 tbar=0:1/6:29/6;
 
 for i=1:length(labels.acce)
-    if size(labels.acce{i},1)>99 && range(labels.acce{i}(:,1))>4
+    if size(labels.acce{i},1)>199 && max(diff(labels.acce{i}(:,1)))<.2
         data=labels.acce{i};
         
         % remove duplicates
         data=sortrows(data);
         data(diff(data(:,1))==0,:)=[];
         
-        labels.acce{i}=[t' spline(data(:,1)'-data(1,1),data(:,2:end)',t')'];
-    else labels.acce{i}=[];
+        acce{i}=[t' spline(data(:,1)'-data(1,1),data(:,2:end)',t')'];
+    else acce{i}=[];
     end
-    if size(labels.gyro{i},1)>99 && range(labels.gyro{i}(:,1))>4
+    if size(labels.gyro{i},1)>199 && max(diff(labels.gyro{i}(:,1)))<.2
         data=labels.gyro{i};
         
         % remove duplicates
         data=sortrows(data);
         data(diff(data(:,1))==0,:)=[];
         
-        labels.gyro{i}=[t' spline(data(:,1)'-data(1,1),data(:,2:end)',t')'];
-    else labels.gyro{i}=[];
+        gyro{i}=[t' spline(data(:,1)'-data(1,1),data(:,2:end)',t')'];
+    else gyro{i}=[];
     end
     if size(labels.baro{i},1)>9 && range(labels.baro{i}(:,1))>4
         data=labels.baro{i};
@@ -33,9 +37,7 @@ for i=1:length(labels.acce)
         data=sortrows(data);
         data(diff(data(:,1))==0,:)=[];
         
-        labels.baro{i}=[tbar' spline(data(:,1)'-data(1,1),data(:,2:end)',tbar')'];
-    else labels.baro{i}=[];
+        baro{i}=[tbar' spline(data(:,1)'-data(1,1),data(:,2:end)',tbar')'];
+    else baro{i}=[];
     end
 end
-
-save labels_full_interp.mat labels

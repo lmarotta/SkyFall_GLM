@@ -1,4 +1,4 @@
-function [FN, L, fold, mu, stdF, eps, nzstd]= extract_feature_matlab( labels, fold_nr)
+function [FN, L, fold, mu, stdF, eps, nzstd]= extract_feature_matlab(labels, fold_nr, new_FFT)
 
 eps=1e-6;
 labelsNum= numel(labels.value);
@@ -57,22 +57,24 @@ for i=1:labelsNum
             %% median
             DCMed= median(data{j},1);
             %%  the real, imaginary and absolute value of the first 40 components   of fast fourier transform
-            DCFFT= fft(data{j},40);
-            DCFFT_re= real(DCFFT(:)');
-            DCFFT_im= imag(DCFFT(:)');
-            DCFFT_abs= abs(DCFFT(:)');
-% 
-%             DCFFT= fft(data{j});
-%             DCFFT_re=[];
-%             DCFFT_im=[];
-%             DCFFT_abs=[];
-%             for ii=1:40
-%                 for jj=1:3
-%                     DCFFT_re= [DCFFT_re trapz(real(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
-%                     DCFFT_im= [DCFFT_im trapz(imag(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
-%                     DCFFT_abs= [DCFFT_abs trapz(abs(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
-%                 end
-%             end
+            if ~new_FFT
+                DCFFT= fft(data{j},40);
+                DCFFT_re= real(DCFFT(:)');
+                DCFFT_im= imag(DCFFT(:)');
+                DCFFT_abs= abs(DCFFT(:)');
+            else
+                DCFFT= fft(data{j});
+                DCFFT_re=[];
+                DCFFT_im=[];
+                DCFFT_abs=[];
+                for ii=1:40
+                    for jj=1:3
+                        DCFFT_re= [DCFFT_re trapz(real(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
+                        DCFFT_im= [DCFFT_im trapz(imag(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
+                        DCFFT_abs= [DCFFT_abs trapz(abs(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
+                    end
+                end
+            end
             
             %% Fitting the recodings as the function of time
 %             bnum=100;
@@ -137,22 +139,24 @@ for i=1:labelsNum
             %% Computing the median of derivatives
             DDCMed= median(DSLN,1);
             %%  The real, imaginary and absolute value of the first 40 components   of fast fourier transform  of derivatives
-            DDCFFT= fft(DSLN,40);
-            DDCFFT_re= real(DDCFFT(:)');
-            DDCFFT_im= imag(DDCFFT(:)');
-            DDCFFT_abs= abs(DDCFFT(:)');
-            
-%             DDCFFT= fft(DSLN);
-%             DDCFFT_re=[];
-%             DDCFFT_im=[];
-%             DDCFFT_abs=[];
-%             for ii=1:40
-%                 for jj=1:3
-%                     DDCFFT_re= [DDCFFT_re trapz(real(DDCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DDCFFT)/40*ii),jj)'))];
-%                     DDCFFT_im= [DDCFFT_im trapz(imag(DDCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DDCFFT)/40*ii),jj)'))];
-%                     DDCFFT_abs= [DDCFFT_abs trapz(abs(DDCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DDCFFT)/40*ii),jj)'))];
-%                 end
-%             end
+            if ~new_FFT
+                DDCFFT= fft(DSLN,40);
+                DDCFFT_re= real(DDCFFT(:)');
+                DDCFFT_im= imag(DDCFFT(:)');
+                DDCFFT_abs= abs(DDCFFT(:)');
+            else                 
+                DDCFFT= fft(DSLN);
+                DDCFFT_re=[];
+                DDCFFT_im=[];
+                DDCFFT_abs=[];
+                for ii=1:40
+                    for jj=1:3
+                        DDCFFT_re= [DDCFFT_re trapz(real(DDCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DDCFFT)/40*ii),jj)'))];
+                        DDCFFT_im= [DDCFFT_im trapz(imag(DDCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DDCFFT)/40*ii),jj)'))];
+                        DDCFFT_abs= [DDCFFT_abs trapz(abs(DDCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DDCFFT)/40*ii),jj)'))];
+                    end
+                end
+            end
             
             %% Fitting the derivatives of recording signals as a function of time
             TD= stamp{j}(IDSL)-stamp{j}(ind(1));
@@ -296,9 +300,9 @@ end;
 
 
 
-F=F(1:end-50,:);
-sub_ind_vect=sub_ind_vect(1:end-50);
-L=L(1:end-50);
+% F=F(1:end-50,:);
+% sub_ind_vect=sub_ind_vect(1:end-50);
+% L=L(1:end-50);
 dsz= size(F,1);
 v1= ones(dsz,1);
 mu= mean(F);

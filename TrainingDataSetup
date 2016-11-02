@@ -1,0 +1,25 @@
+%% TrainingDataSetup
+
+filenames=dir('falls_data_10sec_102*.mat');
+
+for indF=1:length(filenames)
+    d=load(filenames(indF).name);
+    
+    if indF==1, data=d; end
+    
+    data.acce=[data.acce; d.acce];
+    data.gyro=[data.gyro; d.gyro];
+    data.baro=[data.baro; d.baro];
+    
+    data.value=[data.value; d.value];
+    data.subject=[data.subject; d.subject];
+    data.location=[data.location; d.location];
+    data.type_str=[data.type_str; d.type_str];
+    
+end
+    
+[acce, gyro, baro]=InterpData(data);
+
+data.acce=acce;
+data.gyro=gyro;
+data.baro=baro;
