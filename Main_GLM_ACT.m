@@ -125,7 +125,6 @@ if java_feat
     [FN, L, fold_id, muF, stdF, epsF, nzstd]=extract_features(labels, folds_nr);
 else
     [FN, L, fold_id, muF, stdF, epsF, nzstd]=extract_feature_matlab(labels, folds_nr, new_FFT);
-    [FN, ia, ~]=unique(FN,'rows');
     if no_baro
         pre_baro=sum(nzstd(1:1700));
         FN=FN(:,1:pre_baro);
