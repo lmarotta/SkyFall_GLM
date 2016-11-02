@@ -30,9 +30,11 @@ fall_like=9; % 5 to set as non-fall, 9 to set as fall
 remove_falllike = 0;
 remove_activities = 0;
 java_feat=0;
+loop2=0;
+new_FFT=0; % use old or new FFT features
 
 addpath(genpath('./glmnet_matlab/'))
-rng(10001)
+% rng(10001)
 %% Initialization
 
 Twin = 2000;
@@ -56,7 +58,7 @@ nruns = 5;  %how many runs the classification model is trained/tested
 
 % for r = 1:nruns
 
-load new_labels
+load Training_Data
 % load labels_full.mat
 % load labels_full_whome.mat
 
@@ -84,9 +86,12 @@ end
 
 if split
     %Take 75% of original data for training
-    inds = randperm(length(labels.acce));
-    indtrain = inds(1:round(0.75*length(inds)));
-    indtest = inds(round(0.75*length(inds))+1:end);
+    subj=unique(labels.subject);
+    rand_subj=subj(ceil(length(subj)*rand(1)));
+    rand_subj='CF026';
+    
+    indtrain = find(~strcmp(labels.subject,rand_subj));
+    indtest = find(strcmp(labels.subject,rand_subj));
 else
     indtrain = 1:length(labels.acce);
     indtest=[];
@@ -118,7 +123,8 @@ labels.baro = labels.baro(indtrain);
 if java_feat
     [FN, L, fold_id, muF, stdF, epsF, nzstd]=extract_features(labels, folds_nr);
 else
-    [FN, L, fold_id, muF, stdF, epsF, nzstd]=extract_feature_matlab(labels, folds_nr);
+    [FN, L, fold_id, muF, stdF, epsF, nzstd]=extract_feature_matlab(labels, folds_nr, new_FFT);
+    FN=
 end
 fvar.std= stdF;
 fvar.mu= muF;
@@ -181,9 +187,7 @@ lam_opt= d{alp_ind}.lambda(lam_ind(alp_ind))
 sparsity= 100*(FSz-d{alp_ind}.nzero(lam_ind(alp_ind)))/FSz
 
 pred= cvglmnetPredict(d{alp_ind},[],lam_opt,'nonzero');
-% ignore second loop
-b= glmnetPredict(d_nz{alp_ind}.glmnet_fit,[],lam_opt,'coefficients');
-
+b= glmnetPredict(d{alp_ind}.glmnet_fit,[],lam_opt,'coefficients');
 
 if max(LF)>2
     pred_Mat=cell2mat(pred);
@@ -194,41 +198,45 @@ end;
 pred_sum= sum(pred_Mat,2);
 
 nz_ind= pred_sum>0;
+b=b([1; nz_ind]==1);
 FN_nz= FN(:,nz_ind);
 
-min_err_iter_nz= zeros(nalpha, 1);
-lam_vect_nz= zeros(nalpha, 1);
-lam_ind_nz= zeros(nalpha, 1);
-nalpha=40
-alpha=linspace(0, 0.5, nalpha);
-alpha=alpha(end:-1:1);
-for i=1: nalpha
-    %rng(200);
-    opts.alpha= alpha(i);
-    if max(LF)>2
-        d_nz{i}= cvglmnet(FN_nz, LF, 'multinomial', opts, 'class', folds_nr, fold_id);
-    else
-        d_nz{i}= cvglmnet(FN_nz, LF, 'binomial', opts, 'class', folds_nr, fold_id);
+if loop2
+
+    min_err_iter_nz= zeros(nalpha, 1);
+    lam_vect_nz= zeros(nalpha, 1);
+    lam_ind_nz= zeros(nalpha, 1);
+    nalpha=40
+    alpha=linspace(0, 0.5, nalpha);
+    alpha=alpha(end:-1:1);
+    for i=1: nalpha
+        %rng(200);
+        opts.alpha= alpha(i);
+        if max(LF)>2
+            d_nz{i}= cvglmnet(FN_nz, LF, 'multinomial', opts, 'class', folds_nr, fold_id);
+        else
+            d_nz{i}= cvglmnet(FN_nz, LF, 'binomial', opts, 'class', folds_nr, fold_id);
+        end;
+        %cvmMat{i=d{i}.cvm;
+        err_now= min(d_nz{i}.cvm) %mean cross validation error
+        alp_now= alpha(i)
+        min_err_iter_nz(i)= err_now;
+        lam_vect_nz(i)= d_nz{i}.lambda_min;
+        [~, lam_ind_nz(i)]= min(d_nz{i}.lambda);
     end;
-    %cvmMat{i=d{i}.cvm;
-    err_now= min(d_nz{i}.cvm) %mean cross validation error
-    alp_now= alpha(i)
-    min_err_iter_nz(i)= err_now;
-    lam_vect_nz(i)= d_nz{i}.lambda_min;
-    [~, lam_ind_nz(i)]= min(d_nz{i}.lambda);
-end;
-[min_err_nz, alp_ind_nz]= min(min_err_iter_nz);
-%[min_err,alp_ind]=  min(m_col);
+    [min_err_nz, alp_ind_nz]= min(min_err_iter_nz);
+    %[min_err,alp_ind]=  min(m_col);
 
 
-accuracy=(1-min_err_nz)*100
-std= d_nz{alp_ind_nz}.cvsd(lam_ind_nz(alp_ind_nz))*100
-alp_opt_nz= alpha(alp_ind_nz)
-lam_opt_nz= d_nz{alp_ind_nz}.lambda(lam_ind_nz(alp_ind_nz))
-%sparsity= 100*(FSz-d{alp_ind}.nzero(lam_ind(alp_ind)))/FSz
+    accuracy=(1-min_err_nz)*100
+    std= d_nz{alp_ind_nz}.cvsd(lam_ind_nz(alp_ind_nz))*100
+    alp_opt_nz= alpha(alp_ind_nz)
+    lam_opt_nz= d_nz{alp_ind_nz}.lambda(lam_ind_nz(alp_ind_nz))
+    %sparsity= 100*(FSz-d{alp_ind}.nzero(lam_ind(alp_ind)))/FSz
 
-pred= cvglmnetPredict(d_nz{alp_ind_nz},[],lam_opt_nz,'nonzero');
-b= glmnetPredict(d_nz{alp_ind_nz}.glmnet_fit,[],lam_opt_nz,'coefficients');
+    pred= cvglmnetPredict(d_nz{alp_ind_nz},[],lam_opt_nz,'nonzero');
+    b= glmnetPredict(d_nz{alp_ind_nz}.glmnet_fit,[],lam_opt_nz,'coefficients');
+end
 
 %This part might be removed
 % d= glmval(b, FN_nz, 'logit');
@@ -238,7 +246,7 @@ b= glmnetPredict(d_nz{alp_ind_nz}.glmnet_fit,[],lam_opt_nz,'coefficients');
 
 
 %if ~split
-save class_params_ACT_nobar fvar b  nz_ind
+% save class_params_ACT_nobar fvar b  nz_ind
 %end
 
 %end;
@@ -264,7 +272,10 @@ if split
     else
         F=[];
         for i=1:length(labels_test.acce)
-            F=[F; extract_feature_test_phone(labels_test.acce{i}, labels_test.gyro{i}, labels_test.baro{i},fvar)];
+            if i==222
+                dummy=1;
+            end
+            F=[F; extract_feature_test_phone(labels_test.acce{i}, labels_test.gyro{i}, labels_test.baro{i},fvar, new_FFT)];
         end
         FN_nz=F(:,nz_ind);
         z_inds=zeros(1,length(labels_test.value));
