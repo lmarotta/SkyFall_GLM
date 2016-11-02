@@ -18,7 +18,7 @@ eps=1e-6;
 
 sub_ind_vect=[];
 
-javaaddpath('purple-robot-skyfall.jar');
+javaaddpath('FeatureGeneration/purple-robot-skyfall.jar');
 
 save labels_struct labels
 

@@ -258,7 +258,7 @@ end
 %% Testing the model on Test Data (if split is set to 1)
 if split
     if java_feat
-        javaaddpath('purple-robot-skyfall.jar');
+        javaaddpath('FeatureGeneration/purple-robot-skyfall.jar');
         labels = labels_test;   %because java code expects labels structure
         save labels_struct_test labels
         com.company.TrainFeatureExtractor.extractFeatures('labels_struct_test.mat', 'test_features.csv');
