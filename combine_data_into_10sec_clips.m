@@ -1,3 +1,4 @@
+function combine_data_into_10sec_clips(date, plot_data)
 clear all;
 
 load fall_data_unlabeled
@@ -163,14 +164,16 @@ for i=1:length(falllabels.types)
                     curr_data_ind = j+2;
                 end
                 
-                clip = acce_10sec;
-                t = clip(:,1);
-                clip_duration = clip(end,1)-clip(1,1);
-                plot_title = strcat(falllabels.types{i},{' '},falllabels.location{i});
-                figure, plot(t,clip(:,2), t,clip(:,3), t,clip(:,4)), legend('X','Y','Z')
-                title(plot_title), xlabel(clip_duration)
-                y1=get(gca,'ylim'); hold on, plot([fall_start fall_start],y1)
-                y1=get(gca,'ylim'); hold on, plot([fall_end fall_end],y1)
+                if plot_data
+                    clip = acce_10sec;
+                    t = clip(:,1);
+                    clip_duration = clip(end,1)-clip(1,1);
+                    plot_title = strcat(falllabels.types{i},{' '},falllabels.location{i});
+                    figure, plot(t,clip(:,2), t,clip(:,3), t,clip(:,4)), legend('X','Y','Z')
+                    title(plot_title), xlabel(clip_duration)
+                    y1=get(gca,'ylim'); hold on, plot([fall_start fall_start],y1)
+                    y1=get(gca,'ylim'); hold on, plot([fall_end fall_end],y1)
+                end
 
             end
             
@@ -192,4 +195,4 @@ data.subject = [falllabels.subject; data.subject];
 data.location = [falllabels.location; data.location];
 data.value = [get_value(falllabels.types); data.value];
 
-save falls_data_10sec_103116 data
+save(['falls_data_10sec_' date '.mat'], 'data')

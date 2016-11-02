@@ -1,7 +1,21 @@
+%% ParseProbeOutput
+% Inputs:
+% optional
+% YYYY_start, MM_start, DD_start, HH_start, MIN_start - data cutoff start
+% in UTC timestamp (+5h from Chicago time)
+% YYYY_end, MM_end, DD_end, HH_end, MIN_end  - data cutoff end in UTC
+% timestamp (+5h from Chicago time)
+%
 % Loads a user-selected .txt file containing exported data from Fallnet
-% and sensor probes and separates probe data fro analysis
+% and current model class_params file
+%
+% saves labels structure with parsed data into FallProbe_TestData.mat file
 
-clear all
+function ParseProbeOutput(YYYY_start, MM_start, DD_start, HH_start, MIN_start, YYYY_end, MM_end, DD_end, HH_end, MIN_end)
+
+if nargin ~= 0 &&  nargin ~= 10
+  error('the function might not take any input or you may specify cutoff start and end')
+end
 
 % load file
 [FileName,PathName,~] = uigetfile('*.txt');
@@ -14,28 +28,23 @@ Payload=PayloadTable.Payload;
 model=load([PathName '/' FileName]);
 Nfeatures = length(model.b);
 
-fall_probe=[];
-acc_probe=[];
-gyr_probe=[];
-bar_probe=[];
-fall_probe_failure_counts = [];
-fall_probe_failure_gap = [];
-fall_probe_failure_interp =[];
-fall_probe_failure_other =[];
+if nargin == 10
+    cutoff_start = datetime(YYYY_start,MM_start,DD_start,HH_start,MIN_start,0,0);  %This is in UTC (+5h from Chicago time)
+    cutoff_end = datetime(YYYY_end,MM_end,DD_end,HH_end,MIN_end,0,0);  %This is in UTC (+5h from Chicago time)
+    
+    timestr=cellfun(@(x) strsplit(x(strfind(x,'"TIMESTAMP"'):strfind(x,'"TIMESTAMP"')+100),{':' ','}),Payload,'UniformOutput',false);
+    timestamp=cellfun(@(x) str2double(x{:,2}),timestr);
+    timestamp=datetime(1970,1,1,0,0,timestamp);
 
-cutoff_start = datetime(2016,10,31,15,0,0,0);  %This is in UTC (+5h from Chicago time)
-cutoff_end = datetime(2016,10,31,19,0,0,0);  %This is in UTC (+5h from Chicago time)
-
-timestr=cellfun(@(x) strsplit(x(strfind(x,'"TIMESTAMP"'):strfind(x,'"TIMESTAMP"')+100),{':' ','}),Payload,'UniformOutput',false);
-timestamp=cellfun(@(x) str2double(x{:,2}),timestr);
-timestamp=datetime(1970,1,1,0,0,timestamp);
-
-filtered_times=timestamp>cutoff_start & timestamp<cutoff_end;
+    filtered_times=timestamp>cutoff_start & timestamp<cutoff_end;
+    Probe = Probe(filtered_times);
+    Payload = Payload(filtered_times);
+end
 
 %indices of correct and failure records
 correct = cellfun(@(x) isempty(strfind(x,'Failure')),Probe);
-ind_correct = find(correct & filtered_times);
-ind_failures = find(~correct & filtered_times);
+ind_correct = find(correct);
+ind_failures = find(~correct);
 
 %Initialize structure contents (each element corresponds to a window)
 winsize = -ones(length(ind_correct),1);
