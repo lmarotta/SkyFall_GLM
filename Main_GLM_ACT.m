@@ -32,7 +32,7 @@ remove_activities = 0;
 java_feat=0;
 loop2=0;
 new_FFT=1; % use old or new FFT features
-no_baro=1;
+no_baro=0; % 0 - use barometer
 
 addpath(genpath('./glmnet_matlab/'))
 % rng(10001)

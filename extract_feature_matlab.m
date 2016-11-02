@@ -223,10 +223,24 @@ for i=1:labelsNum
             DCCorrInd= find(abs(DCCorrup)>0);
             DCCorrV= DCCorrup(DCCorrInd)';
             %% The real, imaginary and absolute value of the first 5 components   of fast fourier transform
-            DCFFT= fft(data{j},5);
-            DCFFT_re= real(DCFFT(:)');
-            DCFFT_im= imag(DCFFT(:)');
-            DCFFT_abs= abs(DCFFT(:)');
+            if ~new_FFT
+                DCFFT= fft(data{j},5);
+                DCFFT_re= real(DCFFT(:)');
+                DCFFT_im= imag(DCFFT(:)');
+                DCFFT_abs= abs(DCFFT(:)');
+            else
+                DCFFT= fft(data{j});
+                DCFFT_re=[];
+                DCFFT_im=[];
+                DCFFT_abs=[];
+                for ii=1:5
+                    for jj=1:2
+                        DCFFT_re= [DCFFT_re trapz(real(DCFFT(floor(length(DCFFT)/5*(ii-1)+1):floor(length(DCFFT)/5*ii),jj)'))];
+                        DCFFT_im= [DCFFT_im trapz(imag(DCFFT(floor(length(DCFFT)/5*(ii-1)+1):floor(length(DCFFT)/5*ii),jj)'))];
+                        DCFFT_abs= [DCFFT_abs trapz(abs(DCFFT(floor(length(DCFFT)/5*(ii-1)+1):floor(length(DCFFT)/5*ii),jj)'))];
+                    end
+                end
+            end
             
             %% Fitting the  recording as the function of time
             DCfit121= polyfit(DC(:,1),DC(:,2), 1);

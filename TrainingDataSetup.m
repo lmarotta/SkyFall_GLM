@@ -14,10 +14,10 @@ if nargin<1
     locations=[];
 end    
 
-filenames=dir('falls_data_10sec_*.mat');
+filenames=dir('TrainingData/falls_data_10sec_*.mat');
 
 for indF=1:length(filenames)
-    d=load(filenames(indF).name);
+    d=load(['TrainingData/' filenames(indF).name]);
     
     if indF==1, data=d.data;
     else
