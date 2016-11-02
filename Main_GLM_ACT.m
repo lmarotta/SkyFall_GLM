@@ -89,7 +89,7 @@ if split
     %Take 75% of original data for training
     subj=unique(labels.subject);
     rand_subj=subj(ceil(length(subj)*rand(1)));
-    rand_subj='CF026';
+    rand_subj='CF025';
     
     indtrain = find(~strcmp(labels.subject,rand_subj));
     indtest = find(strcmp(labels.subject,rand_subj));
