@@ -2,6 +2,8 @@
 
 filenames=dir('falls_data_10sec_*.mat');
 
+n=10; % number of falls data resamplings
+
 for indF=1:length(filenames)
     d=load(filenames(indF).name);
     
@@ -47,7 +49,7 @@ act_data.subject=data.subject(~fall_inds);
 act_data.location=data.location(~fall_inds);
 act_data.type_str=data.type_str(~fall_inds);
 
-falls_data=JitterClips_new(falls_data,10);
+falls_data=JitterClips(falls_data,n);
 
 data.acce=[falls_data.acce; act_data.acce];
 data.gyro=[falls_data.gyro; act_data.gyro];

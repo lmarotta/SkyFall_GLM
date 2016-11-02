@@ -4,7 +4,7 @@ load FallProbe_TestData.mat
 win=5;
 
 files_list= dir;
-fsz= numel(files_list);
+fsz= n  umel(files_list);
 
 
 for i=1:fsz

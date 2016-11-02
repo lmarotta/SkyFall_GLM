@@ -1,5 +1,6 @@
-load PhoneProbe_data.mat
+load FallProbe_TestData
 load class_params_ACT_nobar.mat
+
 FN=zeros(1,sum(nz_ind));
 
 for i=1:length(labels.acce)
