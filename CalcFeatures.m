@@ -29,23 +29,23 @@ FC=[];
                 DCFFT_re=[];
                 DCFFT_im=[];
                 DCFFT_abs=[];
-                for ii=1:40
-                    for jj=1:3
-                        DCFFT_re= [DCFFT_re trapz(real(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
-                        DCFFT_im= [DCFFT_im trapz(imag(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
-                        DCFFT_abs= [DCFFT_abs trapz(abs(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
-                    end
-                end
-%                 for ii=1:5
-%                     DCFFT=fft(data{j}(floor(length(data{j})/5*(ii-1)+1):floor(length(data{j})/5*ii),:));
-%                     for jj=1:8
-%                         for kk=1:3
-%                             DCFFT_re=[DCFFT_re trapz(real(DCFFT(floor(length(DCFFT)/8*(ii-1)+1):floor(length(DCFFT)/8*ii),kk)'))];
-%                             DCFFT_im=[DCFFT_im trapz(imag(DCFFT(floor(length(DCFFT)/8*(ii-1)+1):floor(length(DCFFT)/8*ii),kk)'))];
-%                             DCFFT_abs=[DCFFT_abs trapz(abs(DCFFT(floor(length(DCFFT)/8*(ii-1)+1):floor(length(DCFFT)/8*ii),kk)'))];
-%                         end
+%                 for ii=1:40
+%                     for jj=1:3
+%                         DCFFT_re= [DCFFT_re trapz(real(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
+%                         DCFFT_im= [DCFFT_im trapz(imag(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
+%                         DCFFT_abs= [DCFFT_abs trapz(abs(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
 %                     end
 %                 end
+                for ii=1:5
+                    DCFFT=fft(data{j}(floor(length(data{j})/5*(ii-1)+1):floor(length(data{j})/5*ii),:));
+                    for jj=1:8
+                        for kk=1:3
+                            DCFFT_re=[DCFFT_re trapz(real(DCFFT(floor(length(DCFFT)/8*(ii-1)+1):floor(length(DCFFT)/8*ii),kk)'))];
+                            DCFFT_im=[DCFFT_im trapz(imag(DCFFT(floor(length(DCFFT)/8*(ii-1)+1):floor(length(DCFFT)/8*ii),kk)'))];
+                            DCFFT_abs=[DCFFT_abs trapz(abs(DCFFT(floor(length(DCFFT)/8*(ii-1)+1):floor(length(DCFFT)/8*ii),kk)'))];
+                        end
+                    end
+                end
 
             end
             
@@ -122,23 +122,23 @@ FC=[];
                 DDCFFT_re=[];
                 DDCFFT_im=[];
                 DDCFFT_abs=[];
-                for ii=1:40
-                    for jj=1:3
-                        DDCFFT_re= [DDCFFT_re trapz(real(DDCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DDCFFT)/40*ii),jj)'))];
-                        DDCFFT_im= [DDCFFT_im trapz(imag(DDCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DDCFFT)/40*ii),jj)'))];
-                        DDCFFT_abs= [DDCFFT_abs trapz(abs(DDCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DDCFFT)/40*ii),jj)'))];
-                    end
-                end
-%                 for ii=1:5
-%                     DDCFFT=fft(data{j}(floor(length(data{j})/5*(ii-1)+1):floor(length(data{j})/5*ii),:));
-%                     for jj=1:8
-%                         for kk=1:3
-%                             DDCFFT_re=[DDCFFT_re trapz(real(DDCFFT(floor(length(DDCFFT)/8*(ii-1)+1):floor(length(DDCFFT)/8*ii),kk)'))];
-%                             DDCFFT_im=[DDCFFT_im trapz(imag(DDCFFT(floor(length(DDCFFT)/8*(ii-1)+1):floor(length(DDCFFT)/8*ii),kk)'))];
-%                             DDCFFT_abs=[DDCFFT_abs trapz(abs(DDCFFT(floor(length(DDCFFT)/8*(ii-1)+1):floor(length(DDCFFT)/8*ii),kk)'))];
-%                         end
+%                 for ii=1:40
+%                     for jj=1:3
+%                         DDCFFT_re= [DDCFFT_re trapz(real(DDCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DDCFFT)/40*ii),jj)'))];
+%                         DDCFFT_im= [DDCFFT_im trapz(imag(DDCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DDCFFT)/40*ii),jj)'))];
+%                         DDCFFT_abs= [DDCFFT_abs trapz(abs(DDCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DDCFFT)/40*ii),jj)'))];
 %                     end
 %                 end
+                for ii=1:5
+                    DDCFFT=fft(data{j}(floor(length(data{j})/5*(ii-1)+1):floor(length(data{j})/5*ii),:));
+                    for jj=1:8
+                        for kk=1:3
+                            DDCFFT_re=[DDCFFT_re trapz(real(DDCFFT(floor(length(DDCFFT)/8*(ii-1)+1):floor(length(DDCFFT)/8*ii),kk)'))];
+                            DDCFFT_im=[DDCFFT_im trapz(imag(DDCFFT(floor(length(DDCFFT)/8*(ii-1)+1):floor(length(DDCFFT)/8*ii),kk)'))];
+                            DDCFFT_abs=[DDCFFT_abs trapz(abs(DDCFFT(floor(length(DDCFFT)/8*(ii-1)+1):floor(length(DDCFFT)/8*ii),kk)'))];
+                        end
+                    end
+                end
             end
             
             %% Fitting the derivatives of recording signals as a function of time
@@ -216,21 +216,21 @@ FC=[];
                 DCFFT_re=[];
                 DCFFT_im=[];
                 DCFFT_abs=[];
-                for ii=1:5
-                    for jj=1:2
-                        DCFFT_re= [DCFFT_re trapz(real(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
-                        DCFFT_im= [DCFFT_im trapz(imag(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
-                        DCFFT_abs= [DCFFT_abs trapz(abs(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
-                    end
-                end
 %                 for ii=1:5
-%                     DCFFT=fft(data{j}(floor(length(data{j})/5*(ii-1)+1):floor(length(data{j})/5*ii),:));
-%                     for kk=1:2
-%                         DCFFT_re=[DCFFT_re trapz(real(DCFFT(:,kk)'))];
-%                         DCFFT_im=[DCFFT_im trapz(imag(DCFFT(:,kk)'))];
-%                         DCFFT_abs=[DCFFT_abs trapz(abs(DCFFT(:,kk)'))];
+%                     for jj=1:2
+%                         DCFFT_re= [DCFFT_re trapz(real(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
+%                         DCFFT_im= [DCFFT_im trapz(imag(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
+%                         DCFFT_abs= [DCFFT_abs trapz(abs(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
 %                     end
 %                 end
+                for ii=1:5
+                    DCFFT=fft(data{j}(floor(length(data{j})/5*(ii-1)+1):floor(length(data{j})/5*ii),:));
+                    for kk=1:2
+                        DCFFT_re=[DCFFT_re trapz(real(DCFFT(:,kk)'))];
+                        DCFFT_im=[DCFFT_im trapz(imag(DCFFT(:,kk)'))];
+                        DCFFT_abs=[DCFFT_abs trapz(abs(DCFFT(:,kk)'))];
+                    end
+                end
             end
                 
             %% Fitting the  recording as the function of time
