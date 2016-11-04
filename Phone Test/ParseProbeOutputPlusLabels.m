@@ -1,14 +1,25 @@
+%%  ParseProbeOutputPlusLabels
+% Inputs:
+% plot_data = 1; - flag to plot parsed data
+% labels_offset = 0; offset for data from 10-24-2016: 396000; 0 otherwise
+% optional:
+% YYYY_start, MM_start, DD_start, HH_start, MIN_start - data cutoff start
+% in UTC timestamp (+5h from Chicago time)
+% YYYY_end, MM_end, DD_end, HH_end, MIN_end  - data cutoff end in UTC
+% timestamp (+5h from Chicago time)
+%
 % Loads a user-selected .txt file containing exported data from Fallnet
 % and sensor probes and separates probe data for analysis
 
+function ParseProbeOutputPlusLabels(plot_data, labels_offset, YYYY_start, MM_start, DD_start, HH_start, MIN_start, YYYY_end, MM_end, DD_end, HH_end, MIN_end)
 clear all
 
-offset=0; % offset for data from 10-24-2016: 396000; 0 otherwise
-
-% flags
-filter_by_time = 0; % flag to cut spesific data range
-labels_offset = 0; % time of labels delay
-plot_data = 1; % flag to plot parsed data
+if nargin == 0
+    labels_offset = 0; % offset for data from 10-24-2016: 396000; 0 otherwise
+    plot_data = 1; % flag to plot parsed data
+elseif nargin ~= 2 && nargin ~= 12
+    error('invalid number of input arguments. Should be 0, 2 or 12');
+end
 
 % load file
 [FileName,PathName,~] = uigetfile('*.txt');
@@ -17,14 +28,17 @@ Probe = PayloadTable.Probe;
 Payload=PayloadTable.Payload;
 PhoneID = PayloadTable.UserID;
 
+date_of_data_collection = PayloadTable.Logged{1};
+date_of_data_collection = strcat(date_of_data_collection(3:4), date_of_data_collection(6:7), date_of_data_collection(9:10));
+
 %load current fall model file from github
 [FileName,PathName,~] = uigetfile('class_params*.mat');
 model=load([PathName '/' FileName]);
 Nfeatures = length(model.b);
 
-if filter_by_time
-    cutoff_start = datetime(2016,10,17,15,40,0,0);  %This is in UTC (+5h from Chicago time)
-    cutoff_end = datetime(2016,10,17,17,10,0,0);  %This is in UTC (+5h from Chicago time)
+if nargin == 12
+    cutoff_start = datetime(YYYY_start,MM_start,DD_start,HH_start,MIN_start,0,0);  %This is in UTC (+5h from Chicago time)
+    cutoff_end = datetime(YYYY_end,MM_end,DD_end,HH_end,MIN_end,0,0);  %This is in UTC (+5h from Chicago time)
 
     timestr=cellfun(@(x) strsplit(x(strfind(x,'"TIMESTAMP"'):strfind(x,'"TIMESTAMP"')+100),{':' ','}),Payload,'UniformOutput',false);
     timestamp=cellfun(@(x) str2double(x{:,2}),timestr);
@@ -73,7 +87,7 @@ for i=1:length(fall_labels)
     fall_location(i) = temp(loc+2);
 end
 
-fall_start_end = fall_start_end - offset;
+fall_start_end = fall_start_end - labels_offset;
 
 falllabels.types = fall_types;
 falllabels.start_end_marked = fall_start_end;
@@ -106,7 +120,7 @@ for i=1:length(activity_labels)
     activity_location(i) = temp(loc+2);
 end
 
-activity_start_end=activity_start_end-offset;
+activity_start_end=activity_start_end-labels_offset;
 
 %indices of correct and failure records
 correct = cellfun(@(x) isempty(strfind(x,'Failure')),data_probe);
@@ -285,8 +299,8 @@ if ~isempty(fall_labels)
     curr_data_ind = 1;
     for i=1:length(fall_labels)
         % current labels data
-        fall_start = fall_start_end(i,1)-labels_offset;
-        fall_end = fall_start_end(i,2)-labels_offset;
+        fall_start = fall_start_end(i,1);
+        fall_end = fall_start_end(i,2);
         curr_type = fall_types(i);
         curr_loc = fall_location(i);
         curr_subj = fall_subject(i);        
@@ -501,8 +515,8 @@ if ~isempty(activity_labels)
     curr_data_ind = 1;
     for i=1:length(activity_labels)
         % current labels data
-        curr_act_start = activity_start_end(i,1) - labels_offset;
-        curr_act_end = activity_start_end(i,2) - labels_offset;
+        curr_act_start = activity_start_end(i,1);
+        curr_act_end = activity_start_end(i,2);
         curr_type = activity_types(i);
         curr_loc = activity_location(i);
         curr_subj = activity_subject(i);        
@@ -602,6 +616,8 @@ actdata.failure.evalstart = labels.failure.evalstart(keep_failure); %timestamp w
 actdata.value=get_value(actdata.type_str);
 
 save activities_data actdata
+
+combine_data_into_10sec_clips(date_of_data_collection, plot_data)
 
 
 
