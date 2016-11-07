@@ -39,10 +39,10 @@ FC=[];
                 for ii=1:5
                     DCFFT=fft(data{j}(floor(length(data{j})/5*(ii-1)+1):floor(length(data{j})/5*ii),:));
                     for jj=1:8
-                        for kk=1:3
-                            DCFFT_re=[DCFFT_re trapz(real(DCFFT(floor(length(DCFFT)/8*(ii-1)+1):floor(length(DCFFT)/8*ii),kk)'))];
-                            DCFFT_im=[DCFFT_im trapz(imag(DCFFT(floor(length(DCFFT)/8*(ii-1)+1):floor(length(DCFFT)/8*ii),kk)'))];
-                            DCFFT_abs=[DCFFT_abs trapz(abs(DCFFT(floor(length(DCFFT)/8*(ii-1)+1):floor(length(DCFFT)/8*ii),kk)'))];
+                        for kk=1:3 %axis of sensor
+                            DCFFT_re=[DCFFT_re trapz(real(DCFFT(floor(length(DCFFT)/8*(jj-1)+1):floor(length(DCFFT)/8*jj),kk)'))];
+                            DCFFT_im=[DCFFT_im trapz(imag(DCFFT(floor(length(DCFFT)/8*(jj-1)+1):floor(length(DCFFT)/8*jj),kk)'))];
+                            DCFFT_abs=[DCFFT_abs trapz(abs(DCFFT(floor(length(DCFFT)/8*(jj-1)+1):floor(length(DCFFT)/8*jj),kk)'))];
                         end
                     end
                 end
