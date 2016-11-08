@@ -88,7 +88,7 @@ end
 if split
     subj=unique(labels.subject);
 else
-    subj={'CF000'}
+    subj={'CF000'};
 end
 
 for indCV=1:length(subj)
@@ -140,6 +140,16 @@ for indCV=1:length(subj)
     fvar.eps= epsF;
     fvar.nzstd= nzstd;
 
+    cvSubj=unique(labels_train.subject);
+    folds_nr=length(cvSubj);
+    fold_id=zeros(length(labels_train.subject), 1);
+    
+    % Assign subject folds
+    for indCVSubj=1:length(cvSubj)
+        inds=strcmp(labels_train.subject,cvSubj{indCVSubj});
+        fold_id(inds)=indCVSubj;
+    end
+    
     FSz= size(FN,2); %feature size
     DSz= size(FN,1); %dataset size
 
@@ -252,9 +262,9 @@ for indCV=1:length(subj)
     % crate=(numel(L0)-sum(abs(bind-L0)))/numel(L0);
 
 
-    %if ~split
-    % save class_params_ACT_nobar fvar b  nz_ind
-    %end
+    if ~split
+        save class_params_ACT_nobar fvar b  nz_ind
+    end
 
     %end;
     %% Testing the model on Test Data (if split is set to 1)

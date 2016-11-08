@@ -37,7 +37,10 @@ FC=[];
 %                     end
 %                 end
                 for ii=1:5
-                    DCFFT=fft(data{j}(floor(length(data{j})/5*(ii-1)+1):floor(length(data{j})/5*ii),:));
+                    d=data{j}(floor(length(data{j})/5*(ii-1)+1):floor(length(data{j})/5*ii),:);
+%                     m=mean(d);
+                    m=zeros(1, size(d,2));
+                    DCFFT=fft(d-repmat(m,[size(d,1) 1]));
                     for jj=1:8
                         for kk=1:3 %axis of sensor
                             DCFFT_re=[DCFFT_re trapz(real(DCFFT(floor(length(DCFFT)/8*(jj-1)+1):floor(length(DCFFT)/8*jj),kk)'))];
@@ -130,7 +133,10 @@ FC=[];
 %                     end
 %                 end
                 for ii=1:5
-                    DDCFFT=fft(data{j}(floor(length(data{j})/5*(ii-1)+1):floor(length(data{j})/5*ii),:));
+                    d=DSLN(floor(length(DSLN)/5*(ii-1)+1):floor(length(DSLN)/5*ii),:);
+%                     m=mean(d);
+                    m=zeros(1, size(d,2));
+                    DDCFFT=fft(d-repmat(m,[size(d,1) 1]));
                     for jj=1:8
                         for kk=1:3
                             DDCFFT_re=[DDCFFT_re trapz(real(DDCFFT(floor(length(DDCFFT)/8*(jj-1)+1):floor(length(DDCFFT)/8*jj),kk)'))];
@@ -224,7 +230,10 @@ FC=[];
 %                     end
 %                 end
                 for ii=1:5
-                    DCFFT=fft(data{j}(floor(length(data{j})/5*(ii-1)+1):floor(length(data{j})/5*ii),:));
+                    d=data{j}(floor(length(data{j})/5*(ii-1)+1):floor(length(data{j})/5*ii),:);
+%                     m=mean(d);
+                    m=zeros(1, size(d,2));
+                    DCFFT=fft(d-repmat(m,[size(d,1) 1]));
                     for kk=1:2
                         DCFFT_re=[DCFFT_re trapz(real(DCFFT(:,kk)'))];
                         DCFFT_im=[DCFFT_im trapz(imag(DCFFT(:,kk)'))];
