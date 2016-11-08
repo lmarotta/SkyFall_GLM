@@ -133,9 +133,9 @@ FC=[];
                     DDCFFT=fft(data{j}(floor(length(data{j})/5*(ii-1)+1):floor(length(data{j})/5*ii),:));
                     for jj=1:8
                         for kk=1:3
-                            DDCFFT_re=[DDCFFT_re trapz(real(DDCFFT(floor(length(DDCFFT)/8*(ii-1)+1):floor(length(DDCFFT)/8*ii),kk)'))];
-                            DDCFFT_im=[DDCFFT_im trapz(imag(DDCFFT(floor(length(DDCFFT)/8*(ii-1)+1):floor(length(DDCFFT)/8*ii),kk)'))];
-                            DDCFFT_abs=[DDCFFT_abs trapz(abs(DDCFFT(floor(length(DDCFFT)/8*(ii-1)+1):floor(length(DDCFFT)/8*ii),kk)'))];
+                            DDCFFT_re=[DDCFFT_re trapz(real(DDCFFT(floor(length(DDCFFT)/8*(jj-1)+1):floor(length(DDCFFT)/8*jj),kk)'))];
+                            DDCFFT_im=[DDCFFT_im trapz(imag(DDCFFT(floor(length(DDCFFT)/8*(jj-1)+1):floor(length(DDCFFT)/8*jj),kk)'))];
+                            DDCFFT_abs=[DDCFFT_abs trapz(abs(DDCFFT(floor(length(DDCFFT)/8*(jj-1)+1):floor(length(DDCFFT)/8*jj),kk)'))];
                         end
                     end
                 end
