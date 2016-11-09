@@ -22,7 +22,7 @@
 %stand_start=17
 %stand_end=18;
 
-function confmat_all=Main_GLM_ACT()
+function [confmat_all, conf_all, isfall_all]=Main_GLM_ACT()
 
 split=1; %flag to split data into test and train sets (25-75) and create cofnusion matrix
 class=0; % flag for fall classification (rather than detection only)
@@ -320,10 +320,12 @@ for indCV=1:length(subj)
             figure; imagesc(confmat./repmat(sum(confmat,2),[1 5])); colorbar; caxis([0 1])
         else
             conf= glmval(b, FN_nz, 'logit');
+            conf_all{indCV}=conf;
             id= ceil(conf-0.5); 
 
             isfall = labels_test.value < 9;
             isfall = isfall(~z_inds);
+            isfall_all{indCV}=isfall;
             fall_err = sum(~id(isfall))/sum(isfall);
             nfall_err = sum(id(~isfall))/sum(~isfall);
             err = (sum(id ~= isfall))/length(id); %error rate
@@ -373,3 +375,11 @@ for indCV=1:length(subj)
 %     saveas(gcf,'./Figs/FeaturesUsed.jpg')
 %     % end
 end
+
+[X, Y, T]=perfcurve(isfall_all, conf_all, true,'XVals',[0:0.05:1]);
+figure; errorbar(X,Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
+
+isfall=cell2mat(isfall_all');
+conf=cell2mat(conf_all');
+[X, Y, T]=perfcurve(isfall, conf, true);
+figure; plot(X,Y)
