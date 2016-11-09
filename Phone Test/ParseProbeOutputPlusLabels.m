@@ -12,7 +12,7 @@
 % and sensor probes and separates probe data for analysis
 
 function ParseProbeOutputPlusLabels(plot_data, labels_offset, YYYY_start, MM_start, DD_start, HH_start, MIN_start, YYYY_end, MM_end, DD_end, HH_end, MIN_end)
-clear all
+% clear all
 
 if nargin == 0
     labels_offset = 0; % offset for data from 10-24-2016: 396000; 0 otherwise
@@ -52,7 +52,7 @@ end
 
 % split labels and data
 fall_labels_ind = cellfun(@(x) strcmp(x,'falls'),Probe);
-fall_labels = Payload(fall_labels_ind);
+fall_labels = Payload(fall_labels_ind);  % if there are mislabeled falls, delete from this array
 
 activity_labels_ind = cellfun(@(x) strcmp(x,'activities'),Probe);
 activity_labels = Payload(activity_labels_ind);
@@ -211,6 +211,7 @@ for ind=1:length(ind_correct)
         str2double(temp_correct(iabar+1:iabar+Nsamplesbar))'];
     
     % parse interpolated sensors data
+    %{
     acc_inerp_start = find(strcmp(temp_correct,'INTERPOLATED_ACCELEROMETER_SAMPLES'));
     gyr_inerp_start = find(strcmp(temp_correct,'INTERPOLATED_GYROSCOPE_SAMPLES'));
     
@@ -231,7 +232,7 @@ for ind=1:length(ind_correct)
     Nsamplesgyr_int = Nsamplesgyr_int(2)-Nsamplesgyr_int(1)-1;
     gyro_inerp{ind} = [str2double(temp_correct(sts_int_gyr+1:sts_int_gyr+Nsamplesgyr_int))' str2double(temp_correct(ix_int_gyr+1:ix_int_gyr+Nsamplesgyr_int))' ...
         str2double(temp_correct(iy_int_gyr+1:iy_int_gyr+Nsamplesgyr_int))' str2double(temp_correct(iz_int_gyr+1:iz_int_gyr+Nsamplesgyr_int))'];
-    
+    %}
 end
 
 labels.winsize = winsize;

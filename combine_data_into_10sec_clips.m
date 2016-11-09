@@ -1,5 +1,4 @@
 function combine_data_into_10sec_clips(date, plot_data)
-clear all;
 
 load fall_data_unlabeled
 load falllabels
