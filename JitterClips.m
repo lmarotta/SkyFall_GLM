@@ -2,8 +2,8 @@
 function JitterClips(allclips)
 
 %% Create clips normally jittered w different std dev
-stdwin = [.01 .1 1 1.5 2 2.5];
-strwin = {'001','01','1','1_5','2','2_5'};
+stdwin = [.1 .5 1 1.5 2 2.5];
+strwin = {'01','05','1','1_5','2','2_5'};
 
 for l = 1:length(stdwin)
     clearvars -except stdwin strwin l allclips
@@ -175,7 +175,7 @@ end
     
     %jitter
     N = length(labels.timestamp);   %# of clips
-    starttimes = 5*rand(N,1);  %normal with std stdwin sec
+    starttimes = 5*rand(N,1);  %uniform
     endtimes = min(starttimes+5,dur);
     
     %find clips less than 5 secs long
