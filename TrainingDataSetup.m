@@ -40,7 +40,7 @@ if ~isempty(locations)
 else
     loc_inds=ones(length(data.location),1);
 end
-if ~ isempty(subjs)
+if ~isempty(subjs)
     subj_inds=cellfun(@(x) any(strcmp(x,subjs)),data.subject);
 else
     subj_inds=ones(length(data.subject),1);

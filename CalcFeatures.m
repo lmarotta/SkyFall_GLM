@@ -2,6 +2,7 @@
 
 function FC=CalcFeatures(data,stamp, new_FFT,eps)
 fvar.eps=eps;
+nbins=8;
 FC=[];
     %%
     for j=1:3
@@ -29,29 +30,75 @@ FC=[];
                 DCFFT_re=[];
                 DCFFT_im=[];
                 DCFFT_abs=[];
-%                 for ii=1:40
-%                     for jj=1:3
-%                         DCFFT_re= [DCFFT_re trapz(real(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
-%                         DCFFT_im= [DCFFT_im trapz(imag(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
-%                         DCFFT_abs= [DCFFT_abs trapz(abs(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
-%                     end
-%                 end
+                for ii=1:40
+                    for jj=1:3
+                        DCFFT_re= [DCFFT_re trapz(real(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
+                        DCFFT_im= [DCFFT_im trapz(imag(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
+                        DCFFT_abs= [DCFFT_abs trapz(abs(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
+                    end
+                end
                 for ii=1:5
                     d=data{j}(floor(length(data{j})/5*(ii-1)+1):floor(length(data{j})/5*ii),:);
 %                     m=mean(d);
                     m=zeros(1, size(d,2));
                     DCFFT=fft(d-repmat(m,[size(d,1) 1]));
-                    for jj=1:8
+                    for jj=1:nbins
                         for kk=1:3 %axis of sensor
-                            DCFFT_re=[DCFFT_re trapz(real(DCFFT(floor(length(DCFFT)/8*(jj-1)+1):floor(length(DCFFT)/8*jj),kk)'))];
-                            DCFFT_im=[DCFFT_im trapz(imag(DCFFT(floor(length(DCFFT)/8*(jj-1)+1):floor(length(DCFFT)/8*jj),kk)'))];
-                            DCFFT_abs=[DCFFT_abs trapz(abs(DCFFT(floor(length(DCFFT)/8*(jj-1)+1):floor(length(DCFFT)/8*jj),kk)'))];
+                            DCFFT_re=[DCFFT_re trapz(real(DCFFT(floor(length(DCFFT)/nbins*(jj-1)+1):floor(length(DCFFT)/nbins*jj),kk)'))];
+                            DCFFT_im=[DCFFT_im trapz(imag(DCFFT(floor(length(DCFFT)/nbins*(jj-1)+1):floor(length(DCFFT)/nbins*jj),kk)'))];
+                            DCFFT_abs=[DCFFT_abs trapz(abs(DCFFT(floor(length(DCFFT)/nbins*(jj-1)+1):floor(length(DCFFT)/nbins*jj),kk)'))];
                         end
                     end
                 end
 
             end
             
+            if new_FFT
+               % resultant and max features
+               res=sum(data{j}.^2,2);
+               DCRM=mean(res);
+               DCRMed=median(res);
+               DCRSD=[std(res) skewness(res) kurtosis(res)];
+               DCMAX=[max(abs(data{j})) max(res) max(diff(res))];
+               DCIQR=[iqr(data{j}) iqr(res) iqr(diff(res))];
+               
+               DCRANGE=range(data{j});
+               
+               Angle1=atan2(data{j}(:,1),data{j}(:,2));
+               Angle2=atan2(data{j}(:,1),data{j}(:,3));
+               Angle3=atan2(data{j}(:,2),data{j}(:,3));
+               
+               % low-pass filter on angles
+               
+%                [B,A]=butter(1,5/125);
+%                
+%                Angle1=filtfilt(B,A,Angle1);
+%                Angle2=filtfilt(B,A,Angle2);
+%                Angle3=filtfilt(B,A,Angle3);
+               
+               DCARANGE=[range(Angle1) range(Angle2) range(Angle3)];
+               DCAIQR=[iqr(Angle1) iqr(Angle2) iqr(Angle3)];
+               DCAMAX=[max(Angle1) max(Angle2) max(Angle3)];
+               DCAMIN=[min(Angle1) min(Angle2) min(Angle3)];
+               DCASTD=[std(Angle1) std(Angle2) std(Angle3)];
+               
+               %% Change in orientation after impulse (0 if no impulse)
+               [M,I]=max(res.^.5);
+               if M>2*9.8 % threshold in g's
+                   indstart=max(I-50,1);
+                   indend=min(I+50,length(Angle1));
+                   
+                   d1=Angle1(indend)-Angle1(indstart);
+                   d2=Angle2(indend)-Angle2(indstart);
+                   d3=Angle3(indend)-Angle3(indstart);
+                   
+                   DCADELTA=[abs(d1) abs(d2) abs(d3)];
+               else
+                   DCADELTA=[0 0 0];
+               end
+                   
+               NEWFEAT=[DCRM DCRMed DCRSD DCMAX DCRANGE DCIQR DCARANGE DCAIQR DCAMAX DCAMIN DCASTD DCADELTA];
+            end
             %% Fitting the recodings as the function of time
 %             bnum=100;
 %             alp=1e-4;
@@ -125,23 +172,23 @@ FC=[];
                 DDCFFT_re=[];
                 DDCFFT_im=[];
                 DDCFFT_abs=[];
-%                 for ii=1:40
-%                     for jj=1:3
-%                         DDCFFT_re= [DDCFFT_re trapz(real(DDCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DDCFFT)/40*ii),jj)'))];
-%                         DDCFFT_im= [DDCFFT_im trapz(imag(DDCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DDCFFT)/40*ii),jj)'))];
-%                         DDCFFT_abs= [DDCFFT_abs trapz(abs(DDCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DDCFFT)/40*ii),jj)'))];
-%                     end
-%                 end
+                for ii=1:40
+                    for jj=1:3
+                        DDCFFT_re= [DDCFFT_re trapz(real(DDCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DDCFFT)/40*ii),jj)'))];
+                        DDCFFT_im= [DDCFFT_im trapz(imag(DDCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DDCFFT)/40*ii),jj)'))];
+                        DDCFFT_abs= [DDCFFT_abs trapz(abs(DDCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DDCFFT)/40*ii),jj)'))];
+                    end
+                end
                 for ii=1:5
                     d=DSLN(floor(length(DSLN)/5*(ii-1)+1):floor(length(DSLN)/5*ii),:);
 %                     m=mean(d);
                     m=zeros(1, size(d,2));
                     DDCFFT=fft(d-repmat(m,[size(d,1) 1]));
-                    for jj=1:8
+                    for jj=1:nbins
                         for kk=1:3
-                            DDCFFT_re=[DDCFFT_re trapz(real(DDCFFT(floor(length(DDCFFT)/8*(jj-1)+1):floor(length(DDCFFT)/8*jj),kk)'))];
-                            DDCFFT_im=[DDCFFT_im trapz(imag(DDCFFT(floor(length(DDCFFT)/8*(jj-1)+1):floor(length(DDCFFT)/8*jj),kk)'))];
-                            DDCFFT_abs=[DDCFFT_abs trapz(abs(DDCFFT(floor(length(DDCFFT)/8*(jj-1)+1):floor(length(DDCFFT)/8*jj),kk)'))];
+                            DDCFFT_re=[DDCFFT_re trapz(real(DDCFFT(floor(length(DDCFFT)/nbins*(jj-1)+1):floor(length(DDCFFT)/nbins*jj),kk)'))];
+                            DDCFFT_im=[DDCFFT_im trapz(imag(DDCFFT(floor(length(DDCFFT)/nbins*(jj-1)+1):floor(length(DDCFFT)/nbins*jj),kk)'))];
+                            DDCFFT_abs=[DDCFFT_abs trapz(abs(DDCFFT(floor(length(DDCFFT)/nbins*(jj-1)+1):floor(length(DDCFFT)/nbins*jj),kk)'))];
                         end
                     end
                 end
@@ -187,8 +234,11 @@ FC=[];
             DDCK= kurtosis(DSLN);
             
             %% stacking the features of the  sensors (Gyro or accelerometer) together
-            FC= [FC, DCM,  DCMed, DCFFT_re, DCFFT_im,  DCFFT_abs, DCfit,  DCCorrV, DCstd DCS, DCK, DDCM, DDCMed, DDCCorrV, DDCstd, DDCS, DDCK, DDCFFT_re, DDCFFT_im,  DDCFFT_abs, DDCfit];
-            
+            if ~new_FFT
+                FC= [FC, DCM,  DCMed, DCFFT_re, DCFFT_im,  DCFFT_abs, DCfit,  DCCorrV, DCstd DCS, DCK, DDCM, DDCMed, DDCCorrV, DDCstd, DDCS, DDCK, DDCFFT_re, DDCFFT_im,  DDCFFT_abs, DDCfit];
+            else
+                FC= [FC, DCM,  DCMed, DCFFT_re, DCFFT_im,  DCFFT_abs, DCfit,  DCCorrV, DCstd DCS, DCK, DDCM, DDCMed, DDCCorrV, DDCstd, DDCS, DDCK, DDCFFT_re, DDCFFT_im,  DDCFFT_abs, DDCfit, NEWFEAT];
+            end
             %%
         else
             %--------------------------------------------------------------------------------------------------------------------------------------
@@ -222,13 +272,13 @@ FC=[];
                 DCFFT_re=[];
                 DCFFT_im=[];
                 DCFFT_abs=[];
-%                 for ii=1:5
-%                     for jj=1:2
-%                         DCFFT_re= [DCFFT_re trapz(real(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
-%                         DCFFT_im= [DCFFT_im trapz(imag(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
-%                         DCFFT_abs= [DCFFT_abs trapz(abs(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
-%                     end
-%                 end
+                for ii=1:5
+                    for jj=1:2
+                        DCFFT_re= [DCFFT_re trapz(real(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
+                        DCFFT_im= [DCFFT_im trapz(imag(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
+                        DCFFT_abs= [DCFFT_abs trapz(abs(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
+                    end
+                end
                 for ii=1:5
                     d=data{j}(floor(length(data{j})/5*(ii-1)+1):floor(length(data{j})/5*ii),:);
 %                     m=mean(d);

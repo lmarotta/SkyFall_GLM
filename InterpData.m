@@ -17,7 +17,9 @@ for i=1:length(labels.acce)
         data=sortrows(data);
         data(diff(data(:,1))==0,:)=[];
         
-        acce{i}=[t' spline(data(:,1)'-data(1,1),data(:,2:end)',t')'];
+        t_ind=min(floor(max(data(:,1)-data(1,1))*50),250);
+        
+        acce{i}=[t(1:t_ind)' spline(data(:,1)'-data(1,1),data(:,2:end)',t(1:t_ind)')'];
     else acce{i}=[];
     end
     if size(labels.gyro{i},1)>199 && max(diff(labels.gyro{i}(:,1)))<.2
@@ -27,7 +29,9 @@ for i=1:length(labels.acce)
         data=sortrows(data);
         data(diff(data(:,1))==0,:)=[];
         
-        gyro{i}=[t' spline(data(:,1)'-data(1,1),data(:,2:end)',t')'];
+        t_ind=min(floor(max(data(:,1)-data(1,1))*50),250);
+        
+        gyro{i}=[t(1:t_ind)' spline(data(:,1)'-data(1,1),data(:,2:end)',t(1:t_ind)')'];
     else gyro{i}=[];
     end
     if size(labels.baro{i},1)>9 && range(labels.baro{i}(:,1))>4
@@ -37,7 +41,9 @@ for i=1:length(labels.acce)
         data=sortrows(data);
         data(diff(data(:,1))==0,:)=[];
         
-        baro{i}=[tbar' spline(data(:,1)'-data(1,1),data(:,2:end)',tbar')'];
+        t_ind=min(floor(max(data(:,1)-data(1,1))*6),30);
+        
+        baro{i}=[tbar(1:t_ind)' spline(data(:,1)'-data(1,1),data(:,2:end)',tbar(1:t_ind)')'];
     else baro{i}=[];
     end
 end

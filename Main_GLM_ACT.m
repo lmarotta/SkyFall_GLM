@@ -289,9 +289,6 @@ for indCV=1:length(subj)
         else
             F=[];
             for i=1:length(labels_test.acce)
-                if i==222
-                    dummy=1;
-                end
                 F=[F; extract_feature_test_phone(labels_test.acce{i}, labels_test.gyro{i}, labels_test.baro{i},fvar, new_FFT)];
             end
             if no_baro
@@ -376,7 +373,7 @@ for indCV=1:length(subj)
 %     % end
 end
 
-[X, Y, T]=perfcurve(isfall_all, conf_all, true,'XVals',[0:0.05:1]);
+[X, Y, T]=perfcurve(isfall_all(2:end), conf_all(2:end), true,'XVals',[0:0.05:1]);
 figure; errorbar(X,Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
 
 isfall=cell2mat(isfall_all');
