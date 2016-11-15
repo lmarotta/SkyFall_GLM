@@ -103,7 +103,7 @@ FC=[];
                
                %Autocorr Features
                
-               X=xcorr(data{j});
+               X=[xcorr(data{j}(:,1)) xcorr(data{j}(:,2)) xcorr(data{j}(:,3))];
                XM=mean(X,1);
                XSD=[std(X) skewness(X) kurtosis(X)];
                XMed=[median(X) iqr(X) range(X) max(X) min(X)];
