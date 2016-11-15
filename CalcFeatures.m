@@ -46,8 +46,6 @@ for j=1:3
             end
         end
         
-        
-        
         % resultant and max features
         res=sum(data{j}.^2,2);
         DCRM=mean(res);
@@ -96,22 +94,18 @@ for j=1:3
         end
         
         %Autocorr Features
-        
-        X=xcorr(data{j});
+               
+        X=[xcorr(data{j}(:,1)) xcorr(data{j}(:,2)) xcorr(data{j}(:,3))];
         XM=mean(X,1);
         XSD=[std(X) skewness(X) kurtosis(X)];
         XMed=[median(X) iqr(X) range(X) max(X) min(X)];
-        
+
         X=diff(X);
         XDM=mean(X,1);
         XDSD=[std(X) skewness(X) kurtosis(X)];
         XDMed=[median(X) iqr(X) range(X) max(X) min(X)];
         
-        NEWFEAT=[DCRM DCRMed DCRSD DCMAX DCRANGE DCIQR DCAMEAN DCARANGE DCAIQR DCAMAX DCAMIN DCASTD DCADELTA XM XSD XMed XDM XDSD XDMed];
-        
-        
-        
-        
+        NEWFEAT=[DCRM DCRMed DCRSD DCMAX DCRANGE DCIQR DCAMEAN DCARANGE DCAIQR DCAMAX DCAMIN DCASTD DCADELTA XM XSD XMed XDM XDSD XDMed];    
         
         DCfit121=  polyfit(DC(:,1),DC(:,2), 1);
         DCfit131=  polyfit(DC(:,1),DC(:,3), 1);
