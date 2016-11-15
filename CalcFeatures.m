@@ -16,7 +16,7 @@ FC=[];
             %% First column: Elapsed time from the first recording
             DC=[stamp{j}-stamp{j}(1),data{j}];
             %% mean
-            DCM= mean(DC,1);
+            DCM= mean(data{j},1);
             %% median
             DCMed= median(data{j},1);
             %%  the real, imaginary and absolute value of the first 40 components   of fast fourier transform
@@ -59,7 +59,7 @@ FC=[];
                DCRM=mean(res);
                DCRMed=median(res);
                DCRSD=[std(res) skewness(res) kurtosis(res)];
-               DCMAX=[max(abs(data{j})) max(res) max(diff(res))];
+               DCMAX=[max(abs(data{j})) max(res) max(diff(res)) min(diff(res))];
                DCIQR=[iqr(data{j}) iqr(res) iqr(diff(res))];
                
                DCRANGE=range(data{j});
@@ -76,28 +76,44 @@ FC=[];
 %                Angle2=filtfilt(B,A,Angle2);
 %                Angle3=filtfilt(B,A,Angle3);
                
+               DCAMEAN=[mean(Angle1) mean(Angle2) mean(Angle3)];
                DCARANGE=[range(Angle1) range(Angle2) range(Angle3)];
                DCAIQR=[iqr(Angle1) iqr(Angle2) iqr(Angle3)];
                DCAMAX=[max(Angle1) max(Angle2) max(Angle3)];
                DCAMIN=[min(Angle1) min(Angle2) min(Angle3)];
-               DCASTD=[std(Angle1) std(Angle2) std(Angle3)];
+               DCASTD=[std(Angle1) std(Angle2) std(Angle3) ...
+                   skewness(Angle1) skewness(Angle2) skewness(Angle3) ...
+                   kurtosis(Angle1) kurtosis(Angle2) kurtosis(Angle3)];
                
                %% Change in orientation after impulse (0 if no impulse)
                [M,I]=max(res.^.5);
-               if M>2*9.8 % threshold in g's
+               if M>2*9.8 && j==2 % threshold in g's
                    indstart=max(I-50,1);
                    indend=min(I+50,length(Angle1));
                    
                    d1=Angle1(indend)-Angle1(indstart);
                    d2=Angle2(indend)-Angle2(indstart);
                    d3=Angle3(indend)-Angle3(indstart);
+                   dall=dot(data{j}(indend),data{j}(indstart));
                    
-                   DCADELTA=[abs(d1) abs(d2) abs(d3)];
+                   DCADELTA=[abs(d1) abs(d2) abs(d3) dall dall/norm(dall)];
                else
-                   DCADELTA=[0 0 0];
+                   DCADELTA=[0 0 0 0 0];
                end
-                   
-               NEWFEAT=[DCRM DCRMed DCRSD DCMAX DCRANGE DCIQR DCARANGE DCAIQR DCAMAX DCAMIN DCASTD DCADELTA];
+               
+               %Autocorr Features
+               
+               X=xcorr(data{j});
+               XM=mean(X,1);
+               XSD=[std(X) skewness(X) kurtosis(X)];
+               XMed=[median(X) iqr(X) range(X) max(X) min(X)];
+               
+               X=diff(X);
+               XDM=mean(X,1);
+               XDSD=[std(X) skewness(X) kurtosis(X)];
+               XDMed=[median(X) iqr(X) range(X) max(X) min(X)];
+               
+               NEWFEAT=[DCRM DCRMed DCRSD DCMAX DCRANGE DCIQR DCAMEAN DCARANGE DCAIQR DCAMAX DCAMIN DCASTD DCADELTA XM XSD XMed XDM XDSD XDMed];
             end
             %% Fitting the recodings as the function of time
 %             bnum=100;
@@ -250,8 +266,9 @@ FC=[];
             data{j}= data{j}(ind, :);
             %% First column: Elapsed time from the first recording
             DC=[stamp{j}-stamp{j}(1),data{j}];
+%             DC=[stamp{j}-stamp{j}(1),data{j}-mean(data{j})];
             %%  Mean
-            DCM= mean(DC,1);
+            DCM= mean(data{j},1);
             %% Median
             DCMed=median(data{j},1);
             %% Correlation coefficients between the sensors and time

@@ -22,7 +22,7 @@
 %stand_start=17
 %stand_end=18;
 
-function [confmat_all, conf_all, isfall_all]=Main_GLM_ACT()
+function [confmat_all, conf_all, isfall_all, b_all, fvar_all, nz_ind_all]=Main_GLM_ACT()
 
 split=1; %flag to split data into test and train sets (25-75) and create cofnusion matrix
 class=0; % flag for fall classification (rather than detection only)
@@ -32,7 +32,7 @@ remove_activities = 0;
 java_feat=0;
 loop2=0;
 new_FFT=1; % use old or new FFT features
-no_baro=0; % 0 - use barometer
+no_baro=1; % 0 - use barometer
 
 addpath(genpath('./glmnet_matlab/'))
 % rng(10001)
@@ -131,7 +131,8 @@ for indCV=1:length(subj)
     else
          [FN, L, fold_id, muF, stdF, epsF, nzstd]=extract_feature_matlab(labels_train, folds_nr, new_FFT);
         if no_baro
-            pre_baro=sum(nzstd(1:1700));
+            pre_baro=sum(nzstd(1:end-80));
+            nzstd(end-80:end)=0;
             FN=FN(:,1:pre_baro);
         end
     end
@@ -255,6 +256,10 @@ for indCV=1:length(subj)
         b= glmnetPredict(d_nz{alp_ind_nz}.glmnet_fit,[],lam_opt_nz,'coefficients');
     end
 
+    b_all{indCV}=b;
+    fvar_all(indCV)=fvar;
+    nz_ind_all{indCV}=nz_ind;
+    
     %This part might be removed
     % d= glmval(b, FN_nz, 'logit');
     % bind=ceil(d-0.5)';
