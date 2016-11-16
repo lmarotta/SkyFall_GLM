@@ -2,7 +2,8 @@
 
 function FC=CalcFeatures(data,stamp, new_FFT,eps)
 fvar.eps=eps;
-nbins=8;
+nbins=10;
+nbins_large=50; % bins for large window
 FC=[];
     %%
     for j=1:3
@@ -30,11 +31,11 @@ FC=[];
                 DCFFT_re=[];
                 DCFFT_im=[];
                 DCFFT_abs=[];
-                for ii=1:40
+                for ii=1:50
                     for jj=1:3
-                        DCFFT_re= [DCFFT_re trapz(real(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
-                        DCFFT_im= [DCFFT_im trapz(imag(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
-                        DCFFT_abs= [DCFFT_abs trapz(abs(DCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DCFFT)/40*ii),jj)'))];
+                        DCFFT_re= [DCFFT_re trapz(real(DCFFT(floor(length(DCFFT)/nbins_large*(ii-1)+1):floor(length(DCFFT)/nbins_large*ii),jj)'))];
+                        DCFFT_im= [DCFFT_im trapz(imag(DCFFT(floor(length(DCFFT)/nbins_large*(ii-1)+1):floor(length(DCFFT)/nbins_large*ii),jj)'))];
+                        DCFFT_abs= [DCFFT_abs trapz(abs(DCFFT(floor(length(DCFFT)/nbins_large*(ii-1)+1):floor(length(DCFFT)/nbins_large*ii),jj)'))];
                     end
                 end
                 for ii=1:5
@@ -188,11 +189,11 @@ FC=[];
                 DDCFFT_re=[];
                 DDCFFT_im=[];
                 DDCFFT_abs=[];
-                for ii=1:40
+                for ii=1:nbins_large
                     for jj=1:3
-                        DDCFFT_re= [DDCFFT_re trapz(real(DDCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DDCFFT)/40*ii),jj)'))];
-                        DDCFFT_im= [DDCFFT_im trapz(imag(DDCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DDCFFT)/40*ii),jj)'))];
-                        DDCFFT_abs= [DDCFFT_abs trapz(abs(DDCFFT(floor(length(DCFFT)/40*(ii-1)+1):floor(length(DDCFFT)/40*ii),jj)'))];
+                        DDCFFT_re= [DDCFFT_re trapz(real(DDCFFT(floor(length(DCFFT)/nbins_large*(ii-1)+1):floor(length(DDCFFT)/nbins_large*ii),jj)'))];
+                        DDCFFT_im= [DDCFFT_im trapz(imag(DDCFFT(floor(length(DCFFT)/nbins_large*(ii-1)+1):floor(length(DDCFFT)/nbins_large*ii),jj)'))];
+                        DDCFFT_abs= [DDCFFT_abs trapz(abs(DDCFFT(floor(length(DCFFT)/nbins_large*(ii-1)+1):floor(length(DDCFFT)/nbins_large*ii),jj)'))];
                     end
                 end
                 for ii=1:5

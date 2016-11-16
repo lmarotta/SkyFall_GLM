@@ -32,7 +32,7 @@ remove_activities = 0;
 java_feat=0;
 loop2=0;
 new_FFT=1; % use old or new FFT features
-no_baro=1; % 0 - use barometer
+no_baro=0; % 0 - use barometer
 
 addpath(genpath('./glmnet_matlab/'))
 % rng(10001)
@@ -383,5 +383,6 @@ figure; errorbar(X,Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
 
 isfall=cell2mat(isfall_all');
 conf=cell2mat(conf_all');
-[X, Y, T]=perfcurve(isfall, conf, true);
+[X, Y, T, AUC]=perfcurve(isfall, conf, true);
 figure; plot(X,Y)
+AUC
