@@ -8,10 +8,10 @@
 function TrainingDataSetup(locations, subjs, n)
 
 if nargin<2
-    subjs=[];
+    subjs=[]; n =1;
 end
 if nargin<1
-    locations=[];
+    locations=[]; n=1;
 end    
 
 filenames=dir('TrainingData/falls_data_10sec_*.mat');
@@ -104,4 +104,8 @@ data.location(empty_inds)=[];
 data.type_str(empty_inds)=[];
 
 labels=data;
-save Training_Data labels
+
+%% Feature calculation 
+
+F = extract_feature_matlab(labels);
+save Training_Data labels F

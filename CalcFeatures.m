@@ -46,7 +46,7 @@ for j=1:3
             end
         end
         
-        % resultant and max features
+        %vector magnitude (norm) and max features
         res=sum(data{j}.^2,2);
         DCRM=mean(res);
         DCRMed=median(res);
