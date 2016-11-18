@@ -8,9 +8,9 @@
 function [confmat_all, conf_all, isfall_all, b_all, fvar_all, nz_ind_all]=Main_GLM_ACT()
 
 epsF = 1e-6; %threshold on std dev for standardizing features
-split=1; %flag to split data into test and train sets (25-75) and create cofnusion matrix
+split=1; %flag to split data into test and train sets (25-75) and create confusion matrix
 class=0; % flag for fall classification (rather than detection only)
-no_baro=1; % 0 - use barometer
+no_baro=0; % 0 - use barometer
 nbaro_features = 80;
 
 % fall_like=9; % 5 to set as non-fall, 9 to set as fall
@@ -134,7 +134,8 @@ for indCV=1:length(subj)
         alp_now= alpha(i)      %current alpha value
         min_err_iter(i)= err_now;
         lam_min(i)= d{i}.lambda_min; %value of lambda that gives minimum cvm for current itearation i (alpha)
-        lam_ind(i)= find(d{i}.lambda==d{i}.lambda_min); %index of lambda that corresponding to min lambda? 
+%         lam_ind(i)= find(d{i}.lambda==d{i}.lambda_min); %index of lambda that corresponding to min lambda?
+        [~, lam_ind(i)]= min(d{i}.lambda);
     end
 
     [min_err, alp_ind]= min(min_err_iter);

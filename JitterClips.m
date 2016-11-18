@@ -5,7 +5,7 @@
 function data=JitterClips(data,n)
 
 m=length(data.acce);
-
+rng(200)
 X=5*rand(n, 1);
 
 acce=cell(m*n,1);
@@ -33,5 +33,3 @@ data.value=repmat(data.value,[n 1]);
 data.type_str=repmat(data.type_str,[n 1]);
 data.subject=repmat(data.subject,[n 1]);
 data.location=repmat(data.location,[n 1]);
-
-save falls_jittered data

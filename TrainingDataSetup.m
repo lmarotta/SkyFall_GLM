@@ -108,4 +108,5 @@ labels=data;
 %% Feature calculation 
 
 F = extract_feature_matlab(labels);
-save Training_Data labels F
+save Training_Data F
+save Training_Data_labels labels

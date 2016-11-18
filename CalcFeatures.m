@@ -2,8 +2,8 @@
 
 function FC=CalcFeatures(data,stamp)
 fvar.eps=1e-6; %threshold to prevent correlation coefficients from being 0
-nbins_large=40;
-nbins=8; %for FFT
+nbins_large=50;
+nbins=10; %for FFT
 FC=[];
 %%
 for j=1:3
@@ -20,6 +20,11 @@ for j=1:3
         DCM= mean(data{j},1);
         %% median
         DCMed= median(data{j},1);
+        
+        %% Entropy
+        
+        DCENT=[Entropy(floor(data{j})) Entropy(floor(data{j}*10)) Entropy(floor(data{j}*.1))];
+        
         %%  the real, imaginary and absolute value of the first 40 components   of fast fourier transform
         
         DCFFT= fft(data{j});
@@ -33,6 +38,9 @@ for j=1:3
                 DCFFT_abs= [DCFFT_abs trapz(abs(DCFFT(floor(length(DCFFT)/nbins_large*(ii-1)+1):floor(length(DCFFT)/nbins_large*ii),jj)'))];
             end
         end
+        
+        FFTENT=[Entropy(floor(abs(DCFFT))) Entropy(floor(abs(DCFFT)*.1)) Entropy(floor(abs(DCFFT)*.01))];
+        
         for ii=1:5
             d=data{j}(floor(length(data{j})/5*(ii-1)+1):floor(length(data{j})/5*ii),:);
             %                     m=mean(d);
@@ -169,6 +177,9 @@ for j=1:3
                 DDCFFT_abs= [DDCFFT_abs trapz(abs(DDCFFT(floor(length(DCFFT)/nbins_large*(ii-1)+1):floor(length(DDCFFT)/nbins_large*ii),jj)'))];
             end
         end
+        
+        DFFTENT=[Entropy(floor(abs(DDCFFT))) Entropy(floor(abs(DDCFFT)*.1)) Entropy(floor(abs(DDCFFT)*.01))];
+        
         for ii=1:5
             d=DSLN(floor(length(DSLN)/5*(ii-1)+1):floor(length(DSLN)/5*ii),:);
             %                     m=mean(d);
@@ -182,6 +193,7 @@ for j=1:3
                 end
             end
         end
+        
         
         
         %% Fitting the derivatives of recording signals as a function of time
@@ -214,7 +226,7 @@ for j=1:3
         DDCK= kurtosis(DSLN);
         
         %% stacking the features of the  sensors (Gyro or accelerometer) together
-        FC= [FC, DCM,  DCMed, DCFFT_re, DCFFT_im,  DCFFT_abs, DCfit,  DCCorrV, DCstd DCS, DCK, DDCM, DDCMed, DDCCorrV, DDCstd, DDCS, DDCK, DDCFFT_re, DDCFFT_im,  DDCFFT_abs, DDCfit, NEWFEAT];
+        FC= [FC, DCM,  DCMed, DCFFT_re, DCFFT_im,  DCFFT_abs, DCfit,  DCCorrV, DCstd DCS, DCK, DDCM, DDCMed, DDCCorrV, DDCstd, DDCS, DDCK, DDCFFT_re, DDCFFT_im,  DDCFFT_abs, DDCfit, NEWFEAT, FFTENT, DFFTENT, DCENT];
         
         %%
     else
@@ -225,6 +237,7 @@ for j=1:3
         %% sorting the  data in terms of their time stamps
         [stamp{j}, ind]= sort(stamp{j},'ascend');
         data{j}= data{j}(ind, :);
+        data{j}=data{j}-ones(length(data{j}),1)*mean(data{j});
         %% First column: Elapsed time from the first recording
         DC=[stamp{j}-stamp{j}(1),data{j}];
         %             DC=[stamp{j}-stamp{j}(1),data{j}-mean(data{j})];

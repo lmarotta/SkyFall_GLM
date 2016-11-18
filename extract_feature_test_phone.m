@@ -29,7 +29,7 @@ if size(gyro_data,1)>=100 && size( accel_data ,1)>=100 && size( baro_data,1 )>=1
     stamp{2}= accel_data(:, 1);
     stamp{3}= baro_data(:, 1);
     %%
-    FC=CalcFeatures(data,stamp,new_FFT, fvar.eps);
+    FC=OldCalc(data,stamp,new_FFT, fvar.eps);
     
     F= FC(fvar.nzstd);
     %% standardizing the data by subtracting the mean and dividing it by variance
