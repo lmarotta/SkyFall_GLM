@@ -286,7 +286,7 @@ labels.failure.evalstart = failure_evalstart; %timestamp when the model started 
 
 save fall_data_unlabeled labels
 
-%% label activities data
+%% label falls data
 if ~isempty(fall_labels)
     
     keep_ind = zeros(length(labels.winsize),1);
@@ -436,11 +436,11 @@ keep_ind = logical(keep_ind);
 keep_failure = logical(keep_failure);
 
 data.winsize = labels.winsize(keep_ind);
-data.features = labels.features(keep_ind); %fallnet model features
-data.timestampSTART_END = labels.timestampSTART_END(keep_ind); %fallnet model features
+data.features = labels.features(keep_ind, true(1,size(labels.features,2))); %fallnet model features
+data.timestampSTART_END = labels.timestampSTART_END(keep_ind, true(1,2)); %fallnet model features
 data.evalstart = labels.evalstart(keep_ind);  %timestamp when the model started to evaluate  
-data.sensor_counts = labels.sensor_counts(keep_ind); % # of samples per sensor
-data.duration = labels.duration(keep_ind);  %evaluation time for each record (preparation, verification, evaluation)  
+data.sensor_counts = labels.sensor_counts(keep_ind, true(1,3)); % # of samples per sensor
+data.duration = labels.duration(keep_ind, true(1,3));  %evaluation time for each record (preparation, verification, evaluation)  
 data.acce = labels.acce(keep_ind);      %sensor data for each window
 data.gyro = labels.gyro(keep_ind);
 data.baro = labels.baro(keep_ind);
@@ -449,10 +449,10 @@ data.type_str = type_str;
 data.subject = subject;
 data.location = location;
 
-data.failure.timestampSTART_END = labels.failure.timestampSTART_END(keep_failure); %start and end timestamps for sensor data in the window
+data.failure.timestampSTART_END = labels.failure.timestampSTART_END(keep_failure, true(1,2)); %start and end timestamps for sensor data in the window
 data.failure.reason = labels.failure.reason(keep_failure);
 data.failure.value = labels.failure.value(keep_failure);
-data.failure.duration = labels.failure.duration(keep_failure); 
+data.failure.duration = labels.failure.duration(keep_failure, true(1,3)); 
 data.failure.evalstart = labels.failure.evalstart(keep_failure); %timestamp when the model started to evaluate 
 
 % Values field for data
@@ -480,11 +480,11 @@ for indSubj=1:length(subjs)
 end
 
 data.winsize = labels.winsize(keep_ind);
-data.features = labels.features(keep_ind); %fallnet model features
-data.timestampSTART_END = labels.timestampSTART_END(keep_ind); %fallnet model features
+data.features = labels.features(keep_ind, true(1,size(labels.features,2))); %fallnet model features
+data.timestampSTART_END = labels.timestampSTART_END(keep_ind, true(1,2)); %fallnet model features
 data.evalstart = labels.evalstart(keep_ind);  %timestamp when the model started to evaluate  
-data.sensor_counts = labels.sensor_counts(keep_ind); % # of samples per sensor
-data.duration = labels.duration(keep_ind);  %evaluation time for each record (preparation, verification, evaluation)  
+data.sensor_counts = labels.sensor_counts(keep_ind, true(1,3)); % # of samples per sensor
+data.duration = labels.duration(keep_ind, true(1,3));  %evaluation time for each record (preparation, verification, evaluation)  
 data.acce = labels.acce(keep_ind);      %sensor data for each window
 data.gyro = labels.gyro(keep_ind);
 data.baro = labels.baro(keep_ind);
@@ -595,11 +595,11 @@ keep_ind = logical(keep_ind);
 keep_failure = logical(keep_failure);
 
 actdata.winsize = labels.winsize(keep_ind);
-actdata.features = labels.features(keep_ind); %fallnet model features
-actdata.timestampSTART_END = labels.timestampSTART_END(keep_ind); %fallnet model features
+actdata.features = labels.features(keep_ind, true(1,size(labels.features,2))); %fallnet model features
+actdata.timestampSTART_END = labels.timestampSTART_END(keep_ind, true(1,2)); %fallnet model features
 actdata.evalstart = labels.evalstart(keep_ind);  %timestamp when the model started to evaluate  
-actdata.sensor_counts = labels.sensor_counts(keep_ind); % # of samples per sensor
-actdata.duration = labels.duration(keep_ind);  %evaluation time for each record (preparation, verification, evaluation)  
+actdata.sensor_counts = labels.sensor_counts(keep_ind, true(1,3)); % # of samples per sensor
+actdata.duration = labels.duration(keep_ind, true(1,3));  %evaluation time for each record (preparation, verification, evaluation)  
 actdata.acce = labels.acce(keep_ind);      %sensor data for each window
 actdata.gyro = labels.gyro(keep_ind);
 actdata.baro = labels.baro(keep_ind);
@@ -608,10 +608,10 @@ actdata.type_str = type_str;
 actdata.subject = subject;
 actdata.location = location;
 
-actdata.failure.timestampSTART_END = labels.failure.timestampSTART_END(keep_failure); %start and end timestamps for sensor data in the window
+actdata.failure.timestampSTART_END = labels.failure.timestampSTART_END(keep_failure, true(1,2)); %start and end timestamps for sensor data in the window
 actdata.failure.reason = labels.failure.reason(keep_failure);
 actdata.failure.value = labels.failure.value(keep_failure);
-actdata.failure.duration = labels.failure.duration(keep_failure); 
+actdata.failure.duration = labels.failure.duration(keep_failure, true(1,3)); 
 actdata.failure.evalstart = labels.failure.evalstart(keep_failure); %timestamp when the model started to evaluate 
 
 actdata.value=get_value(actdata.type_str);
