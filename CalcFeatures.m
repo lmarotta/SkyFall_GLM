@@ -23,7 +23,7 @@ for j=1:3
         
         %% Entropy
         
-        DCENT=[Entropy(floor(data{j})) Entropy(floor(data{j}*10)) Entropy(floor(data{j}*.1))];
+        DCENT=Entropy(floor(zscore(data{j})/.2));
         
         %%  the real, imaginary and absolute value of the first 40 components   of fast fourier transform
         
@@ -39,21 +39,42 @@ for j=1:3
             end
         end
         
-        FFTENT=[Entropy(floor(abs(DCFFT))) Entropy(floor(abs(DCFFT)*.1)) Entropy(floor(abs(DCFFT)*.01))];
+        FFTENT=Entropy(floor(zscore(abs(DCFFT))/.2));
+        
+        
+        DC_E=[];
+        E=[];
         
         for ii=1:5
             d=data{j}(floor(length(data{j})/5*(ii-1)+1):floor(length(data{j})/5*ii),:);
-            %                     m=mean(d);
+            % m=mean(d);
             m=zeros(1, size(d,2));
             DCFFT=fft(d-repmat(m,[size(d,1) 1]));
+            E_temp=[];
             for jj=1:nbins
                 for kk=1:3 %axis of sensor
                     DCFFT_re=[DCFFT_re trapz(real(DCFFT(floor(length(DCFFT)/nbins*(jj-1)+1):floor(length(DCFFT)/nbins*jj),kk)'))];
                     DCFFT_im=[DCFFT_im trapz(imag(DCFFT(floor(length(DCFFT)/nbins*(jj-1)+1):floor(length(DCFFT)/nbins*jj),kk)'))];
-                    DCFFT_abs=[DCFFT_abs trapz(abs(DCFFT(floor(length(DCFFT)/nbins*(jj-1)+1):floor(length(DCFFT)/nbins*jj),kk)'))];
+                    
+                    temp(1,1,kk)=trapz(abs(DCFFT(floor(length(DCFFT)/nbins*(jj-1)+1):floor(length(DCFFT)/nbins*jj),kk)'));
+                    DCFFT_abs=[DCFFT_abs temp(kk)];                
                 end
+                E_temp=[E_temp temp];
+            end
+            DC_E=[DC_E; E_temp];
+            E=[E sum(d.^2)];
+        end
+        
+        Ent_temp=[];
+        
+        for ii=1:nbins
+            for jj=1:3
+                Ent_temp(:,ii,jj)=Entropy(floor(zscore(DC_E(:,ii,jj))/.2));
             end
         end
+        
+        DCENERGY=[mean(DC_E) std(DC_E) skewness(DC_E) kurtosis(DC_E) Ent_temp];
+        DCENERGY=[DCENERGY(:)' mean(E) std(E) skewness(E) kurtosis(E) Entropy(floor(zscore(E)/.2))];
         
         %vector magnitude (norm) and max features
         res=sum(data{j}.^2,2);
@@ -85,6 +106,23 @@ for j=1:3
         DCASTD=[std(Angle1) std(Angle2) std(Angle3) ...
             skewness(Angle1) skewness(Angle2) skewness(Angle3) ...
             kurtosis(Angle1) kurtosis(Angle2) kurtosis(Angle3)];
+              
+        % SampEntropy
+        
+        DCENT=[DCENT sampleEntropy(zscore(data{j}),1,.2,1)];
+        
+        % X Products
+        XY=data{j}(:,1).*data{j}(:,2);
+        XZ=data{j}(:,1).*data{j}(:,3);
+        YZ=data{j}(:,2).*data{j}(:,3);
+        
+        TX=stamp{j}.*data{j}(:,1);
+        TY=stamp{j}.*data{j}(:,2);
+        TZ=stamp{j}.*data{j}(:,3);
+        
+        XProd=[XY XZ YZ TX TY TZ];
+        
+        XP=[abs(mean(XProd)) std(XProd) skewness(XProd) kurtosis(XProd) median(XProd) iqr(XProd) range(XProd) max(XProd) min(XProd)];
         
         %% Change in orientation after impulse (0 if no impulse)
         [M,I]=max(res.^.5);
@@ -146,11 +184,11 @@ for j=1:3
         %last line could be updated with DCCorrV= DCCorrup
         
         %% standard deviation of channels
-        DCstd= std(DC,0,1);
+        DCstd= std(data{j},0,1);
         %% skewness od data (3rd order moment)
-        DCS= skewness(DC);
+        DCS= skewness(data{j});
         %% Kurtosis of the dataset
-        DCK= kurtosis(DC);
+        DCK= kurtosis(data{j});
         %%
         %--------------------------------------------------------------------------------------------------------------------------------------
         %Computing the statistics of the derivative of data
@@ -160,6 +198,7 @@ for j=1:3
         stamp_diff= diff(stamp{j});
         IDSL= (stamp_diff>0);
         DSLN= DDC(IDSL,:)./repmat(stamp_diff(IDSL),1,3);
+        stamp_diff=stamp_diff(IDSL);
         %% Computing the mean of derivatives
         DDCM= mean(DSLN,1);
         %% Computing the median of derivatives
@@ -178,23 +217,59 @@ for j=1:3
             end
         end
         
-        DFFTENT=[Entropy(floor(abs(DDCFFT))) Entropy(floor(abs(DDCFFT)*.1)) Entropy(floor(abs(DDCFFT)*.01))];
+        DFFTENT=Entropy(floor(zscore(abs(DDCFFT))/.2));
+        
+        FFT_E=[];
+        E=[];
         
         for ii=1:5
             d=DSLN(floor(length(DSLN)/5*(ii-1)+1):floor(length(DSLN)/5*ii),:);
             %                     m=mean(d);
             m=zeros(1, size(d,2));
             DDCFFT=fft(d-repmat(m,[size(d,1) 1]));
+           
+            E_temp=[];
             for jj=1:nbins
                 for kk=1:3
                     DDCFFT_re=[DDCFFT_re trapz(real(DDCFFT(floor(length(DDCFFT)/nbins*(jj-1)+1):floor(length(DDCFFT)/nbins*jj),kk)'))];
                     DDCFFT_im=[DDCFFT_im trapz(imag(DDCFFT(floor(length(DDCFFT)/nbins*(jj-1)+1):floor(length(DDCFFT)/nbins*jj),kk)'))];
-                    DDCFFT_abs=[DDCFFT_abs trapz(abs(DDCFFT(floor(length(DDCFFT)/nbins*(jj-1)+1):floor(length(DDCFFT)/nbins*jj),kk)'))];
+                    
+                    temp(1,1,kk)=trapz(abs(DDCFFT(floor(length(DDCFFT)/nbins*(jj-1)+1):floor(length(DDCFFT)/nbins*jj),kk)'));
+                    DDCFFT_abs=[DDCFFT_abs temp(kk)];
                 end
+                E_temp=[E_temp temp];
+            end
+            FFT_E=[FFT_E E_temp];
+            E=[E sum(d.^2)];
+        end
+        
+        Ent_temp=[];
+        
+        for ii=1:nbins
+            for jj=1:3
+                Ent_temp(:,ii,jj)=Entropy(floor(zscore(FFT_E(:,ii,jj))/.2));
             end
         end
         
+        FFTENERGY=[mean(FFT_E) std(FFT_E) skewness(FFT_E) kurtosis(FFT_E) Ent_temp];
+        FFTENERGY=[FFTENERGY(:)' mean(E) std(E) skewness(E) kurtosis(E) Entropy(floor(zscore(E)/.2))];
         
+        % SampEntropy
+        
+        DCENT=[DCENT sampleEntropy(zscore(DDC),1,.2,1)];
+        
+        % X Products
+        XY=DSLN(:,1).*DSLN(:,2);
+        XZ=DSLN(:,1).*DSLN(:,3);
+        YZ=DSLN(:,2).*DSLN(:,3);
+        
+        TX=stamp_diff.*DSLN(:,1);
+        TY=stamp_diff.*DSLN(:,2);
+        TZ=stamp_diff.*DSLN(:,3);
+        
+        XProd=[XY XZ YZ TX TY TZ];
+        
+        XP=[XP abs(mean(XProd)) std(XProd) skewness(XProd) kurtosis(XProd) median(XProd) iqr(XProd) range(XProd) max(XProd) min(XProd)];
         
         %% Fitting the derivatives of recording signals as a function of time
         TD= stamp{j}(IDSL)-stamp{j}(ind(1));
@@ -226,7 +301,7 @@ for j=1:3
         DDCK= kurtosis(DSLN);
         
         %% stacking the features of the  sensors (Gyro or accelerometer) together
-        FC= [FC, DCM,  DCMed, DCFFT_re, DCFFT_im,  DCFFT_abs, DCfit,  DCCorrV, DCstd DCS, DCK, DDCM, DDCMed, DDCCorrV, DDCstd, DDCS, DDCK, DDCFFT_re, DDCFFT_im,  DDCFFT_abs, DDCfit, NEWFEAT, FFTENT, DFFTENT, DCENT];
+        FC= [FC, DCM,  DCMed, DCFFT_re, DCFFT_im,  DCFFT_abs, DCfit,  DCCorrV, DCstd DCS, DCK, DDCM, DDCMed, DDCCorrV, DDCstd, DDCS, DDCK, DDCFFT_re, DDCFFT_im,  DDCFFT_abs, DDCfit, NEWFEAT, FFTENT, DFFTENT, DCENT, XP, DCENERGY, FFTENERGY];
         
         %%
     else
@@ -294,11 +369,11 @@ for j=1:3
         DCfit=[DCfit121,  DCfit131, DCfit122,  DCfit132,  DCfit123,...
             DCfit133,  DCfit124,  DCfit134];
         %% standard deviation
-        DCstd= std(DC,0,1);
+        DCstd= std(data{j},0,1);
         %%
-        DCskew= skewness(DC);
+        DCskew= skewness(data{j});
         %% Kurtosis of data
-        DCkurt= kurtosis(DC);
+        DCkurt= kurtosis(data{j});
         %% derivative of data
         DDC= diff(data{j},1);
         

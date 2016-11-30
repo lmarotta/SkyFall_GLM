@@ -21,8 +21,8 @@ addpath(genpath('./glmnet_matlab/'))
 % rng(10001)
 %% Initialization
 
-nalpha=10;
-nlambda=200;
+nalpha=3;
+nlambda=50;
 
 %%% Loading the data
 
@@ -120,7 +120,7 @@ for indCV=1:length(subj)
     lam_ind =zeros(nalpha, 1);
 
 %loop over alpha - optimize on LOSOCV 
-    for i=1: nalpha
+    for i=1:nalpha
         %rng(200);
         opts.alpha= alpha(i);
 
@@ -134,8 +134,7 @@ for indCV=1:length(subj)
         alp_now= alpha(i)      %current alpha value
         min_err_iter(i)= err_now;
         lam_min(i)= d{i}.lambda_min; %value of lambda that gives minimum cvm for current itearation i (alpha)
-%         lam_ind(i)= find(d{i}.lambda==d{i}.lambda_min); %index of lambda that corresponding to min lambda?
-        [~, lam_ind(i)]= min(d{i}.lambda);
+        lam_ind(i)= find(d{i}.lambda==d{i}.lambda_min); %index of lambda that corresponding to min lambda?
     end
 
     [min_err, alp_ind]= min(min_err_iter);
@@ -156,7 +155,7 @@ for indCV=1:length(subj)
     nz_ind_all{indCV}=nz_ind;
 
     if ~split
-        save class_params_ACT_nobar fvar b nz_ind
+        save class_params fvar b nz_ind
     end
 
     %% Testing the model on Test Data (left out subject)
