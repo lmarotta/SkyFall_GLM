@@ -64,7 +64,7 @@ end
           
 
 %convert subjectcode to numeric
-%1 = CF (healthy) 2 = AF (amputee)
+%1 = CF (healthy); 0 = AF (amputee)
 subjcode = cellfun(@(x) strcmp(x(1:2),'CF'),labels.subject);
 % subjtype = cellfun(@(x) x(1:2),labels.subject,'UniformOutput',false)
 
