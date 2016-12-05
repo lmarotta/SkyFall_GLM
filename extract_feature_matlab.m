@@ -1,6 +1,6 @@
 function F = extract_feature_matlab(labels)
 
-labelsNum= numel(labels.value);
+labelsNum= numel(labels.acce);
 
 %extract feature dimension
 i = 1;
@@ -65,7 +65,9 @@ end
 
 %convert subjectcode to numeric
 %1 = CF (healthy) 2 = AF (amputee)
-subjcode = cellfun(@(x) strcmp(x(1:2),'CF'),labels.subject);
-% subjtype = cellfun(@(x) x(1:2),labels.subject,'UniformOutput',false)
+if ~isempty(labels.value)
+    subjcode = cellfun(@(x) strcmp(x(1:2),'CF'),labels.subject);
+    % subjtype = cellfun(@(x) x(1:2),labels.subject,'UniformOutput',false)
 
-F = [subj_id location subjcode labels.value F];
+    F = [subj_id location subjcode labels.value F];
+end
