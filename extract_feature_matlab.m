@@ -68,6 +68,6 @@ end
 if ~isempty(labels.value)
     subjcode = cellfun(@(x) strcmp(x(1:2),'CF'),labels.subject);
     % subjtype = cellfun(@(x) x(1:2),labels.subject,'UniformOutput',false)
-
+end
     F = [subj_id location subjcode labels.value F];
 end
