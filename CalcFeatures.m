@@ -4,6 +4,7 @@ function FC=CalcFeatures(data,stamp)
 fvar.eps=1e-6; %threshold to prevent correlation coefficients from being 0
 nbins_large=50;
 nbins=10; %for FFT
+nwin=10;
 FC=[];
 %%
 for j=1:3
@@ -27,7 +28,6 @@ for j=1:3
         %% Kurtosis of the dataset
         DCK= kurtosis(data{j});
         %% Entropy
-        
         DCENT=Entropy(floor(zscore(data{j})/.2));
         
         %%  the real, imaginary and absolute value of the first 40 components   of fast fourier transform
@@ -46,23 +46,23 @@ for j=1:3
         
         FFTENT=Entropy(floor(zscore(abs(DCFFT))/.2));
         
-        
         DC_E=[];
         E=[];
         
-        for ii=1:5
-            d=data{j}(floor(length(data{j})/5*(ii-1)+1):floor(length(data{j})/5*ii),:);
+        for ii=1:nwin-(nwin/10-1)
+            winsize=floor(length(data{j})/10);
+            d=data{j}(floor(length(data{j})/nwin*(ii-1)+1):floor(length(data{j})/nwin*(ii-1)+winsize),:);
             % m=mean(d);
             m=zeros(1, size(d,2));
             DCFFT=fft(d-repmat(m,[size(d,1) 1]));
             E_temp=[];
             for jj=1:5
                 for kk=1:3 %axis of sensor
-                    DCFFT_re=[DCFFT_re trapz(real(DCFFT(floor(length(DCFFT)/nbins*(jj-1)+1):floor(length(DCFFT)/nbins*jj),kk)'))];
-                    DCFFT_im=[DCFFT_im trapz(imag(DCFFT(floor(length(DCFFT)/nbins*(jj-1)+1):floor(length(DCFFT)/nbins*jj),kk)'))];
-                    
                     temp(1,1,kk)=trapz(abs(DCFFT(floor(length(DCFFT)/nbins*(jj-1)+1):floor(length(DCFFT)/nbins*jj),kk)'));
-                    DCFFT_abs=[DCFFT_abs temp(kk)];                
+                    
+                    if mod(ii-1,nwin/10)==0
+                        DCFFT_abs=[DCFFT_abs temp(kk)];
+                    end  
                 end
                 E_temp=[E_temp temp];
             end
@@ -159,8 +159,6 @@ for j=1:3
         DDCFFT_abs=[];
         for ii=1:nbins_large/2
             for jj=1:3
-                DDCFFT_re= [DDCFFT_re trapz(real(DDCFFT(floor(length(DCFFT)/nbins_large*(ii-1)+1):floor(length(DDCFFT)/nbins_large*ii),jj)'))];
-                DDCFFT_im= [DDCFFT_im trapz(imag(DDCFFT(floor(length(DCFFT)/nbins_large*(ii-1)+1):floor(length(DDCFFT)/nbins_large*ii),jj)'))];
                 DDCFFT_abs= [DDCFFT_abs trapz(abs(DDCFFT(floor(length(DCFFT)/nbins_large*(ii-1)+1):floor(length(DDCFFT)/nbins_large*ii),jj)'))];
             end
         end
@@ -170,8 +168,9 @@ for j=1:3
         FFT_E=[];
         E=[];
         
-        for ii=1:5
-            d=DSLN(floor(length(DSLN)/5*(ii-1)+1):floor(length(DSLN)/5*ii),:);
+        for ii=1:nwin-(nwin/10-1)
+            winsize=floor(length(data{j})/10);
+            d=data{j}(floor(length(data{j})/nwin*(ii-1)+1):floor(length(data{j})/nwin*(ii-1)+winsize),:);
             %                     m=mean(d);
             m=zeros(1, size(d,2));
             DDCFFT=fft(d-repmat(m,[size(d,1) 1]));
@@ -179,11 +178,11 @@ for j=1:3
             E_temp=[];
             for jj=1:5
                 for kk=1:3
-                    DDCFFT_re=[DDCFFT_re trapz(real(DDCFFT(floor(length(DDCFFT)/nbins*(jj-1)+1):floor(length(DDCFFT)/nbins*jj),kk)'))];
-                    DDCFFT_im=[DDCFFT_im trapz(imag(DDCFFT(floor(length(DDCFFT)/nbins*(jj-1)+1):floor(length(DDCFFT)/nbins*jj),kk)'))];
-                    
                     temp(1,1,kk)=trapz(abs(DDCFFT(floor(length(DDCFFT)/nbins*(jj-1)+1):floor(length(DDCFFT)/nbins*jj),kk)'));
-                    DDCFFT_abs=[DDCFFT_abs temp(kk)];
+                    
+                    if mod(ii-1,nwin/10)==0
+                        DCFFT_abs=[DCFFT_abs temp(kk)];
+                    end
                 end
                 E_temp=[E_temp temp];
             end

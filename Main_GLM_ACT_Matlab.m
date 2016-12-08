@@ -12,7 +12,7 @@ amputee_test = 1;   %use amputee data only for test
 epsF = 1e-6; %threshold on std dev for standardizing features
 class=0; % flag for fall classification (rather than detection only)
 no_baro=0; % 0 - use barometer
-nbaro_features = 80;
+nbaro_features = 106;
 % rng(10001)
 %% Loading the data
 
@@ -47,7 +47,7 @@ folds_nr = length(subj)-1; %for glmnet
 
 %initialize fvar structure
 f = cell(length(subj),1);
-fvar= struct('mu',f,'std',f,'eps',f,'nzstd',f);
+fvar= struct('std',f,'mu',f,'eps',f,'nzstd',f);
 
 for indCV=1:length(subj)
 
@@ -83,6 +83,7 @@ for indCV=1:length(subj)
     
 end
 
+fvar_all=fvar;
 %% Plot ROC curve for all data
 [X, Y, T]=perfcurve(isfall_all(2:end), conf_all(2:end), true,'XVals',[0:0.05:1]); %skip subject 1 (CK) data
 figure; errorbar(X,Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
@@ -93,7 +94,7 @@ conf=cell2mat(conf_all');
 figure; plot(X,Y)
 AUC
 
-%% Train a model on all Healthy lab data 
+%% Train a model on all Healthy lab data
 if amputee_test
     Thres = nanmean(OptThres);  %the optimal threshold
     [fvar,b,nz_ind]=Modeltrain(F,L,alpha,lambda,no_baro);
