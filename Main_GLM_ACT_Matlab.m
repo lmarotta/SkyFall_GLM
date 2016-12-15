@@ -104,4 +104,11 @@ if amputee_test
     [pred,conf,confmat] = Modeleval(FAmputee,LAmputee,fvar,nz_ind,b,Thres,1);
     %Save model trained on healthy and threshold
     save class_params_Stage1Model fvar b nz_ind Thres
+    isfall = LAmputee;
+    [X, Y, T, AUC]=perfcurve(isfall, conf, true);
+    figure; plot(X,Y,'LineWidth',3)
+    xlabel('False positive rate')
+    ylabel('True positive rate')
+    title('ROC Fall detection in Amputee')
+
 end
