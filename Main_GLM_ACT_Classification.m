@@ -5,10 +5,13 @@
 %leftfall=4;
 %Activities=9; (everything else)
 
-% function [confmat_all, conf_all, isfall_all, b_all, fvar, nz_ind_all, FP]=Main_GLM_ACT_Matlab_ThrTuning()
+%feature matrix structure
+% F = [subj_id location subjcode labels.value Features];
+%Location: (0 = NA, 1=Pouch, 2=Pocket, 3=Hand)
+%Subjcode: 1 = CF (healthy); 0 = AF (amputee)
 
 FP=[]; %to store FP and train model stage 2
-amputee_test = 1;   %use amputee data only for test
+amputee_CV = 0;   %use only amputee data for CV (train and test)
 epsF = 1e-6; %threshold on std dev for standardizing features
 class=0; % flag for fall classification (rather than detection only)
 no_baro=0; % 0 - use barometer
@@ -34,30 +37,28 @@ LB=(L<9);%+1;  %binary labeling
 % Remove non-falls for classification
 F(~LB,:)=[];
 L(~LB)=[];
+%combine left and right together
 % L(L==4)=3;
 % L(L==2)=1;
 % L(L==3)=2;
-L(L==9)=5;
+L(L==9)=5; %non-falls
 
-if ~amputee_test
-    subjid = F(:,1:3);  %[subjid, location subjcode]
-    F = F(:,5:end); %the feature matrix
-else
-    ind = F(:,3) == 0;      %index of amputee subjects
-%     FAmputee= F(ind,5:end);
-    FAmputee = F(ind,:);    %features from amputee only (test)
+if ~amputee_CV %train on healthy and test on amputee
+    ind = F(:,3) == 0;      %index of amputee subjects (test)
+    FAmputee= F(ind,5:end);
     subjid = F(~ind,1:3);  %[subjid, location subjcode]
-    F = F(~ind,5:end);
+    F = F(~ind,5:end);     %features for training
     LAmputee = L(ind);      %labels for amputees
     L = L(~ind);            %labels for all others
+else %CV on amputee only
+    ind = F(:,3) == 0;      %index of amputee subjects
+    subjid = F(ind,1:3);  %[subjid, location subjcode]
+    F = F(ind,5:end);
+    L = L(ind);      %labels for amputees
+    
 end
 
-F=FAmputee(:,5:end);
-L=LAmputee;
-subjid = FAmputee(:,1:3);
-
 subj=unique(subjid(:,1));
-folds_nr = length(subj)-1; %for glmnet
 
 %% LOSO CV
 %This CV is used to find an optimal threshold to achieve desired
@@ -67,52 +68,56 @@ folds_nr = length(subj)-1; %for glmnet
 f = cell(length(subj),1);
 fvar= struct('std',f,'mu',f,'eps',f,'nzstd',f);
 
-for indCV=1:length(subj)
-
-    test_subj=subj(indCV);
-    indtrain = subjid(:,1)~=test_subj;
-    indtest = ~indtrain;
-
-    disp(['Training model with subject' num2str(indCV) 'out'])
+if amputee_CV %LOSO CV on amputees
     
-    if RF
-        RFModel=TreeBagger(50,F(indtrain,:),L(indtrain),'OOBPred','on');
-        figure; plot(oobError(RFModel))
-%         t = templateTree('MinLeafSize',5);
-%         RFModel=fitensemble(F(indtrain,:),L(indtrain),'RUSBoost',20,t,'LearnRate',0.1);
-    else
-        L1=L; L2=L; L3=L; L4=L;
-        L1(L~=1)=2; 
-        L2(L==2)=1; L2(L~=2)=2;
-        L3(L==3)=1; L3(L~=3)=2;
-        L4(L==4)=1; L4(L~=4)=2;
+    for indCV=1:length(subj)
         
-        Model1=lassoglm(F(indtrain,:),L1(indtrain),'binomial','Alpha',alpha,'Lambda',lambda);
-        Model2=lassoglm
+        test_subj=subj(indCV);
+        indtrain = subjid(:,1)~=test_subj;
+        indtest = ~indtrain;
+        
+        disp(['Training model with subject' num2str(indCV) 'out'])
+        disp(['Training Data size ' num2str(size(F(indtrain,:),1)) ' instances - # Features ' num2str(size(F(indtrain,:),2))])
+        
+        if RF
+            RFModel=TreeBagger(50,F(indtrain,:),L(indtrain),'OOBPred','on');
+            figure; plot(oobError(RFModel))
+            %         t = templateTree('MinLeafSize',5);
+            %         RFModel=fitensemble(F(indtrain,:),L(indtrain),'RUSBoost',20,t,'LearnRate',0.1);
+        else
+            L1=L; L2=L; L3=L; L4=L;
+            L1(L~=1)=2;
+            L2(L==2)=1; L2(L~=2)=2;
+            L3(L==3)=1; L3(L~=3)=2;
+            L4(L==4)=1; L4(L~=4)=2;
+            
+            Model1=lassoglm(F(indtrain,:),L1(indtrain),'binomial','Alpha',alpha,'Lambda',lambda);
+            Model2=lassoglm
+        end
+        
+        
+        %Evaluate model on left out AMPUTEE
+        P=predict(RFModel,F(indtest,:));
+        confmat=confusionmat(L(indtest),str2double(P),'order',1:length(unique(L)));
+        figure, imagesc(confmat./repmat(sum(confmat,2),[1 length(unique(L))]));
+
     end
     
-    %Evaluate model on AMPUTEES
-    P=predict(RFModel,F(indtest,:));
-    confmat=confusionmat(L(indtest),str2double(P),'order',1:length(unique(L)));
-    figure, imagesc(confmat./repmat(sum(confmat,2),[1 length(unique(L))]));
-
-  
-    
-end
-
-%% Train a model on all Healthy lab data
-if amputee_test
-    RFModel=TreeBagger(50,F,L,'OOBPred','on');
-    figure; plot(oobError(RFModel))
-%     t = templateTree('MinLeafSize',5);
-%     RFModel=fitensemble(F,L,'RUSBoost',20,t,'LearnRate',0.1);
-
+else %Train on all healthy and test on amputees
     disp('Training model on all healthy data')
-   
+    disp(['Training Data size ' num2str(size(F,1)) ' instances - # Features ' num2str(size(F,2))])
+
+    RFModel=TreeBagger(30,F,L,'OOBPred','on');
+    figure; plot(oobError(RFModel))
+    %     t = templateTree('MinLeafSize',5);
+    %     RFModel=fitensemble(F,L,'RUSBoost',20,t,'LearnRate',0.1);
+    
     %Evaluate model on AMPUTEES
     P=predict(RFModel,FAmputee);
-    confmat=confusionmat(LAmputee,str2double(P),'order',1:length(unique(L)));
+    P = str2double(P);
+    confmat=confusionmat(LAmputee,P,'order',1:length(unique(L)));
     figure, imagesc(confmat./repmat(sum(confmat,2),[1 length(unique(L))]));
-    %Save model trained on healthy and threshold
+    acc = sum(P == LAmputee)/length(LAmputee)
+    title(['Accuracy = ' num2str(acc)])
     
 end
