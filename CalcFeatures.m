@@ -35,12 +35,10 @@ for j=1:3
         %%  the real, imaginary and absolute value of the first 40 components   of fast fourier transform
         
         DCFFT= fft(data{j});
-        DCFFT_re=[];
-        DCFFT_im=[];
         DCFFT_abs=[];
         for ii=1:nbins_large*FFTSize
             for jj=1:3
-                DCFFT_abs= [DCFFT_abs trapz(abs(DCFFT(floor(length(DCFFT)/nbins_large*(ii-1)+1):floor(length(DCFFT)/nbins_large*ii),jj)'))];
+                DCFFT_abs= [DCFFT_abs mean(abs(DCFFT(floor(length(DCFFT)/nbins_large*(ii-1)+1):floor(length(DCFFT)/nbins_large*ii),jj)'))];
             end
         end
         
@@ -58,7 +56,7 @@ for j=1:3
             E_temp=[];
             for jj=1:nbins*FFTSize
                 for kk=1:3 %axis of sensor
-                    temp(1,1,kk)=trapz(abs(DCFFT(floor(length(DCFFT)/nbins*(jj-1)+1):floor(length(DCFFT)/nbins*jj),kk)'));
+                    temp(1,1,kk)=mean(abs(DCFFT(floor(length(DCFFT)/nbins*(jj-1)+1):floor(length(DCFFT)/nbins*jj),kk)'));
                     if mod(ii-1,nwin/5)==0
                         DCFFT_abs=[DCFFT_abs temp(kk)];
                     end  
@@ -96,17 +94,12 @@ for j=1:3
         Angle3=atan2(data{j}(:,2),data{j}(:,3));
         
         DCAMEAN=[mean(Angle1) mean(Angle2) mean(Angle3)];
-        DCARANGE=[range(Angle1) range(Angle2) range(Angle3)];
         DCAIQR=[iqr(Angle1) iqr(Angle2) iqr(Angle3)];
         DCAMAX=[max(Angle1) max(Angle2) max(Angle3)];
         DCAMIN=[min(Angle1) min(Angle2) min(Angle3)];
         DCASTD=[std(Angle1) std(Angle2) std(Angle3) ...
             skewness(Angle1) skewness(Angle2) skewness(Angle3) ...
             kurtosis(Angle1) kurtosis(Angle2) kurtosis(Angle3)];
-              
-        % SampEntropy
-        
-        DCENT=[DCENT Entropy(floor(zscore(data{j})/.2))];
         
         % X Products
         XY=data{j}(:,1).*data{j}(:,2);
@@ -115,7 +108,7 @@ for j=1:3
         
         XProd=[XY XZ YZ];
         
-        XP=[abs(mean(XProd)) std(XProd) skewness(XProd) kurtosis(XProd) median(XProd) iqr(XProd) range(XProd) max(XProd) min(XProd)];
+        XP=[abs(mean(XProd)) std(XProd) skewness(XProd) kurtosis(XProd) median(XProd) iqr(XProd) max(XProd) min(XProd)];
         
         %Autocorr Features
                
@@ -124,7 +117,7 @@ for j=1:3
         XSD=[std(X) skewness(X) kurtosis(X)];
         XMed=[median(X) iqr(X) range(X) max(X) min(X)];
         
-        NEWFEAT=[DCRM DCRMed DCRSD DCMAX DCRANGE DCIQR DCAMEAN DCARANGE DCAIQR DCAMAX DCAMIN DCASTD XM XSD XMed];    
+        NEWFEAT=[DCRM DCRMed DCRSD DCMAX DCIQR DCRANGE DCAMEAN DCAIQR DCAMAX DCAMIN DCASTD]; % XM XSD XMed];    
         
         %% computing the correlation coefficients between different channels of the sensors
         DCCorr= corrcoef(DC);
@@ -150,13 +143,16 @@ for j=1:3
         DDCM= mean(DSLN,1);
         %% Computing the median of derivatives
         DDCMed= median(DSLN,1);
+        
+        %% Entropy
+        DCENT=[DCENT Entropy(floor(zscore(DSLN)/.2))];     
         %%  The real, imaginary and absolute value of the first 40 components   of fast fourier transform  of derivatives
         
         DDCFFT= fft(DSLN);
         DDCFFT_abs=[];
         for ii=1:nbins_large*FFTSize
             for jj=1:3
-                DDCFFT_abs= [DDCFFT_abs trapz(abs(DDCFFT(floor(length(DCFFT)/nbins_large*(ii-1)+1):floor(length(DDCFFT)/nbins_large*ii),jj)'))];
+                DDCFFT_abs= [DDCFFT_abs mean(abs(DDCFFT(floor(length(DCFFT)/nbins_large*(ii-1)+1):floor(length(DDCFFT)/nbins_large*ii),jj)'))];
             end
         end
         
@@ -166,8 +162,8 @@ for j=1:3
         E=[];
         
         for ii=1:nwin-(nwin/5-1)
-            winsize=floor(length(data{j})/5);
-            d=data{j}(floor(length(data{j})/nwin*(ii-1)+1):floor(length(data{j})/nwin*(ii-1)+winsize),:);
+            winsize=floor(length(DSLN)/5);
+            d=DSLN(floor(length(DSLN)/nwin*(ii-1)+1):floor(length(DSLN)/nwin*(ii-1)+winsize),:);
             %                     m=mean(d);
             m=zeros(1, size(d,2));
             DDCFFT=fft(d-repmat(m,[size(d,1) 1]));
@@ -175,9 +171,9 @@ for j=1:3
             E_temp=[];
             for jj=1:nbins*FFTSize
                 for kk=1:3
-                    temp(1,1,kk)=trapz(abs(DDCFFT(floor(length(DDCFFT)/nbins*(jj-1)+1):floor(length(DDCFFT)/nbins*jj),kk)'));
+                    temp(1,1,kk)=mean(abs(DDCFFT(floor(length(DDCFFT)/nbins*(jj-1)+1):floor(length(DDCFFT)/nbins*jj),kk)'));
                     if mod(ii-1,nwin/5)==0
-                        DCFFT_abs=[DCFFT_abs temp(kk)];
+                        DDCFFT_abs=[DDCFFT_abs temp(kk)];
                     end
                 end
                 E_temp=[E_temp temp];
@@ -197,10 +193,6 @@ for j=1:3
         FFTENERGY=[mean(FFT_E) std(FFT_E) skewness(FFT_E) kurtosis(FFT_E) Ent_temp];
         FFTENERGY=[FFTENERGY(:)' mean(E) std(E) skewness(E) kurtosis(E) Entropy(floor(zscore(E)/.2))];
         
-        % SampEntropy
-        
-        DCENT=[DCENT Entropy(floor(zscore(DDC)/.2))];
-        
         % X Products
         XY=DSLN(:,1).*DSLN(:,2);
         XZ=DSLN(:,1).*DSLN(:,3);
@@ -208,7 +200,7 @@ for j=1:3
         
         XProd=[XY XZ YZ];
         
-        XP=[XP abs(mean(XProd)) std(XProd) skewness(XProd) kurtosis(XProd) median(XProd) iqr(XProd) range(XProd) max(XProd) min(XProd)];
+        XP=[XP abs(mean(XProd)) std(XProd) skewness(XProd) kurtosis(XProd) median(XProd) iqr(XProd) max(XProd) min(XProd)];
 
         %%  standard deviations of derivatives
         DDCstd= std(DSLN,0,1);
@@ -227,7 +219,7 @@ for j=1:3
         %             continue % skip barometer features
         %% sorting the  data in terms of their time stamps
         [stamp{j}, ind]= sort(stamp{j},'ascend');
-        data{j}= data{j}(ind, 1);
+        data{j}= data{j}(ind, 2);
         data{j}=data{j}-ones(length(data{j}),1)*mean(data{j});
         %% First column: Elapsed time from the first recording
         DC=[stamp{j}-stamp{j}(1),data{j}]; % use only pressure (no altitude)
@@ -250,7 +242,7 @@ for j=1:3
             m=zeros(1, size(d,2));
             DCFFT=fft(d-repmat(m,[size(d,1) 1]));
             for kk=1:1
-                DCFFT_abs=[DCFFT_abs trapz(abs(DCFFT(:,kk)'))];
+                DCFFT_abs=[DCFFT_abs mean(abs(DCFFT(:,kk)'))];
             end
         end
         
