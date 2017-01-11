@@ -2,22 +2,40 @@
 % Inputs:
 % locations     Cell array of desired data locations {'pouch', 'pocket', 'hand'}
 % subjs         Cell array of desired subject IDs
-%
+% condition     0: healthy, 1: Amputee, 2: healthy outdoor 
 % leave inputs empty to use all
 
-function TrainingDataSetup(locations, subjs, n)
+function F = TrainingDataSetup(locations, subjs, n, condition, savedfilename)
 
+if nargin<5
+    savedfilename='Training_Data';
+end
+if nargin < 4
+    condition = 0;
+end
 if nargin<2
     subjs=[]; n =1;
+    savedfilename='Training_Data';
 end
 if nargin<1
     locations=[]; n=1;
+    savedfilename='Training_Data';
+
 end    
 
-filenames=dir('TrainingData/falls_data_10sec_*.mat');
+switch condition
+    case 0 
+        filepath = './TrainingData/Healthy/';
+    case 1
+        filepath = './TrainingData/';
+    case 2
+        filepath = './TrainingData/Outdoors/';
+end
+
+filenames=dir([filepath,'falls_data_10sec_*.mat']);
 
 for indF=1:length(filenames)
-    d=load(['TrainingData/' filenames(indF).name]);
+    d=load([filepath filenames(indF).name]);
     
     if indF==1, data=d.data;
     else
@@ -108,5 +126,7 @@ labels=data;
 %% Feature calculation 
 
 F = extract_feature_matlab(labels);
-save Training_Data F
-save Training_Data_labels labels
+save([savedfilename '.mat'],'F')
+save([savedfilename '_labels.mat'], 'labels')
+% save Training_Data F
+% save Training_Data_labels labels
