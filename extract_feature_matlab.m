@@ -84,6 +84,8 @@ for i =1:length(locs)
             location(inds) = 2;
         case 'hand'
             location(inds) = 3;
+        case 'hand '
+            location(inds) = 3;
     end
 end    
           
