@@ -2,11 +2,11 @@
 
 % LOSO CV on Healthy - Train/Test on Indoor falls
 % Input: Features set (0:reduced, 1:full)
-         %Number of locations (1:waist, 2:waist+pocket, 3:all)
+%Number of locations (1:waist, 2:waist+pocket, 3:all)
 % Output: AUC, Sens, Spec
 function results = GeneratePaperResults
 
-% close all
+close all
 %% Store Amputees data (all 3 locations) for testing
 %Feature matrix assembled as follows
 % F = [subj_id location subjcode labels Features];
@@ -25,33 +25,33 @@ else
     X = X.F;
 end
 
-[AUC{2},Sens{2},Spec{2}] = LOSOCV(X,X_Amp,1,0,0); %RF
-[AUC{4},Sens{4},Spec{4}] = LOSOCV(X,X_Amp,2,0,0);
-[AUC{6},Sens{6},Spec{6}] = LOSOCV(X,X_Amp,3,0,0);
-[AUC{1},Sens{1},Spec{1}] = LOSOCV(X,X_Amp,1,1,0); %GLMnet
-[AUC{3},Sens{3},Spec{3}] = LOSOCV(X,X_Amp,2,1,0);
-[AUC{5},Sens{5},Spec{5}] = LOSOCV(X,X_Amp,3,1,0);
+% [AUC{2},Sens{2},Spec{2}] = LOSOCV(X,X_Amp,1,0,0); %RF
+% [AUC{4},Sens{4},Spec{4}] = LOSOCV(X,X_Amp,2,0,0);
+% [AUC{6},Sens{6},Spec{6}] = LOSOCV(X,X_Amp,3,0,0);
+% [AUC{1},Sens{1},Spec{1}] = LOSOCV(X,X_Amp,1,1,0); %GLMnet
+% [AUC{3},Sens{3},Spec{3}] = LOSOCV(X,X_Amp,2,1,0);
+[AUC,Sens,Spec] = LOSOCV(X,X_Amp,3,1,0);
 
 mAUC=cellfun(@mean,AUC);
 sAUC=cellfun(@std,AUC);
 
-figure; hold on; bar(mAUC); for i=1:6; errorbar(i,mAUC(i), 0, sAUC(i),'Color','k'); end
-
-mSens=cellfun(@mean,Sens);
-sSens=cellfun(@std,Sens);
-
-figure; hold on; bar(mSens); for i=1:6; errorbar(i,mSens(i), 0, sSens(i),'Color','k'); end
-
-mSpec=cellfun(@mean,Spec);
-sSpec=cellfun(@std,Spec);
-
-figure; hold on; bar(mSpec); for i=1:6; errorbar(i,mSpec(i), 0, sSpec(i),'Color','k'); end
+% figure; hold on; bar(mAUC); for i=1:6; errorbar(i,mAUC(i), 0, sAUC(i),'Color','k'); end
+%
+% mSens=cellfun(@mean,Sens);
+% sSens=cellfun(@std,Sens);
+%
+% figure; hold on; bar(mSens); for i=1:6; errorbar(i,mSens(i), 0, sSens(i),'Color','k'); end
+%
+% mSpec=cellfun(@mean,Spec);
+% sSpec=cellfun(@std,Spec);
+%
+% figure; hold on; bar(mSpec); for i=1:6; errorbar(i,mSpec(i), 0, sSpec(i),'Color','k'); end
 
 results.AUC = AUC;
 results.Sens = Sens;
 results.Spec = Spec;
 
-end 
+end
 
 function [F,L,subjid] = dataextraction(X)
 
@@ -83,13 +83,16 @@ L_w = L(subjid(:,2)<=n_locations);
 ratio = sum(L_w)/sum(~L_w);   %falls/non_falls
 sprintf('Nlocs = %d, falls/non_falls = %f',n_locations,ratio)
 
-AUC=zeros(1,length(subj));
-Sens=zeros(1,length(subj));
-Spec=zeros(1,length(subj));
 
 conf_all=cell(1,length(subj));
 isfall_all=cell(1,length(subj));
 confmat_all=zeros(2,2,length(subj));
+
+%% LOSO CV HEALTHY
+Nruns = 1;  %average multiple runs for each subject
+AUC_HH=zeros(Nruns,length(subj));
+Sens_HH=zeros(Nruns,length(subj));
+Spec_HH=zeros(Nruns,length(subj));
 
 for indCV=1:length(subj)
     
@@ -101,113 +104,256 @@ for indCV=1:length(subj)
     falls_ind = find(indtrain & L);
     nfalls_ind = find(indtrain & ~L);
     
-    %balance the dataset 
-    indtrain = [falls_ind(randperm(length(falls_ind),500)); nfalls_ind(randperm(length(nfalls_ind),500))];
-    
-    if model
-        % Train GLMnet
-        %default values - no grid search over params
-        alpha = 0.6;
-        lambda = 0.015;
-
-        [fvar_si,b,nz_ind]=Modeltrain(F(indtrain,:),L(indtrain),alpha,lambda,0);
-        % Testing the model on Test Data (left out subject)
-        [pred,conf,confmat] = Modeleval(F(indtest,:),L(indtest),fvar_si,nz_ind,b,0.5,0);
-        conf_all{indCV}=conf;
-        confmat_all(:,:,indCV)=confmat;
-        isfall = logical(L(indtest));
-        isfall_all{indCV}=isfall;
-        [~, ~, ~, AUC(indCV)]=perfcurve(isfall, conf, true);
-        Sens(indCV) = sum(pred & isfall)/sum(isfall);
-        Spec(indCV) = sum(~pred & ~isfall)/sum(~isfall);
-    else 
-        RFModel=TreeBagger(100,F(indtrain,:),L(indtrain));
-        [pred,conf]=predict(RFModel,F(indtest,:));
-        conf = conf(:,2); %posterior prob of a fall
-        isfall = logical(L(indtest));
-        isfall_all{indCV}=isfall;
-        [~, ~, ~, AUC(indCV)]=perfcurve(isfall, conf, true);
+    %balance the dataset - randomly sample 500 instances from each class
+    %repeat it 5 times and average results
+    for run = 1:Nruns
+        indtrain = [falls_ind(randperm(length(falls_ind),500)); nfalls_ind(randperm(length(nfalls_ind),500))];
         
-        isfall = logical(L(indtest));
-        isfall_all{indCV}=isfall;
-        pred=cellfun(@(x) logical(str2double(x)),pred);
-        
-        confmat=confusionmat(isfall,pred);
-        confmat_all(:,:,indCV)=confmat;
-        
-        Sens(indCV) = sum(pred & isfall)/sum(isfall);
-        Spec(indCV) = sum(~pred & ~isfall)/sum(~isfall);
+        if model
+            % Train GLMnet
+            %default values - no grid search over params
+            alpha = 0.6;
+            lambda = 0.015;
+            
+            [fvar_si,b,nz_ind]=Modeltrain(F(indtrain,:),L(indtrain),alpha,lambda,0);
+            % Testing the model on Test Data (left out subject)
+            [pred,conf,confmat] = Modeleval(F(indtest,:),L(indtest),fvar_si,nz_ind,b,0.5,0);
+            conf_all{indCV}=conf;
+            confmat_all(:,:,indCV)=confmat;
+            isfall = logical(L(indtest));
+            isfall_all{indCV}=isfall;
+            [~, ~, ~, AUC_HH(run,indCV)]=perfcurve(isfall, conf, true);
+            Sens_HH(run,indCV) = sum(pred & isfall)/sum(isfall);
+            Spec_HH(run,indCV) = sum(~pred & ~isfall)/sum(~isfall);
+        else
+            RFModel=TreeBagger(100,F(indtrain,:),L(indtrain));
+            [pred,conf]=predict(RFModel,F(indtest,:));
+            conf = conf(:,2); %posterior prob of a fall
+            isfall = logical(L(indtest));
+            isfall_all{indCV}=isfall;
+            [~, ~, ~, AUC_HH(run,indCV)]=perfcurve(isfall, conf, true);
+            
+            isfall = logical(L(indtest));
+            isfall_all{indCV}=isfall;
+            pred=cellfun(@(x) logical(str2double(x)),pred);
+            
+            confmat=confusionmat(isfall,pred);
+            confmat_all(:,:,indCV)=confmat;
+            
+            Sens_HH(run,indCV) = sum(pred & isfall)/sum(isfall);
+            Spec_HH(run,indCV) = sum(~pred & ~isfall)/sum(~isfall);
+        end
     end
 end
+%average over runs
+AUC_HH = nanmean(AUC_HH,1);
+Sens_HH = nanmean(Sens_HH,1);
+Spec_HH = nanmean(Spec_HH,1);
 
 confmat=sum(confmat_all,3);
-plotConfmat(confmat);
+plotConfmat(confmat,'Healthy-Healthy');
 
+%plot ROC curves w confidence bounds
+figroc = figure;
+% [X, Y, T, AUC]=perfcurve(isfall_all, conf_all, true,'XVals',[0:0.05:1]); %conf bounds with CV
+[X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'), cell2mat(conf_all'), true,'Nboot',1000,'XVals',[0:0.05:1]); %cb with Bootstrap
+e = errorbar(X,Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
+e.LineWidth = 2; e.Marker = 'o';
+xlabel('False positive rate')
+ylabel('True positive rate')
+
+%% Train on Healthy, Test on Amputees
 if ~isempty(X_test)
+    AUC_HA=NaN(Nruns,length(unique(X_test(:,1))),'double');
+    Sens_HA=NaN(Nruns,length(unique(X_test(:,1))),'double');
+    Spec_HA=NaN(Nruns,length(unique(X_test(:,1))),'double');
+    isfall_all = {};
+    conf_all = {};
+    
     if featureset
         Ft = X_test(:,5:end);
     else
         Ft = X_test(:,943:962); % only magnitude features
     end
-        
+    
     indtrain = subjid(:,2)<=n_locations;
     
     falls_ind = find(indtrain & L);
     nfalls_ind = find(indtrain & ~L);
     
-    indtrain = [falls_ind(randperm(length(falls_ind),500)); nfalls_ind(randperm(length(nfalls_ind),500))];
-    
-    if model
-        [fvar_si,b,nz_ind]=Modeltrain(F(indtrain,:),L(indtrain),alpha,lambda,0);
-        % Testing the model on Test Data (external set)
-        [~,conf,confmat] = Modeleval(Ft,X_test(:,4)<5,fvar_si,nz_ind,b,0.5,0);
-
-        plotConfmat(confmat)
-        [X, Y, ~]=perfcurve(X_test(:,4)<9, conf, true,'XVals',[0:0.05:1]); %skip subject 1 (CK) data
-%         figure; plot(X,Y);
-    else
-        RFModel=TreeBagger(100,F(indtrain,:),L(indtrain));
-        [pred,conf]=predict(RFModel,Ft);
-        conf = conf(:,2); %posterior prob of a fall
-
-        confmat=confusionmat(X_test(:,4)<9,cellfun(@(x) logical(str2double(x)),pred));
-        plotConfmat(confmat);
-    end
-    
-end
-
-if model
-    [X, Y, ~]=perfcurve(isfall_all, conf_all, true,'XVals',[0:0.05:1]);
-%     figure; errorbar(X,Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
-end
-
-end
-
-function plotConfmat(confmat)
-    
-    activities = {'Non-Fall','Fall'};
-    figure; imagesc(confmat./repmat(sum(confmat,2),[1 2]));
-    confmat = confmat./repmat(sum(confmat,2),[1 2]);
-    % [cmin,cmax] = caxis;
-    caxis([0,1]) %set colormap to 0 1
-    ax = gca;
-    ax.XTick = 1:size(activities,2);
-    ax.YTick = 1:size(activities,2);
-    set(gca,'XTickLabel',activities,'FontSize',14)
-    set(gca,'YTickLabel',activities,'FontSize',14)
-    ax.XTickLabelRotation = 45;
-    axis square
-    title('Fall Detection')
-    %add text
-    thres = 0.6;
-    for i = 1:length(activities)
-        for j = 1:length(activities)
-            if confmat(i,j) < thres
-                col = [1 1 1];
-            else
-                col = [0 0 0];
+    for run = 1:Nruns
+        indtrain = [falls_ind(randperm(length(falls_ind),500)); nfalls_ind(randperm(length(nfalls_ind),500))];
+        
+        if model
+            [fvar_si,b,nz_ind]=Modeltrain(F(indtrain,:),L(indtrain),alpha,lambda,0);
+            % Testing the model on each amputee subj (external set)
+            for subj = 1:length(unique(X_test(:,1)))
+                rowid = X_test(:,1)==subj;
+                [pred,conf,confmat] = Modeleval(Ft(rowid,:),X_test(rowid,4)<5,fvar_si,nz_ind,b,0.5,0);
+                conf_all{subj}=conf;
+                confmat_all(:,:,subj)=confmat;
+                isfall = X_test(rowid,4)<5;
+                isfall_all{subj}=isfall;
+                if length(unique(isfall)) <2 %subject AF06 with missing activities - TO FIX
+                    ;
+                else
+                    [~, ~, ~, AUC_HA(run,subj)]=perfcurve(isfall, conf, true);
+                    Sens_HA(run,subj) = sum(pred & isfall)/sum(isfall);
+                    Spec_HA(run,subj) = sum(~pred & ~isfall)/sum(~isfall);
+                end
             end
-            text(i-0.2,j,sprintf('%.3f',confmat(j,i)),'FontSize',12,'FontWeight','bold','Color',col);
+        else
+            RFModel=TreeBagger(100,F(indtrain,:),L(indtrain));
+            for subj = 1:length(unique(X_test(:,1)))
+                rowid = X_test(:,1)==subj;
+                [pred,conf]=predict(RFModel,Ft(rowid,:));
+                conf = conf(:,2); %posterior prob of a fall
+                conf_all{subj}=conf;
+                isfall = X_test(rowid,4)<5;
+                isfall_all{subj}=isfall;
+                [~, ~, ~, AUC_HA(run,subj)]=perfcurve(isfall, conf, true);
+                Sens_HA(run,subj) = sum(pred & isfall)/sum(isfall);
+                Spec_HA(run,subj) = sum(~pred & ~isfall)/sum(~isfall);
+                confmat=confusionmat(X_test(:,4)<9,cellfun(@(x) logical(str2double(x)),pred));
+                confmat_all(:,:,subj)=confmat;
+                
+            end
         end
     end
+    AUC_HA = nanmean(AUC_HA,1);
+    Sens_HA = nanmean(Sens_HA,1);
+    Spec_HA = nanmean(Spec_HA,1);
+    
+    confmat=sum(confmat_all,3);
+    plotConfmat(confmat,'Healthy-Amputee');
+    figure(figroc), hold on
+%     [X, Y, T, AUC]=perfcurve(isfall_all, conf_all, true,'XVals',[0:0.05:1]);
+    [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'), cell2mat(conf_all'), true,'Nboot',1000,'XVals',[0:0.05:1]); %cb with Bootstrap
+    e = errorbar(X,Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
+    e.LineWidth = 2; e.Marker = 'o';
+
+    
+    %% LOSO on Amputees
+    AUC_AA=NaN(Nruns,length(subj),'double');
+    Sens_AA=NaN(Nruns,length(subj),'double');
+    Spec_AA=NaN(Nruns,length(subj),'double');
+    isfall_all = {};
+    conf_all = {};
+
+    if featureset
+        F = X_test(:,5:end);
+    else
+        F = X_test(:,943:962); % only magnitude features
+    end
+    L = X_test(:,4); %labels for classification
+    L=(L<9);%+1;  %binary labeling
+    subjid = X_test(:,1:3);  %[subjid, location subjcode]
+    subj=unique(subjid(:,1));
+    
+    for indCV=1:length(subj)
+        
+        test_subj=subj(indCV);
+        indtrain = subjid(:,1)~=test_subj & subjid(:,2)<=n_locations;
+        indtest = subjid(:,1) == test_subj;
+        
+        falls_ind = find(indtrain & L);
+        nfalls_ind = find(indtrain & ~L);
+        
+        for run = 1:Nruns
+            %balance the dataset
+            indtrain = [falls_ind(randperm(length(falls_ind),400)); nfalls_ind(randperm(length(nfalls_ind),400))];
+            
+            if model
+                % Train GLMnet
+                %default values - no grid search over params
+                alpha = 0.6;
+                lambda = 0.015;
+                
+                [fvar_si,b,nz_ind]=Modeltrain(F(indtrain,:),L(indtrain),alpha,lambda,0);
+                % Testing the model on Test Data (left out subject)
+                [pred,conf,confmat] = Modeleval(F(indtest,:),L(indtest),fvar_si,nz_ind,b,0.5,0);
+                conf_all{indCV}=conf;
+                confmat_all(:,:,indCV)=confmat;
+                isfall = logical(L(indtest));
+                isfall_all{indCV}=isfall;
+                if length(unique(isfall)) <2 %subject AF06 with missing activities - TO FIX
+                    ;
+                else
+                    [~, ~, ~, AUC_AA(run,indCV)]=perfcurve(isfall, conf, true);
+                    Sens_AA(run,indCV) = sum(pred & isfall)/sum(isfall);
+                    Spec_AA(run,indCV) = sum(~pred & ~isfall)/sum(~isfall);
+                end
+            else
+                RFModel=TreeBagger(100,F(indtrain,:),L(indtrain));
+                [pred,conf]=predict(RFModel,F(indtest,:));
+                conf = conf(:,2); %posterior prob of a fall
+                isfall = logical(L(indtest));
+                isfall_all{indCV}=isfall;
+                [~, ~, ~, AUC_AA(run,indCV)]=perfcurve(isfall, conf, true);
+                
+                isfall = logical(L(indtest));
+                isfall_all{indCV}=isfall;
+                pred=cellfun(@(x) logical(str2double(x)),pred);
+                
+                confmat=confusionmat(isfall,pred);
+                confmat_all(:,:,indCV)=confmat;
+                
+                Sens_AA(run,indCV) = sum(pred & isfall)/sum(isfall);
+                Spec_AA(run,indCV) = sum(~pred & ~isfall)/sum(~isfall);
+            end
+        end
+    end
+    AUC_AA = nanmean(AUC_AA,1);
+    Sens_AA = nanmean(Sens_AA,1);
+    Spec_AA = nanmean(Spec_AA,1);
+    
+    confmat=sum(confmat_all,3);
+    plotConfmat(confmat,'Amputee-Amputee');
+    figure(figroc), hold on
+    %     [X, Y, T, AUC]=perfcurve(isfall_all, conf_all, true,'XVals',[0:0.05:1]);
+    [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'),cell2mat(conf_all'),true,'Nboot',1000,'XVals',[0:0.05:1]);
+    e = errorbar(X,Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
+    e.LineWidth = 2; e.Marker = 'o';
+    legend('Healthy-Healthy','Healthy-Amputee','Amputee-Amputee')
+
+end
+
+AUC = {AUC_HH;AUC_AA;AUC_HA};
+Sens = {Sens_HH;Sens_AA;Sens_HA};
+Spec = {Spec_HH;Spec_AA;Spec_HA};
+
+
+end
+
+function plotConfmat(confmat,figtitle)
+
+activities = {'Non-Fall','Fall'};
+figure; imagesc(confmat./repmat(sum(confmat,2),[1 2]));
+confmat = confmat./repmat(sum(confmat,2),[1 2]);
+% [cmin,cmax] = caxis;
+caxis([0,1]) %set colormap to 0 1
+ax = gca;
+ax.XTick = 1:size(activities,2);
+ax.YTick = 1:size(activities,2);
+set(gca,'XTickLabel',activities,'FontSize',14)
+set(gca,'YTickLabel',activities,'FontSize',14)
+ax.XTickLabelRotation = 45;
+axis square
+if isempty(figtitle)
+    title('Fall Detection')
+else
+    title(figtitle);
+end
+%add text
+thres = 0.6;
+for i = 1:length(activities)
+    for j = 1:length(activities)
+        if confmat(i,j) < thres
+            col = [1 1 1];
+        else
+            col = [0 0 0];
+        end
+        text(i-0.2,j,sprintf('%.3f',confmat(j,i)),'FontSize',12,'FontWeight','bold','Color',col);
+    end
+end
 end

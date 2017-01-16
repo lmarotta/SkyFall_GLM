@@ -3,7 +3,7 @@
 % locations     Cell array of desired data locations {'pouch', 'pocket', 'hand'}
 % subjs         Cell array of desired subject IDs
 % condition     0: healthy, 1: Amputee, 2: healthy outdoor 
-% leave inputs empty to use all
+% leave inputs empty ([]) to use all
 
 function F = TrainingDataSetup(locations, subjs, n, condition, savedfilename)
 
