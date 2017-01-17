@@ -30,7 +30,25 @@ end
 % [AUC{6},Sens{6},Spec{6}] = LOSOCV(X,X_Amp,3,0,0);
 % [AUC{1},Sens{1},Spec{1}] = LOSOCV(X,X_Amp,1,1,0); %GLMnet
 % [AUC{3},Sens{3},Spec{3}] = LOSOCV(X,X_Amp,2,1,0);
-[AUC,Sens,Spec] = LOSOCV(X,X_Amp,3,1,0);
+
+
+[AUC,Sens,Spec] = LOSOCV(X,X_Amp,1:3,1:3,400,1,0);
+
+% Train on waist
+[wAUC{1},wSens{1},wSpec{1}] = LOSOCV(X,X_Amp,1,1,125,1,0);
+[wAUC{2},wSens{2},wSpec{2}] = LOSOCV(X,X_Amp,1,2,125,1,0);
+[wAUC{3},wSens{3},wSpec{3}] = LOSOCV(X,X_Amp,1,3,125,1,0);
+
+% Train on pocket
+[pAUC{1},pSens{1},pSpec{1}] = LOSOCV(X,X_Amp,2,1,80,1,0);
+[pAUC{2},pSens{2},pSpec{2}] = LOSOCV(X,X_Amp,2,2,80,1,0);
+[pAUC{3},pSens{3},pSpec{3}] = LOSOCV(X,X_Amp,2,3,80,1,0);
+
+% Train on hand
+[hAUC{1},hSens{1},hSpec{1}] = LOSOCV(X,X_Amp,3,1,150,1,0);
+[hAUC{2},hSens{2},hSpec{2}] = LOSOCV(X,X_Amp,3,2,150,1,0);
+[hAUC{3},hSens{3},hSpec{3}] = LOSOCV(X,X_Amp,3,3,150,1,0);
+
 
 mAUC=cellfun(@mean,AUC);
 sAUC=cellfun(@std,AUC);
@@ -51,6 +69,18 @@ results.AUC = AUC;
 results.Sens = Sens;
 results.Spec = Spec;
 
+results.waist.AUC = wAUC;
+results.waist.Sens = wSens;
+results.waist.Spec = wSpec;
+
+results.pock.AUC = pAUC;
+results.pock.Sens = pSens;
+results.pock.Spec = pSpec;
+
+results.hand.AUC = hAUC;
+results.hand.Sens = hSens;
+results.hand.Spec = hSpec;
+
 end
 
 function [F,L,subjid] = dataextraction(X)
@@ -64,7 +94,7 @@ F = X(:,5:end); %the feature matrix
 
 end
 
-function [AUC,Sens,Spec] = LOSOCV(X,X_test,n_locations,model,featureset)
+function [AUC,Sens,Spec] = LOSOCV(X,X_test,locations_train,locations_test,nData,model,featureset)
 
 %convert labels to binary (1,4=falls, 9=activities/nonfalls)
 % Assign fall categories as 1 (falls) or 0 (non-fall)
@@ -79,9 +109,9 @@ end
 
 subj=unique(subjid(:,1));
 
-L_w = L(subjid(:,2)<=n_locations);
+L_w = L(any(bsxfun(@eq,subjid(:,2),locations_train),2));
 ratio = sum(L_w)/sum(~L_w);   %falls/non_falls
-sprintf('Nlocs = %d, falls/non_falls = %f',n_locations,ratio)
+sprintf('Nlocs = %d, falls/non_falls = %f',length(locations_train),ratio)
 
 
 conf_all=cell(1,length(subj));
@@ -98,16 +128,16 @@ for indCV=1:length(subj)
     
     
     test_subj=subj(indCV);
-    indtrain = subjid(:,1)~=test_subj & subjid(:,2)<=n_locations;
-    indtest = subjid(:,1) == test_subj;
+    indtrain = subjid(:,1)~=test_subj & any(bsxfun(@eq,subjid(:,2),locations_train),2);
+    indtest = subjid(:,1) == test_subj & any(bsxfun(@eq,subjid(:,2),locations_test),2);
     
     falls_ind = find(indtrain & L);
     nfalls_ind = find(indtrain & ~L);
     
-    %balance the dataset - randomly sample 500 instances from each class
+    %balance the dataset - randomly sample nData instances from each class
     %repeat it 5 times and average results
     for run = 1:Nruns
-        indtrain = [falls_ind(randperm(length(falls_ind),500)); nfalls_ind(randperm(length(nfalls_ind),500))];
+        indtrain = [falls_ind(randperm(length(falls_ind),nData)); nfalls_ind(randperm(length(nfalls_ind),nData))];
         
         if model
             % Train GLMnet
@@ -155,8 +185,8 @@ plotConfmat(confmat,'Healthy-Healthy');
 
 %plot ROC curves w confidence bounds
 figroc = figure;
-% [X, Y, T, AUC]=perfcurve(isfall_all, conf_all, true,'XVals',[0:0.05:1]); %conf bounds with CV
-[X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'), cell2mat(conf_all'), true,'Nboot',1000,'XVals',[0:0.05:1]); %cb with Bootstrap
+[X, Y, T, AUC]=perfcurve(isfall_all, conf_all, true,'XVals',[0:0.05:1]); %conf bounds with CV
+% [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'), cell2mat(conf_all'), true,'Nboot',0,'XVals',[0:0.05:1]); %cb with Bootstrap
 e = errorbar(X,Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
 e.LineWidth = 2; e.Marker = 'o';
 xlabel('False positive rate')
@@ -176,19 +206,19 @@ if ~isempty(X_test)
         Ft = X_test(:,943:962); % only magnitude features
     end
     
-    indtrain = subjid(:,2)<=n_locations;
+    indtrain = any(bsxfun(@eq,subjid(:,2),locations_train),2);
     
     falls_ind = find(indtrain & L);
     nfalls_ind = find(indtrain & ~L);
     
     for run = 1:Nruns
-        indtrain = [falls_ind(randperm(length(falls_ind),500)); nfalls_ind(randperm(length(nfalls_ind),500))];
+        indtrain = [falls_ind(randperm(length(falls_ind),nData)); nfalls_ind(randperm(length(nfalls_ind),nData))];
         
         if model
             [fvar_si,b,nz_ind]=Modeltrain(F(indtrain,:),L(indtrain),alpha,lambda,0);
             % Testing the model on each amputee subj (external set)
             for subj = 1:length(unique(X_test(:,1)))
-                rowid = X_test(:,1)==subj;
+                rowid = (X_test(:,1)==subj) & any(bsxfun(@eq,X_test(:,2),locations_test),2);
                 [pred,conf,confmat] = Modeleval(Ft(rowid,:),X_test(rowid,4)<5,fvar_si,nz_ind,b,0.5,0);
                 conf_all{subj}=conf;
                 confmat_all(:,:,subj)=confmat;
@@ -205,7 +235,7 @@ if ~isempty(X_test)
         else
             RFModel=TreeBagger(100,F(indtrain,:),L(indtrain));
             for subj = 1:length(unique(X_test(:,1)))
-                rowid = X_test(:,1)==subj;
+                rowid = (X_test(:,1)==subj) & any(bsxfun(@eq,X_test(:,2),locations_test),2);
                 [pred,conf]=predict(RFModel,Ft(rowid,:));
                 conf = conf(:,2); %posterior prob of a fall
                 conf_all{subj}=conf;
@@ -227,8 +257,8 @@ if ~isempty(X_test)
     confmat=sum(confmat_all,3);
     plotConfmat(confmat,'Healthy-Amputee');
     figure(figroc), hold on
-%     [X, Y, T, AUC]=perfcurve(isfall_all, conf_all, true,'XVals',[0:0.05:1]);
-    [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'), cell2mat(conf_all'), true,'Nboot',1000,'XVals',[0:0.05:1]); %cb with Bootstrap
+    [X, Y, T, AUC]=perfcurve(isfall_all(2:end), conf_all(2:end), true,'XVals',[0:0.05:1]);
+%     [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'), cell2mat(conf_all'), true,'Nboot',0,'XVals',[0:0.05:1]); %cb with Bootstrap
     e = errorbar(X,Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
     e.LineWidth = 2; e.Marker = 'o';
 
@@ -253,15 +283,15 @@ if ~isempty(X_test)
     for indCV=1:length(subj)
         
         test_subj=subj(indCV);
-        indtrain = subjid(:,1)~=test_subj & subjid(:,2)<=n_locations;
-        indtest = subjid(:,1) == test_subj;
+        indtrain = subjid(:,1)~=test_subj & any(bsxfun(@eq,subjid(:,2),locations_train),2);
+        indtest = subjid(:,1) == test_subj & any(bsxfun(@eq,subjid(:,2),locations_test),2);
         
         falls_ind = find(indtrain & L);
         nfalls_ind = find(indtrain & ~L);
         
         for run = 1:Nruns
             %balance the dataset
-            indtrain = [falls_ind(randperm(length(falls_ind),400)); nfalls_ind(randperm(length(nfalls_ind),400))];
+            indtrain = [falls_ind(randperm(length(falls_ind),nData)); nfalls_ind(randperm(length(nfalls_ind),nData))];
             
             if model
                 % Train GLMnet
@@ -310,8 +340,8 @@ if ~isempty(X_test)
     confmat=sum(confmat_all,3);
     plotConfmat(confmat,'Amputee-Amputee');
     figure(figroc), hold on
-    %     [X, Y, T, AUC]=perfcurve(isfall_all, conf_all, true,'XVals',[0:0.05:1]);
-    [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'),cell2mat(conf_all'),true,'Nboot',1000,'XVals',[0:0.05:1]);
+    [X, Y, T, AUC]=perfcurve(isfall_all(2:end), conf_all(2:end), true,'XVals',[0:0.05:1]);
+%     [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'),cell2mat(conf_all'),true,'Nboot',0,'XVals',[0:0.05:1]);
     e = errorbar(X,Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
     e.LineWidth = 2; e.Marker = 'o';
     legend('Healthy-Healthy','Healthy-Amputee','Amputee-Amputee')
