@@ -6,6 +6,8 @@
 % Output: AUC, Sens, Spec
 function results = GeneratePaperResults
 
+nData=80;
+
 close all
 %% Store Amputees data (all 3 locations) for testing
 %Feature matrix assembled as follows
@@ -35,20 +37,31 @@ end
 [AUC,Sens,Spec] = LOSOCV(X,X_Amp,1:3,1:3,400,1,0);
 
 % Train on waist
-[wAUC{1},wSens{1},wSpec{1}] = LOSOCV(X,X_Amp,1,1,125,1,0);
-[wAUC{2},wSens{2},wSpec{2}] = LOSOCV(X,X_Amp,1,2,125,1,0);
-[wAUC{3},wSens{3},wSpec{3}] = LOSOCV(X,X_Amp,1,3,125,1,0);
+[wAUC{1},wSens{1},wSpec{1}] = LOSOCV(X,X_Amp,1,1,nData,1,0);
+[wAUC{2},wSens{2},wSpec{2}] = LOSOCV(X,X_Amp,1,2,nData,1,0);
+[wAUC{3},wSens{3},wSpec{3}] = LOSOCV(X,X_Amp,1,3,nData,1,0);
 
 % Train on pocket
-[pAUC{1},pSens{1},pSpec{1}] = LOSOCV(X,X_Amp,2,1,80,1,0);
-[pAUC{2},pSens{2},pSpec{2}] = LOSOCV(X,X_Amp,2,2,80,1,0);
-[pAUC{3},pSens{3},pSpec{3}] = LOSOCV(X,X_Amp,2,3,80,1,0);
+[pAUC{1},pSens{1},pSpec{1}] = LOSOCV(X,X_Amp,2,1,nData,1,0);
+[pAUC{2},pSens{2},pSpec{2}] = LOSOCV(X,X_Amp,2,2,nData,1,0);
+[pAUC{3},pSens{3},pSpec{3}] = LOSOCV(X,X_Amp,2,3,nData,1,0);
 
 % Train on hand
-[hAUC{1},hSens{1},hSpec{1}] = LOSOCV(X,X_Amp,3,1,150,1,0);
-[hAUC{2},hSens{2},hSpec{2}] = LOSOCV(X,X_Amp,3,2,150,1,0);
-[hAUC{3},hSens{3},hSpec{3}] = LOSOCV(X,X_Amp,3,3,150,1,0);
+[hAUC{1},hSens{1},hSpec{1}] = LOSOCV(X,X_Amp,3,1,nData,1,0);
+[hAUC{2},hSens{2},hSpec{2}] = LOSOCV(X,X_Amp,3,2,nData,1,0);
+[hAUC{3},hSens{3},hSpec{3}] = LOSOCV(X,X_Amp,3,3,nData,1,0);
 
+AUC=[cellfun(@(x) cellfun(@nanmean, x),wAUC,'UniformOutput',false); ...
+    cellfun(@(x) cellfun(@nanmean, x),pAUC,'UniformOutput',false); ...
+    cellfun(@(x) cellfun(@nanmean, x),hAUC,'UniformOutput',false)];
+
+HH_AUC=cellfun(@(x) x(1),AUC);
+HA_AUC=cellfun(@(x) x(2),AUC);
+AA_AUC=cellfun(@(x) x(3),AUC);
+
+figure; imagesc(HH_AUC); caxis([0 1]);
+figure; imagesc(HA_AUC); caxis([0 1]);
+figure; imagesc(AA_AUC); caxis([0 1]);
 
 mAUC=cellfun(@mean,AUC);
 sAUC=cellfun(@std,AUC);
