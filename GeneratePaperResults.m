@@ -55,13 +55,27 @@ AUC=[cellfun(@(x) cellfun(@nanmean, x),wAUC,'UniformOutput',false); ...
     cellfun(@(x) cellfun(@nanmean, x),pAUC,'UniformOutput',false); ...
     cellfun(@(x) cellfun(@nanmean, x),hAUC,'UniformOutput',false)];
 
+sAUC=[cellfun(@(x) cellfun(@nanstd, x),wAUC,'UniformOutput',false); ...
+    cellfun(@(x) cellfun(@nanstd, x),pAUC,'UniformOutput',false); ...
+    cellfun(@(x) cellfun(@nanstd, x),hAUC,'UniformOutput',false)];
+
 HH_AUC=cellfun(@(x) x(1),AUC);
 HA_AUC=cellfun(@(x) x(2),AUC);
 AA_AUC=cellfun(@(x) x(3),AUC);
 
-figure; imagesc(HH_AUC); caxis([0 1]);
-figure; imagesc(HA_AUC); caxis([0 1]);
-figure; imagesc(AA_AUC); caxis([0 1]);
+HH_sAUC=cellfun(@(x) x(1),sAUC);
+HA_sAUC=cellfun(@(x) x(2),sAUC);
+AA_sAUC=cellfun(@(x) x(3),sAUC);
+
+figure, hold on; imagesc(HH_AUC); caxis([.5 1]); ...
+    for i=1:3; for j=1:3; text(i-.5,j, [num2str(HH_AUC(j,i)) '+/-' num2str(HH_sAUC(j,i))]); end; end;
+axis square, set(gca,'YDir','reverse');
+figure, hold on; imagesc(HA_AUC); caxis([.5 1]); ...
+    for i=1:3; for j=1:3; text(i-.5,j, [num2str(HA_AUC(j,i)) '+/-' num2str(HA_sAUC(j,i))]); end; end;
+axis square, set(gca,'YDir','reverse');
+figure, hold on; imagesc(AA_AUC); caxis([.5 1]); ...
+    for i=1:3; for j=1:3; text(i-.5,j, [num2str(AA_AUC(j,i)) '+/-' num2str(AA_sAUC(j,i))]); end; end;
+axis square, set(gca,'YDir','reverse');
 
 mAUC=cellfun(@mean,AUC);
 sAUC=cellfun(@std,AUC);
@@ -132,7 +146,7 @@ isfall_all=cell(1,length(subj));
 confmat_all=zeros(2,2,length(subj));
 
 %% LOSO CV HEALTHY
-Nruns = 1;  %average multiple runs for each subject
+Nruns = 5;  %average multiple runs for each subject
 AUC_HH=zeros(Nruns,length(subj));
 Sens_HH=zeros(Nruns,length(subj));
 Spec_HH=zeros(Nruns,length(subj));

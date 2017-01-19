@@ -3,10 +3,13 @@
 function F = HomeDataSetup(data)
 
 %% Interpolated Data
+thresh=1.5; % threshold in g
 
-datai.acce = data.acce_inerp;
-datai.gyro = data.gyro_inerp;
-datai.baro = data.baro;
+inds=cellfun(@(x) max(sum(x.^2,2))>(thresh*9.8)^2);
+
+datai.acce = data.acce_inerp(inds);
+datai.gyro = data.gyro_inerp(inds);
+datai.baro = data.baro(inds);
 
 javaaddpath('FeatureGeneration/purple-robot-skyfall.jar');
 chunkSize=4000;
