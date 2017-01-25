@@ -1,11 +1,9 @@
 %generate features from phone unlabeled (home) data
 %INPUT: data structure with raw and interpolated phone data
-function F = HomeDataSetup(data)
+function F = HomeDataSetup(data,thresh)
 
 %% Interpolated Data
-thresh=1.5; % threshold in g
-
-inds=cellfun(@(x) max(sum(x.^2,2))>(thresh*9.8)^2);
+inds=cellfun(@(x) max(sum(x.^2,2))>(thresh*9.8)^2,data.acce);
 
 datai.acce = data.acce_inerp(inds);
 datai.gyro = data.gyro_inerp(inds);

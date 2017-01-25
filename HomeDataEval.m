@@ -1,6 +1,6 @@
 clear all
 
-full_featureset = 1;
+full_featureset = 0;
 %default values - no grid search over params
 alpha = 0.6;
 lambda = 0.015;
@@ -29,7 +29,7 @@ display = 0;
 load ../SkyFall_HomeData/Nick_Luca_01132017/NickHomeData.mat
 %extract features 
 F = [];
-F = HomeDataSetup(labelsNick);
+F = HomeDataSetup(labelsNick,1.5); %1.5g threshold for acceleration clips
 if full_featureset
     F=F(:,1:end);
 else
