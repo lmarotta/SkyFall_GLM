@@ -19,7 +19,6 @@ else
     X_Amp = X_Amp.F;
 end
 
-%LOSO CV on Healthy 1 location (waist)
 if ~exist('HealthyData.mat','file')
     X = TrainingDataSetup([], [], 10, 0,'HealthyData');
 else
@@ -34,51 +33,107 @@ end
 % [AUC{3},Sens{3},Spec{3}] = LOSOCV(X,X_Amp,2,1,0);
 
 
+%Train and Test on all 3 locations
 [AUC,Sens,Spec] = LOSOCV(X,X_Amp,1:3,1:3,400,1,0);
-
+results.AUC = AUC;
+results.Sens = Sens;
+results.Spec = Spec;
+results.mAUC = cellfun(@nanmean,AUC);
+results.sAUC = cellfun(@nanstd,AUC);
+results.mSens = cellfun(@nanmean,Sens);
+results.sSens = cellfun(@nanstd,Sens);
+results.mSpec = cellfun(@nanmean,Spec);
+results.sSpec = cellfun(@nanstd,Spec);
+%% Train on 1 location and test on 3 
 % Train on waist
-[wAUC{1},wSens{1},wSpec{1}] = LOSOCV(X,X_Amp,1,1,nData,1,0);
-[wAUC{2},wSens{2},wSpec{2}] = LOSOCV(X,X_Amp,1,2,nData,1,0);
-[wAUC{3},wSens{3},wSpec{3}] = LOSOCV(X,X_Amp,1,3,nData,1,0);
+[wAUC,wSens,wSpec] = LOSOCV(X,X_Amp,1,1:3,nData,1,0);
+results.waist.AUC = wAUC;
+results.waist.Sens = wSens;
+results.waist.Spec = wSpec;
+results.waist.mAUC = cellfun(@nanmean,wAUC);
+results.waist.sAUC = cellfun(@nanstd,wAUC);
+results.waist.mSens = cellfun(@nanmean,wSens);
+results.waist.sSens = cellfun(@nanstd,wSens);
+results.waist.mSpec = cellfun(@nanmean,wSpec);
+results.waist.sSpec = cellfun(@nanstd,wSpec);
 
 % Train on pocket
-[pAUC{1},pSens{1},pSpec{1}] = LOSOCV(X,X_Amp,2,1,nData,1,0);
-[pAUC{2},pSens{2},pSpec{2}] = LOSOCV(X,X_Amp,2,2,nData,1,0);
-[pAUC{3},pSens{3},pSpec{3}] = LOSOCV(X,X_Amp,2,3,nData,1,0);
+[pAUC,pSens,pSpec] = LOSOCV(X,X_Amp,2,1:3,nData,1,0);
+results.pock.AUC = pAUC;
+results.pock.Sens = pSens;
+results.pock.Spec = pSpec;
+results.pock.mAUC = cellfun(@nanmean,pAUC);
+results.pock.sAUC = cellfun(@nanstd,pAUC);
+results.pock.mSens = cellfun(@nanmean,pSens);
+results.pock.sSens = cellfun(@nanstd,pSens);
+results.pock.mSpec = cellfun(@nanmean,pSpec);
+results.pock.sSpec = cellfun(@nanstd,pSpec);
 
 % Train on hand
-[hAUC{1},hSens{1},hSpec{1}] = LOSOCV(X,X_Amp,3,1,nData,1,0);
-[hAUC{2},hSens{2},hSpec{2}] = LOSOCV(X,X_Amp,3,2,nData,1,0);
-[hAUC{3},hSens{3},hSpec{3}] = LOSOCV(X,X_Amp,3,3,nData,1,0);
+[hAUC,hSens,hSpec] = LOSOCV(X,X_Amp,3,1:3,nData,1,0);
+results.hand.AUC = hAUC;
+results.hand.Sens = hSens;
+results.hand.Spec = hSpec;
+results.hand.mAUC = cellfun(@nanmean,hAUC);
+results.hand.sAUC = cellfun(@nanstd,hAUC);
+results.hand.mSens = cellfun(@nanmean,hSens);
+results.hand.sSens = cellfun(@nanstd,hSens);
+results.hand.mSpec = cellfun(@nanmean,hSpec);
+results.hand.sSpec = cellfun(@nanstd,hSpec);
 
-AUC=[cellfun(@(x) cellfun(@nanmean, x),wAUC,'UniformOutput',false); ...
-    cellfun(@(x) cellfun(@nanmean, x),pAUC,'UniformOutput',false); ...
-    cellfun(@(x) cellfun(@nanmean, x),hAUC,'UniformOutput',false)];
 
-sAUC=[cellfun(@(x) cellfun(@nanstd, x),wAUC,'UniformOutput',false); ...
-    cellfun(@(x) cellfun(@nanstd, x),pAUC,'UniformOutput',false); ...
-    cellfun(@(x) cellfun(@nanstd, x),hAUC,'UniformOutput',false)];
+%% Train on 2 location and test on 3 
+% Train on waist+pocket
+[wpAUC,wpSens,wpSpec] = LOSOCV(X,X_Amp,[1 2],1:3,nData,1,0);
+results.waist_pock.AUC = wpAUC;
+results.waist_pock.Sens = wpSens;
+results.waist_pock.Spec = wpSpec;
+results.waist_pock.mAUC = cellfun(@nanmean,wpAUC);
+results.waist_pock.sAUC = cellfun(@nanstd,wpAUC);
+results.waist_pock.mSens = cellfun(@nanmean,wpSens);
+results.waist_pock.sSens = cellfun(@nanstd,wpSens);
+results.waist_pock.mSpec = cellfun(@nanmean,wpSpec);
+results.waist_pock.sSpec = cellfun(@nanstd,wpSpec);
 
-HH_AUC=cellfun(@(x) x(1),AUC);
-HA_AUC=cellfun(@(x) x(2),AUC);
-AA_AUC=cellfun(@(x) x(3),AUC);
+% Train on waist+hand
+[whAUC,whSens,whSpec] = LOSOCV(X,X_Amp,[1 3],1:3,nData,1,0);
+results.waist_hand.AUC = whAUC;
+results.waist_hand.Sens = whSens;
+results.waist_hand.Spec = whSpec;
+results.waist_hand.mAUC = cellfun(@nanmean,whAUC);
+results.waist_hand.sAUC = cellfun(@nanstd,whAUC);
+results.waist_hand.mSens = cellfun(@nanmean,whSens);
+results.waist_hand.sSens = cellfun(@nanstd,whSens);
+results.waist_hand.mSpec = cellfun(@nanmean,whSpec);
+results.waist_hand.sSpec = cellfun(@nanstd,whSpec);
 
-HH_sAUC=cellfun(@(x) x(1),sAUC);
-HA_sAUC=cellfun(@(x) x(2),sAUC);
-AA_sAUC=cellfun(@(x) x(3),sAUC);
+% Train on pocket+hand
+[phAUC,phSens,phSpec] = LOSOCV(X,X_Amp,[2 3],1:3,nData,1,0);
+results.pock_hand.AUC = phAUC;
+results.pock_hand.Sens = phSens;
+results.pock_hand.Spec = phSpec;
+results.pock_hand.mAUC = cellfun(@nanmean,phAUC);
+results.pock_hand.sAUC = cellfun(@nanstd,phAUC);
+results.pock_hand.mSens = cellfun(@nanmean,phSens);
+results.pock_hand.sSens = cellfun(@nanstd,phSens);
+results.pock_hand.mSpec = cellfun(@nanmean,phSpec);
+results.pock_hand.sSpec = cellfun(@nanstd,phSpec);
 
-figure, hold on; imagesc(HH_AUC); caxis([.5 1]); ...
-    for i=1:3; for j=1:3; text(i-.5,j, [num2str(HH_AUC(j,i)) '+/-' num2str(HH_sAUC(j,i))]); end; end;
-axis square, set(gca,'YDir','reverse');
-figure, hold on; imagesc(HA_AUC); caxis([.5 1]); ...
-    for i=1:3; for j=1:3; text(i-.5,j, [num2str(HA_AUC(j,i)) '+/-' num2str(HA_sAUC(j,i))]); end; end;
-axis square, set(gca,'YDir','reverse');
-figure, hold on; imagesc(AA_AUC); caxis([.5 1]); ...
-    for i=1:3; for j=1:3; text(i-.5,j, [num2str(AA_AUC(j,i)) '+/-' num2str(AA_sAUC(j,i))]); end; end;
-axis square, set(gca,'YDir','reverse');
 
-mAUC=cellfun(@mean,AUC);
-sAUC=cellfun(@std,AUC);
+%% Plot location results (Healthy-Amputee)
+%need to add error bars
+figure, hold on
+figauc = bar([results.waist.mAUC(2) results.pock.mAUC(2) results.hand.mAUC(2) results.waist_pock.mAUC(2) results.waist_hand.mAUC(2) results.pock_hand.mAUC(2) results.mAUC(2)]);
+h = gca;
+h.YLim = [0.8 1];
+title('mean AUC')
+%plot Sens-Spec 
+figure, hold on
+figSS = bar([results.waist.mSens(2) results.pock.mSens(2) results.hand.mSens(2) results.waist_pock.mSens(2) results.waist_hand.mSens(2) results.pock_hand.mSens(2) results.mSens(2); ...
+              results.waist.mSpec(2) results.pock.mSpec(2) results.hand.mSpec(2) results.waist_pock.mSpec(2) results.waist_hand.mSpec(2) results.pock_hand.mSpec(2) results.mSpec(2)]');
+h = gca;
+h.YLim = [0.8 1];
+title('mean Sens and Spec')
 
 % figure; hold on; bar(mAUC); for i=1:6; errorbar(i,mAUC(i), 0, sAUC(i),'Color','k'); end
 %
@@ -92,34 +147,54 @@ sAUC=cellfun(@std,AUC);
 %
 % figure; hold on; bar(mSpec); for i=1:6; errorbar(i,mSpec(i), 0, sSpec(i),'Color','k'); end
 
-results.AUC = AUC;
-results.Sens = Sens;
-results.Spec = Spec;
 
-results.waist.AUC = wAUC;
-results.waist.Sens = wSens;
-results.waist.Spec = wSpec;
+%% Train on 1 location test on 1 loc
+% Train on waist 
+% [wAUC{1},wSens{1},wSpec{1}] = LOSOCV(X,X_Amp,1,1,nData,1,0);
+% [wAUC{2},wSens{2},wSpec{2}] = LOSOCV(X,X_Amp,1,2,nData,1,0);
+% [wAUC{3},wSens{3},wSpec{3}] = LOSOCV(X,X_Amp,1,3,nData,1,0);
+% 
+% % Train on pocket
+% [pAUC{1},pSens{1},pSpec{1}] = LOSOCV(X,X_Amp,2,1,nData,1,0);
+% [pAUC{2},pSens{2},pSpec{2}] = LOSOCV(X,X_Amp,2,2,nData,1,0);
+% [pAUC{3},pSens{3},pSpec{3}] = LOSOCV(X,X_Amp,2,3,nData,1,0);
+% 
+% % Train on hand
+% [hAUC{1},hSens{1},hSpec{1}] = LOSOCV(X,X_Amp,3,1,nData,1,0);
+% [hAUC{2},hSens{2},hSpec{2}] = LOSOCV(X,X_Amp,3,2,nData,1,0);
+% [hAUC{3},hSens{3},hSpec{3}] = LOSOCV(X,X_Amp,3,3,nData,1,0);
 
-results.pock.AUC = pAUC;
-results.pock.Sens = pSens;
-results.pock.Spec = pSpec;
+% AUC=[cellfun(@(x) cellfun(@nanmean, x),wAUC,'UniformOutput',false); ...
+%     cellfun(@(x) cellfun(@nanmean, x),pAUC,'UniformOutput',false); ...
+%     cellfun(@(x) cellfun(@nanmean, x),hAUC,'UniformOutput',false)];
+% 
+% sAUC=[cellfun(@(x) cellfun(@nanstd, x),wAUC,'UniformOutput',false); ...
+%     cellfun(@(x) cellfun(@nanstd, x),pAUC,'UniformOutput',false); ...
+%     cellfun(@(x) cellfun(@nanstd, x),hAUC,'UniformOutput',false)];
+% 
+% HH_AUC=cellfun(@(x) x(1),AUC);
+% HA_AUC=cellfun(@(x) x(2),AUC);
+% AA_AUC=cellfun(@(x) x(3),AUC);
+% 
+% HH_sAUC=cellfun(@(x) x(1),sAUC);
+% HA_sAUC=cellfun(@(x) x(2),sAUC);
+% AA_sAUC=cellfun(@(x) x(3),sAUC);
+% 
+% figure, hold on; imagesc(HH_AUC); caxis([.5 1]); ...
+%     for i=1:3; for j=1:3; text(i-.5,j, [num2str(HH_AUC(j,i)) '+/-' num2str(HH_sAUC(j,i))]); end; end;
+% axis square, set(gca,'YDir','reverse');
+% figure, hold on; imagesc(HA_AUC); caxis([.5 1]); ...
+%     for i=1:3; for j=1:3; text(i-.5,j, [num2str(HA_AUC(j,i)) '+/-' num2str(HA_sAUC(j,i))]); end; end;
+% axis square, set(gca,'YDir','reverse');
+% figure, hold on; imagesc(AA_AUC); caxis([.5 1]); ...
+%     for i=1:3; for j=1:3; text(i-.5,j, [num2str(AA_AUC(j,i)) '+/-' num2str(AA_sAUC(j,i))]); end; end;
+% axis square, set(gca,'YDir','reverse');
+% 
 
-results.hand.AUC = hAUC;
-results.hand.Sens = hSens;
-results.hand.Spec = hSpec;
+
 
 end
 
-function [F,L,subjid] = dataextraction(X)
-
-%convert labels to binary (1,4=falls, 9=activities/nonfalls)
-% Assign fall categories as 1 (falls) or 0 (non-fall)
-L = X(:,4); %labels for classification
-L=(L<9);%+1;  %binary labeling
-subjid = X(:,1:3);  %[subjid, location subjcode]
-F = X(:,5:end); %the feature matrix
-
-end
 
 function [AUC,Sens,Spec] = LOSOCV(X,X_test,locations_train,locations_test,nData,model,featureset)
 
