@@ -92,12 +92,24 @@ end
 
 %% Test phone model w Gyro features
 load ./PhoneModels/MagFeat.mat
-F = HomeDataSetup(labelsLuca,1.5); %1.5g threshold for acceleration clips
+F = HomeDataSetup(labelsNick,1.5); %1.5g threshold for acceleration clips
 F=F(:,1:end);
 
-[pred,conf,confmat] = Modeleval(F,L,fvar,nz_ind,b,Thres,display);
+L=false(size(F,1),1);
+
+FNZ = F(:,fvar.nzstd);
+FN = (FNZ - repmat(fvar.mu,[size(FNZ,1),1])) ./ repmat(fvar.std,[size(FNZ,1),1]); %features normalized
+FN = FN(:,nz_ind);
+conf= glmval(b, FN, 'logit');
+pred= ceil(conf-Thres);
+
+%results
+isfall = logical(L);
+confmat(:,:)=confusionmat(isfall,pred==1,'order',[false true]);
+
 figure, histogram(conf)    
 figure, histogram(pred)
     
+
 
 
