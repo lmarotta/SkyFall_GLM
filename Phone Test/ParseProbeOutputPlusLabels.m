@@ -32,7 +32,7 @@ date_of_data_collection = PayloadTable.Logged{1};
 date_of_data_collection = strcat(date_of_data_collection(3:4), date_of_data_collection(6:7), date_of_data_collection(9:10));
 
 %load current fall model file from github
-[FileName,PathName,~] = uigetfile('class_params*.mat');
+[FileName,PathName,~] = uigetfile('*.mat');
 model=load([PathName '/' FileName]);
 Nfeatures = length(model.b);
 
