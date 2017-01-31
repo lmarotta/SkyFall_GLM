@@ -20,31 +20,34 @@ end
 % load file
 [FileName,PathName,~] = uigetfile('*.txt');
 PayloadTable=readtable([PathName '/' FileName],'Delimiter','\t');
+Phone = PayloadTable.UserID;
 Probe = PayloadTable.Probe;
 Payload=PayloadTable.Payload;
 
 %load current fall model file from github
-[FileName,PathName,~] = uigetfile('class_params*.mat');
+[FileName,PathName,~] = uigetfile('*.mat');
 model=load([PathName '/' FileName]);
 Nfeatures = length(model.b);
 
 if nargin == 10
-    cutoff_start = datetime(YYYY_start,MM_start,DD_start,HH_start,MIN_start,0,0);  %This is in UTC (+5h from Chicago time)
-    cutoff_end = datetime(YYYY_end,MM_end,DD_end,HH_end,MIN_end,0,0);  %This is in UTC (+5h from Chicago time)
+    cutoff_start = datetime(YYYY_start,MM_start,DD_start,HH_start,MIN_start,0);  %This is in UTC (+5h from Chicago time)
+    cutoff_end = datetime(YYYY_end,MM_end,DD_end,HH_end,MIN_end,0);  %This is in UTC (+5h from Chicago time)
     
     timestr=cellfun(@(x) strsplit(x(strfind(x,'"TIMESTAMP"'):strfind(x,'"TIMESTAMP"')+100),{':' ','}),Payload,'UniformOutput',false);
     timestamp=cellfun(@(x) str2double(x{:,2}),timestr);
     timestamp=datetime(1970,1,1,0,0,timestamp);
 
     filtered_times=timestamp>cutoff_start & timestamp<cutoff_end;
+    Phone = Phone(filtered_times);
     Probe = Probe(filtered_times);
     Payload = Payload(filtered_times);
 end
 
 %indices of correct and failure records
-correct = cellfun(@(x) isempty(strfind(x,'Failure')),Probe);
+correct = cellfun(@(x) isempty(strfind(x,'Failure')) && ~isempty(strfind(x,'FallNet')),Probe);
 ind_correct = find(correct);
-ind_failures = find(~correct);
+failure = cellfun(@(x) ~isempty(strfind(x,'Failure')),Probe);
+ind_failures = find(failure);
 
 %Initialize structure contents (each element corresponds to a window)
 winsize = -ones(length(ind_correct),1);
@@ -165,6 +168,7 @@ labels.baro = baro;
 labels.acce_inerp = acce_inerp;      %interpolated sensor data for each window
 labels.gyro_inerp = gyro_inerp;
 
+labels.phone = Phone(ind_correct);
 
 for ind=1:length(ind_failures)
     i = ind_failures(ind); %index
@@ -201,5 +205,6 @@ labels.failure.reason = failure_reason;
 labels.failure.value = failure_value;
 labels.failure.duration = failure_duration; 
 labels.failure.evalstart = failure_evalstart; %timestamp when the model started to evaluate 
+labels.failure.phone = Phone(ind_failures);
 
-save FallProbe_TestData labels
+save FallProbe_TestData labels -v7.3
