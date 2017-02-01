@@ -496,7 +496,10 @@ for i=1:length(subjs)
     data.subject(falls_size+1+sum(subj_counts(1:i-1)):falls_size+sum(subj_counts(1:i)))=subjs(i);
 end
 data.type_str(falls_size+1:falls_size+act_size) = ({'Non-Fall'});
-data.location(falls_size+1:falls_size+act_size) = ({'NA'});
+% data.location(falls_size+1:falls_size+act_size) = ({'NA'});
+
+data.location(falls_size+1:falls_size+act_size)=getActivityLocations(...
+    data.timestampSTART_END(falls_size+1:falls_size+act_size,:), activity_location, activity_start_end);
 
 data.value=[data.value; repmat(9,[act_size 1])];
 
