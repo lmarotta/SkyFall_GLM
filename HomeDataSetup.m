@@ -4,7 +4,7 @@ function F = HomeDataSetup(data,thresh)
 
 %% Interpolated Data
 inds=cellfun(@(x) max(sum(x.^2,2))>(thresh*9.8)^2,data.acce);
-
+sprintf('%.2f %% of clips with acc higher than %.2f',sum(inds)/length(inds)*100,thresh)
 datai.acce = data.acce_inerp(inds);
 datai.gyro = data.gyro_inerp(inds);
 datai.baro = data.baro(inds);
@@ -15,7 +15,7 @@ F=[];
 for indChunk=1:ceil(length(datai.acce)/chunkSize)
     
     startind=(indChunk-1)*chunkSize+1;
-    endind=min(indChunk*chunkSize,length(data.acce));
+    endind=min(indChunk*chunkSize,length(datai.acce));
     
     labels.acce=datai.acce(startind:endind);
     labels.gyro=datai.gyro(startind:endind);
