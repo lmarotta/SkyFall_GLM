@@ -38,5 +38,6 @@ function featureInds=getFeatureInds(groups)
     end
     % Baro
     featureInds=[featureInds; repmat(groups(end),grouplengths(end),1)];
+    featureInds = logical(featureInds);
     
 end
