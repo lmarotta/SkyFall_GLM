@@ -1,24 +1,29 @@
 clear all
 
-full_featureset = 0;
+% features_used = ones(18,1); %full feature set
+features_used = zeros(18,1); features_used(8) = 1; %only magnitude features
+featureInds=getFeatureInds(features_used); 
+
 %default values - no grid search over params
 alpha = 0.6;
 lambda = 0.015;
 no_baro=0; % 0 - use barometer
 
-X = load('HealthyData.mat');
-X = X.F;
+if ~exist('HealthyData.mat','file')
+    TrainingDataSetup([], [], 10, 0, 'HealthyData');
+else
+    X = load('HealthyData.mat');
+    X = X.F;
+end
 %convert labels to binary (1,4=falls, 9=activities/nonfalls)
 % Assign fall categories as 1 (falls) or 0 (non-fall)
 L = X(:,4); %labels for classification
 L=(L<9);%+1;  %binary labeling
 subjid = X(:,1:3);  %[subjid, location subjcode]
-if full_featureset
-    F=X(:,5:end);
-else
-    F = X(:,943:962); % only magnitude features
-end
 subj=unique(subjid(:,1));
+
+F = X(:,5:end); %remove meta-data
+F = F(:,featureInds);
 
 disp('Training model on all healthy data')
 [fvar,b,nz_ind]=Modeltrain(F,L,alpha,lambda,no_baro);
@@ -26,61 +31,111 @@ Flab = F;
 Llab = L;
 
 %% Test on amputee lab
-Thres = 0.5;
+Thres = 0.5; %model threshold
 disp('Test model on amputees - lab data')
 display = 1;
 X_Amp = load('Test_Data_Amputees');
 X_Amp = X_Amp.F;
 L = X_Amp(:,4); L = L<9;
-X_Amp(:,1:4) = [];
-if full_featureset
-    F=X_Amp(:,1:end);
-else
-    F = X_Amp(:,939:958); % only magnitude features
-end
+X_Amp(:,1:4) = []; %remove meta-data
+F = X_Amp(:,featureInds);
 [pred,conf,confmat] = Modeleval(F,L,fvar,nz_ind,b,Thres,display);
 
 
-%% Load Home data and test
-Thres = 0.5;
+%% Load Home data and test - Amputee
 display = 0;
-load ../SkyFall_HomeData/Nick_Luca_01132017/LucaHomeData.mat
-%extract features 
 F = [];
-F = HomeDataSetup(labelsLuca,1.5); %1.5g threshold for acceleration clips
-sprintf('Data length = %.2f h',size(F,1)*5/60/60)
-if full_featureset
-    F=F(:,1:end);
+lf = [];
+filespath = 'Z:/Amputee Phones-R01/Home Data Collection/Amputees/';
+if ~exist([filespath 'HomeDataAmp.mat'],'file')
+    f = dir([filespath,'/Raw/*.mat']);
+    for i = 1:length(f)
+        sprintf('Filename %s',f(i).name)
+        l = load([filespath '/Raw/' f(i).name]); labels = l.labels;
+        %extract features
+        Fnew = HomeDataSetup(labels,1.5); %1.5g threshold for acceleration clips
+        F = [F;Fnew];
+        lf = [lf;size(Fnew,1)*5/60/60]; %store duration of each day
+        sprintf('Data length = %.2f h',size(F,1)*5/60/60) 
+        disp(lf)
+    end
+    save([filespath 'HomeDataAmp.mat'],'F')
+
 else
-    F = F(:,939:958); % only magnitude features
+    l = load([filespath 'HomeDataAmp.mat']);
+    F = l.F;
+    sprintf('Data length = %.2f h',size(F,1)*5/60/60)
 end
+
+%feature selection
+F = F(:,featureInds);
+L = zeros(size(F,1),1); %all labels are non-fall
+[pred,conf,confmat] = Modeleval(F,L,fvar,nz_ind,b,Thres,display);
+sprintf('Spec = %.2f%', length(pred)/(length(pred)+sum(pred)))
+figure, histogram(conf)    
+figure, histogram(pred), hold on, title(sprintf('Spec = %.2f%', length(pred)/(length(pred)+sum(pred))))
+
+%% Train on Healthy Lab + home data misclassified clips
+display = 0;
+F = [];
+lf = [];
+filespath = 'Z:/Amputee Phones-R01/Home Data Collection/Healthy/';
+if ~exist([filespath 'HomeDataHealthy.mat'],'file')
+    f = dir([filespath,'/Raw/*.mat']);
+    for i = 1:length(f)
+        sprintf('Filename %s',f(i).name)
+        l = load([filespath '/Raw/' f(i).name]); labels = l.labels;
+        %extract features
+        Fnew = HomeDataSetup(labels,1.5); %1.5g threshold for acceleration clips
+        F = [F;Fnew];
+        lf = [lf;size(Fnew,1)*5/60/60]; %store duration of each day
+        sprintf('Data length = %.2f h',size(F,1)*5/60/60) 
+        disp(lf)
+    end
+    save([filespath 'HomeDataHealthy.mat'],'F')
+
+else
+    sprintf('Load %s',[filespath 'HomeDataHealthy.mat'])
+    l = load([filespath 'HomeDataHealthy.mat']);
+    F = l.F;
+    sprintf('Data length = %.2f h',size(F,1)*5/60/60)
+end
+
+%feature selection
+F = F(:,featureInds);
+L = zeros(size(F,1),1); %all labels are non-fall
+[pred,conf,confmat] = Modeleval(F,L,fvar,nz_ind,b,Thres,display);
+sprintf('Spec = %.2f%', length(pred)/(length(pred)+sum(pred)))
+indmisc=find(pred); %misclassified clips
+sprintf('# of misclassified clips = %d/%d',length(indmisc),length(F))
+Fmisc = F(indmisc,:); Lmisc = zeros(length(indmisc),1);
+F = [Flab;Fmisc]; L = [Llab;Lmisc];
+disp('Training model on Healthy lab + misclassified home data')
+[fvar,b,nz_ind]=Modeltrain(F,L,alpha,lambda,no_baro);
+
+%test model on amputee lab dataset
+Thres = 0.5; %model threshold
+disp('Test model on amputees - lab data')
+display = 1;
+X_Amp = load('Test_Data_Amputees');
+X_Amp = X_Amp.F;
+L = X_Amp(:,4); L = L<9;
+X_Amp(:,1:4) = []; %remove meta-data
+F = X_Amp(:,featureInds);
+[pred,conf,confmat] = Modeleval(F,L,fvar,nz_ind,b,Thres,display);
+
+%test on amputee home data
+display = 0;
+filespath = 'Z:/Amputee Phones-R01/Home Data Collection/Amputees/';
+disp('Test model on amputees - home data')
+l = load([filespath 'HomeDataAmp.mat']);
+F = l.F;
+F = F(:,featureInds);
 L = zeros(size(F,1),1);
 [pred,conf,confmat] = Modeleval(F,L,fvar,nz_ind,b,Thres,display);
 sprintf('Spec = %.2f%', length(pred)/(length(pred)+sum(pred)))
 figure, histogram(conf)    
-figure, histogram(pred)
-
-%% Train on Healthy Lab + home data misclassified clips
-indmisc=find(pred);
-Fmisc = F(indmisc,:); Lmisc = zeros(length(indmisc),1);
-F = [Flab;Fmisc]; L = [Llab;Lmisc];
-disp('Training model on lab + misclassified home data')
-[fvar,b,nz_ind]=Modeltrain(F,L,alpha,lambda,no_baro);
-
-%test model on amputee dataset
-Thres = 0.5;
-disp('Test model on amputees - lab data')
-display = 1;
-X_Amp = load('Test_Data_Amputees');
-X_Amp = X_Amp.F;
-L = X_Amp(:,4); L = L<9;
-X_Amp(:,1:4) = [];
-if full_featureset
-    F=X_Amp(:,1:end);
-else
-    F = X_Amp(:,939:958); % only magnitude features
-end
-[pred,conf,confmat] = Modeleval(F,L,fvar,nz_ind,b,Thres,display);
+figure, histogram(pred), title(sprintf('Spec = %.2f%', length(pred)/(length(pred)+sum(pred))))
 
 %% Train on Healthy Lab + home data
 load ../SkyFall_HomeData/Nick_Luca_01132017/NickHomeData.mat
@@ -132,7 +187,7 @@ end
 
 %% Test phone model w Gyro features
 load ./PhoneModels/MagFeat.mat
-F = HomeDataSetup(labelsNick,1.5); %1.5g threshold for acceleration clips
+F = HomeDataSetup(labels,1.5); %1.5g threshold for acceleration clips
 F=F(:,1:end);
 
 L=false(size(F,1),1);
