@@ -71,7 +71,7 @@ end
 
 %feature selection
 F = F(:,featureInds);
-L = zeros(size(F,1),1); %all labels are non-fall
+L = false(size(F,1),1); %all labels are non-fall
 [pred,conf,confmat] = Modeleval(F,L,fvar,nz_ind,b,Thres,display);
 sprintf('Spec = %.2f%', length(pred)/(length(pred)+sum(pred)))
 figure, histogram(conf)    
@@ -81,7 +81,7 @@ roc = figure, hold on
 [X, Y, T, AUC]=perfcurve([L;L_lab], [conf;conf_lab], true,'XVals',[0:0.05:1]); %conf bounds with CV
 % [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'), cell2mat(conf_all'), true,'Nboot',0,'XVals',[0:0.05:1]); %cb with Bootstrap
 e = plot(X,Y);
-e.LineWidth = 2; e.Marker = 'ro';
+e.LineWidth = 2; e.Marker = 'o';
 
 %% Train on Healthy Lab + home data misclassified clips
 display = 0;
@@ -141,7 +141,7 @@ disp('Test model on amputees - home data')
 l = load([filespath 'HomeDataAmp.mat']);
 F = l.F;
 F = F(:,featureInds);
-L = zeros(size(F,1),1);
+L = false(size(F,1),1);
 [pred,conf,confmat] = Modeleval(F,L,fvar,nz_ind,b,Thres,display);
 sprintf('Spec = %.2f%', length(pred)/(length(pred)+sum(pred)))
 figure, histogram(conf)    
