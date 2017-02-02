@@ -1,7 +1,7 @@
 clear all
 
-% features_used = ones(18,1); %full feature set
-features_used = zeros(18,1); features_used(8) = 1; %only magnitude features
+features_used = ones(18,1); features_used([4 7 10:18]) = 0; %full feature set
+% features_used = zeros(18,1); features_used([1 2 5 8 9 10]) = 1; %only magnitude features
 featureInds=getFeatureInds(features_used); 
 
 %default values - no grid search over params
