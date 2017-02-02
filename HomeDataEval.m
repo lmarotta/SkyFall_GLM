@@ -1,7 +1,7 @@
 clear all
 
-features_used = ones(18,1); features_used([4 7 10:18]) = 0; %full feature set
-% features_used = zeros(18,1); features_used([1 2 5 8 9 10]) = 1; %only magnitude features
+features_used = ones(18,1); %features_used([4 7 10:18]) = 0; %full feature set
+% features_used = zeros(18,1); features_used([8]) = 1; %only magnitude features
 featureInds=getFeatureInds(features_used); 
 
 %default values - no grid search over params
@@ -40,6 +40,8 @@ L = X_Amp(:,4); L = L<9;
 X_Amp(:,1:4) = []; %remove meta-data
 F = X_Amp(:,featureInds);
 [pred,conf,confmat] = Modeleval(F,L,fvar,nz_ind,b,Thres,display);
+conf_lab = conf;
+L_lab = L;
 
 
 %% Load Home data and test - Amputee
@@ -74,6 +76,12 @@ L = zeros(size(F,1),1); %all labels are non-fall
 sprintf('Spec = %.2f%', length(pred)/(length(pred)+sum(pred)))
 figure, histogram(conf)    
 figure, histogram(pred), hold on, title(sprintf('Spec = %.2f%', length(pred)/(length(pred)+sum(pred))))
+
+roc = figure, hold on
+[X, Y, T, AUC]=perfcurve([L;L_lab], [conf;conf_lab], true,'XVals',[0:0.05:1]); %conf bounds with CV
+% [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'), cell2mat(conf_all'), true,'Nboot',0,'XVals',[0:0.05:1]); %cb with Bootstrap
+e = plot(X,Y);
+e.LineWidth = 2; e.Marker = 'ro';
 
 %% Train on Healthy Lab + home data misclassified clips
 display = 0;
@@ -123,6 +131,8 @@ L = X_Amp(:,4); L = L<9;
 X_Amp(:,1:4) = []; %remove meta-data
 F = X_Amp(:,featureInds);
 [pred,conf,confmat] = Modeleval(F,L,fvar,nz_ind,b,Thres,display);
+conf_lab = conf;
+L_lab = L;
 
 %test on amputee home data
 display = 0;
@@ -136,6 +146,15 @@ L = zeros(size(F,1),1);
 sprintf('Spec = %.2f%', length(pred)/(length(pred)+sum(pred)))
 figure, histogram(conf)    
 figure, histogram(pred), title(sprintf('Spec = %.2f%', length(pred)/(length(pred)+sum(pred))))
+
+%test on home + lab data
+figure(roc)
+[X, Y, T, AUC]=perfcurve([L;L_lab], [conf;conf_lab], true,'XVals',[0:0.05:1]); %conf bounds with CV
+% [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'), cell2mat(conf_all'), true,'Nboot',0,'XVals',[0:0.05:1]); %cb with Bootstrap
+e = plot(X,Y);
+e.LineWidth = 2; e.Marker = 'o';
+xlabel('False positive rate')
+ylabel('True positive rate')
 
 %% Train on Healthy Lab + home data
 load ../SkyFall_HomeData/Nick_Luca_01132017/NickHomeData.mat
