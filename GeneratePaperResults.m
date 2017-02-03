@@ -51,8 +51,9 @@ results.mSens = cellfun(@nanmean,Sens,'UniformOutput',false);
 results.sSens = cellfun(@nanstd,Sens,'UniformOutput',false);
 results.mSpec = cellfun(@nanmean,Spec,'UniformOutput',false);
 results.sSpec = cellfun(@nanstd,Spec,'UniformOutput',false);
+
 %% Train on 1 location and test on 3
-cvtype = 3; %H-A only
+cvtype = 2; %H-A only
 
 % Train on waist
 [wAUC,wSens,wSpec] = LOSOCV(X,X_Amp,1,1:3,nData,1,featureset,cvtype);
@@ -145,65 +146,39 @@ h.YLim = [0.6 1];
 title('mean Sens and Spec')
 
 
-% figure; hold on; bar(mAUC); for i=1:6; errorbar(i,mAUC(i), 0, sAUC(i),'Color','k'); end
-%
-% mSens=cellfun(@mean,Sens);
-% sSens=cellfun(@std,Sens);
-%
-% figure; hold on; bar(mSens); for i=1:6; errorbar(i,mSens(i), 0, sSens(i),'Color','k'); end
-%
-% mSpec=cellfun(@mean,Spec);
-% sSpec=cellfun(@std,Spec);
-%
-% figure; hold on; bar(mSpec); for i=1:6; errorbar(i,mSpec(i), 0, sSpec(i),'Color','k'); end
+%% HOME DATA ANALYSIS 
+cvtype = 2;
 
+filespath = 'Z:/Amputee Phones-R01/Home Data Collection/Amputees/';
+l = load([filespath 'HomeDataAmp.mat']);
+F = l.F;
+sprintf('Data length = %.2f h',size(F,1)*5/60/60)
 
-%% Train on 1 location test on 1 loc
+metadata = [ones(size(F,1),3), 9*ones(size(F,1),1)];
+F = [metadata F];
+X_Amp = [X_Amp;F];
+
 % Train on waist
-% [wAUC{1},wSens{1},wSpec{1}] = LOSOCV(X,X_Amp,1,1,nData,1,0);
-% [wAUC{2},wSens{2},wSpec{2}] = LOSOCV(X,X_Amp,1,2,nData,1,0);
-% [wAUC{3},wSens{3},wSpec{3}] = LOSOCV(X,X_Amp,1,3,nData,1,0);
-%
-% % Train on pocket
-% [pAUC{1},pSens{1},pSpec{1}] = LOSOCV(X,X_Amp,2,1,nData,1,0);
-% [pAUC{2},pSens{2},pSpec{2}] = LOSOCV(X,X_Amp,2,2,nData,1,0);
-% [pAUC{3},pSens{3},pSpec{3}] = LOSOCV(X,X_Amp,2,3,nData,1,0);
-%
-% % Train on hand
-% [hAUC{1},hSens{1},hSpec{1}] = LOSOCV(X,X_Amp,3,1,nData,1,0);
-% [hAUC{2},hSens{2},hSpec{2}] = LOSOCV(X,X_Amp,3,2,nData,1,0);
-% [hAUC{3},hSens{3},hSpec{3}] = LOSOCV(X,X_Amp,3,3,nData,1,0);
+[wAUC,wSens,wSpec] = LOSOCV(X,X_Amp,1,0:3,nData,1,featureset,cvtype);
+results.waist.AUC = wAUC;
+results.waist.Sens = wSens;
+results.waist.Spec = wSpec;
+results.waist.mAUC = cellfun(@nanmean,wAUC,'UniformOutput',false);
+results.waist.sAUC = cellfun(@nanstd,wAUC,'UniformOutput',false);
+results.waist.mSens = cellfun(@nanmean,wSens,'UniformOutput',false);
+results.waist.sSens = cellfun(@nanstd,wSens,'UniformOutput',false);
+results.waist.mSpec = cellfun(@nanmean,wSpec,'UniformOutput',false);
+results.waist.sSpec = cellfun(@nanstd,wSpec,'UniformOutput',false);
 
-% AUC=[cellfun(@(x) cellfun(@nanmean, x),wAUC,'UniformOutput',false); ...
-%     cellfun(@(x) cellfun(@nanmean, x),pAUC,'UniformOutput',false); ...
-%     cellfun(@(x) cellfun(@nanmean, x),hAUC,'UniformOutput',false)];
-%
-% sAUC=[cellfun(@(x) cellfun(@nanstd, x),wAUC,'UniformOutput',false); ...
-%     cellfun(@(x) cellfun(@nanstd, x),pAUC,'UniformOutput',false); ...
-%     cellfun(@(x) cellfun(@nanstd, x),hAUC,'UniformOutput',false)];
-%
-% HH_AUC=cellfun(@(x) x(1),AUC);
-% HA_AUC=cellfun(@(x) x(2),AUC);
-% AA_AUC=cellfun(@(x) x(3),AUC);
-%
-% HH_sAUC=cellfun(@(x) x(1),sAUC);
-% HA_sAUC=cellfun(@(x) x(2),sAUC);
-% AA_sAUC=cellfun(@(x) x(3),sAUC);
-%
-% figure, hold on; imagesc(HH_AUC); caxis([.5 1]); ...
-%     for i=1:3; for j=1:3; text(i-.5,j, [num2str(HH_AUC(j,i)) '+/-' num2str(HH_sAUC(j,i))]); end; end;
-% axis square, set(gca,'YDir','reverse');
-% figure, hold on; imagesc(HA_AUC); caxis([.5 1]); ...
-%     for i=1:3; for j=1:3; text(i-.5,j, [num2str(HA_AUC(j,i)) '+/-' num2str(HA_sAUC(j,i))]); end; end;
-% axis square, set(gca,'YDir','reverse');
-% figure, hold on; imagesc(AA_AUC); caxis([.5 1]); ...
-%     for i=1:3; for j=1:3; text(i-.5,j, [num2str(AA_AUC(j,i)) '+/-' num2str(AA_sAUC(j,i))]); end; end;
-% axis square, set(gca,'YDir','reverse');
-%
 
 
 
 end
+
+
+
+
+
 
 %cvtype is a vector with the cases
 %[1 2 3] = H-H, H-A, A-A
@@ -369,9 +344,10 @@ if any(cvtype == 2)
         figroc = figure;
     end
     figure(figroc), hold on
-    [X, Y, T, AUC]=perfcurve(isfall_all(2:end), conf_all(2:end), true,'XVals',[0:0.05:1]);
-    %     [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'), cell2mat(conf_all'), true,'Nboot',0,'XVals',[0:0.05:1]); %cb with Bootstrap
-    e = errorbar(X,Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
+%     [X, Y, T, AUC]=perfcurve(isfall_all(2:end), conf_all(2:end), true,'XVals',[0:0.05:1]);
+    [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'), cell2mat(conf_all'), true,'Nboot',0,'XVals',[0:0.05:1]); %cb with Bootstrap
+%     e = errorbar(X,Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
+    e = plot(X,Y);
     e.LineWidth = 2; e.Marker = 'o';
     
 end

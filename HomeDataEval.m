@@ -1,6 +1,6 @@
 clear all
 
-features_used = ones(18,1); %features_used([4 7 10:18]) = 0; %full feature set
+features_used = ones(18,1); features_used([4 7 10:18]) = 0; %full feature set
 % features_used = zeros(18,1); features_used([8]) = 1; %only magnitude features
 featureInds=getFeatureInds(features_used); 
 
@@ -78,7 +78,7 @@ figure, histogram(conf)
 figure, histogram(pred), hold on, title(sprintf('Spec = %.2f%', length(pred)/(length(pred)+sum(pred))))
 
 roc = figure, hold on
-[X, Y, T, AUC]=perfcurve([L;L_lab], [conf;conf_lab], true,'XVals',[0:0.05:1]); %conf bounds with CV
+[X, Y, T, AUC]=perfcurve([L;L_lab], [conf;conf_lab], true,'TVals',[0:0.05:1]); %conf bounds with CV
 % [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'), cell2mat(conf_all'), true,'Nboot',0,'XVals',[0:0.05:1]); %cb with Bootstrap
 e = plot(X,Y);
 e.LineWidth = 2; e.Marker = 'o';
@@ -144,12 +144,23 @@ F = F(:,featureInds);
 L = false(size(F,1),1);
 [pred,conf,confmat] = Modeleval(F,L,fvar,nz_ind,b,Thres,display);
 sprintf('Spec = %.2f%', length(pred)/(length(pred)+sum(pred)))
-figure, histogram(conf)    
+figure, histogram(conf,'normalization','probability'), hold on, histogram(conf_lab(L_lab),'normalization','probability')    
 figure, histogram(pred), title(sprintf('Spec = %.2f%', length(pred)/(length(pred)+sum(pred))))
+inds = conf_lab < 0.5 & L_lab;
+locs = X_Amp(inds,2);
+subjs = X_Amp(inds,1);
+figure, subplot(121), histogram(locs), subplot(122), histogram(subjs)
+
+figure, hold on
+for loc = 1:3
+    
+    inds_hand = X_Amp(:,2) == loc;
+    histogram(conf_lab(L_lab & inds_hand),'normalization','probability')
+end
 
 %test on home + lab data
 figure(roc)
-[X, Y, T, AUC]=perfcurve([L;L_lab], [conf;conf_lab], true,'XVals',[0:0.05:1]); %conf bounds with CV
+[X, Y, T, AUC]=perfcurve([L;L_lab], [conf;conf_lab], true,'TVals',[0:0.05:1]); %conf bounds with CV
 % [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'), cell2mat(conf_all'), true,'Nboot',0,'XVals',[0:0.05:1]); %cb with Bootstrap
 e = plot(X,Y);
 e.LineWidth = 2; e.Marker = 'o';
