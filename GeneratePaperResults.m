@@ -7,6 +7,8 @@
 function results = GeneratePaperResults
 close all
 
+
+
 nData=160; %number of data points for training on 1 location only
 
 % features_used = ones(18,1); %full feature set
@@ -41,8 +43,9 @@ end
 %Train and Test on all 3 locations
 cvtype = [1 2 3]; %all cv
 % cvtype = 2; %H-A only
-[AUC,Sens,Spec] = LOSOCV(X,X_Amp,1:3,1:3,100,1,featureset,cvtype);
+[AUC,Sens,Spec,AUCErr] = LOSOCV(X,X_Amp,1:3,1:3,100,1,featureset,cvtype,0);
 results.AUC = AUC;
+results.AUCErr = AUCErr;
 results.Sens = Sens;
 results.Spec = Spec;
 results.mAUC = cellfun(@nanmean,AUC,'UniformOutput',false);
@@ -56,8 +59,9 @@ results.sSpec = cellfun(@nanstd,Spec,'UniformOutput',false);
 cvtype = 2; %H-A only
 
 % Train on waist
-[wAUC,wSens,wSpec] = LOSOCV(X,X_Amp,1,1:3,nData,1,featureset,cvtype);
+[wAUC,wSens,wSpec,AUCErr] = LOSOCV(X,X_Amp,1,1:3,nData,1,featureset,cvtype,0);
 results.waist.AUC = wAUC;
+results.waist.AUCErr = AUCErr;
 results.waist.Sens = wSens;
 results.waist.Spec = wSpec;
 results.waist.mAUC = cellfun(@nanmean,wAUC,'UniformOutput',false);
@@ -68,8 +72,9 @@ results.waist.mSpec = cellfun(@nanmean,wSpec,'UniformOutput',false);
 results.waist.sSpec = cellfun(@nanstd,wSpec,'UniformOutput',false);
 
 % Train on pocket
-[pAUC,pSens,pSpec] = LOSOCV(X,X_Amp,2,1:3,nData,1,featureset,cvtype);
+[pAUC,pSens,pSpec,AUCErr] = LOSOCV(X,X_Amp,2,1:3,nData,1,featureset,cvtype,0);
 results.pock.AUC = pAUC;
+results.pock.AUCErr = AUCErr;
 results.pock.Sens = pSens;
 results.pock.Spec = pSpec;
 results.pock.mAUC = cellfun(@nanmean,pAUC,'UniformOutput',false);
@@ -80,8 +85,9 @@ results.pock.mSpec = cellfun(@nanmean,pSpec,'UniformOutput',false);
 results.pock.sSpec = cellfun(@nanstd,pSpec,'UniformOutput',false);
 
 % Train on hand
-[hAUC,hSens,hSpec] = LOSOCV(X,X_Amp,3,1:3,nData,1,featureset,cvtype);
+[hAUC,hSens,hSpec,AUCErr] = LOSOCV(X,X_Amp,3,1:3,nData,1,featureset,cvtype,0);
 results.hand.AUC = hAUC;
+results.hand.AUCErr = AUCErr;
 results.hand.Sens = hSens;
 results.hand.Spec = hSpec;
 results.hand.mAUC = cellfun(@nanmean,hAUC,'UniformOutput',false);
@@ -91,56 +97,21 @@ results.hand.sSens = cellfun(@nanstd,hSens,'UniformOutput',false);
 results.hand.mSpec = cellfun(@nanmean,hSpec,'UniformOutput',false);
 results.hand.sSpec = cellfun(@nanstd,hSpec,'UniformOutput',false);
 
-
-%% Train on 2 location and test on 3
-% Train on waist+pocket
-[wpAUC,wpSens,wpSpec] = LOSOCV(X,X_Amp,[1 2],1:3,nData,1,featureset,cvtype);
-results.waist_pock.AUC = wpAUC;
-results.waist_pock.Sens = wpSens;
-results.waist_pock.Spec = wpSpec;
-results.waist_pock.mAUC = cellfun(@nanmean,wpAUC,'UniformOutput',false);
-results.waist_pock.sAUC = cellfun(@nanstd,wpAUC,'UniformOutput',false);
-results.waist_pock.mSens = cellfun(@nanmean,wpSens,'UniformOutput',false);
-results.waist_pock.sSens = cellfun(@nanstd,wpSens,'UniformOutput',false);
-results.waist_pock.mSpec = cellfun(@nanmean,wpSpec,'UniformOutput',false);
-results.waist_pock.sSpec = cellfun(@nanstd,wpSpec,'UniformOutput',false);
-
-% Train on waist+hand
-[whAUC,whSens,whSpec] = LOSOCV(X,X_Amp,[1 3],1:3,nData,1,featureset,cvtype);
-results.waist_hand.AUC = whAUC;
-results.waist_hand.Sens = whSens;
-results.waist_hand.Spec = whSpec;
-results.waist_hand.mAUC = cellfun(@nanmean,whAUC,'UniformOutput',false);
-results.waist_hand.sAUC = cellfun(@nanstd,whAUC,'UniformOutput',false);
-results.waist_hand.mSens = cellfun(@nanmean,whSens,'UniformOutput',false);
-results.waist_hand.sSens = cellfun(@nanstd,whSens,'UniformOutput',false);
-results.waist_hand.mSpec = cellfun(@nanmean,whSpec,'UniformOutput',false);
-results.waist_hand.sSpec = cellfun(@nanstd,whSpec,'UniformOutput',false);
-
-% Train on pocket+hand
-[phAUC,phSens,phSpec] = LOSOCV(X,X_Amp,[2 3],1:3,nData,1,featureset,cvtype);
-results.pock_hand.AUC = phAUC;
-results.pock_hand.Sens = phSens;
-results.pock_hand.Spec = phSpec;
-results.pock_hand.mAUC = cellfun(@nanmean,phAUC,'UniformOutput',false);
-results.pock_hand.sAUC = cellfun(@nanstd,phAUC,'UniformOutput',false);
-results.pock_hand.mSens = cellfun(@nanmean,phSens,'UniformOutput',false);
-results.pock_hand.sSens = cellfun(@nanstd,phSens,'UniformOutput',false);
-results.pock_hand.mSpec = cellfun(@nanmean,phSpec,'UniformOutput',false);
-results.pock_hand.sSpec = cellfun(@nanstd,phSpec,'UniformOutput',false);
-
-
 %% Plot location results (Healthy-Amputee)
 %need to add error bars
 figure, hold on
-figauc = bar([results.waist.mAUC{cvtype} results.pock.mAUC{cvtype} results.hand.mAUC{cvtype} results.waist_pock.mAUC{cvtype} results.waist_hand.mAUC{cvtype} results.pock_hand.mAUC{cvtype} results.mAUC{cvtype}]);
+bar(1:4,[results.waist.mAUC{cvtype} results.pock.mAUC{cvtype} results.hand.mAUC{cvtype} results.mAUC{cvtype}])
+figauc = errorbar(1:4,[results.waist.mAUC{cvtype} results.pock.mAUC{cvtype} results.hand.mAUC{cvtype} results.mAUC{cvtype}],...
+    [results.waist.mAUC{cvtype}-results.waist.AUCErr{cvtype}(1) results.pock.mAUC{cvtype}-results.pock.AUCErr{cvtype}(1) results.hand.mAUC{cvtype}-results.hand.AUCErr{cvtype}(1) results.mAUC{cvtype}-results.AUCErr{cvtype}(1)],...
+    [results.waist.AUCErr{cvtype}(2)-results.waist.mAUC{cvtype} results.pock.AUCErr{cvtype}(2)-results.pock.mAUC{cvtype} results.hand.AUCErr{cvtype}(2)-results.hand.mAUC{cvtype} results.AUCErr{cvtype}(2)-results.mAUC{cvtype}],...
+    'linewidth',1.5,'linestyle','none','color','k');
 h = gca;
 h.YLim = [0.8 1];
 title('mean AUC')
 %plot Sens-Spec
 figure, hold on
-figSS = bar([results.waist.mSens{cvtype} results.pock.mSens{cvtype} results.hand.mSens{cvtype} results.waist_pock.mSens{cvtype} results.waist_hand.mSens{cvtype} results.pock_hand.mSens{cvtype} results.mSens{cvtype}; ...
-    results.waist.mSpec{cvtype} results.pock.mSpec{cvtype} results.hand.mSpec{cvtype} results.waist_pock.mSpec{cvtype} results.waist_hand.mSpec{cvtype} results.pock_hand.mSpec{cvtype} results.mSpec{cvtype}]');
+figSS = bar([results.waist.mSens{cvtype} results.pock.mSens{cvtype} results.hand.mSens{cvtype} results.mSens{cvtype}; ...
+    results.waist.mSpec{cvtype} results.pock.mSpec{cvtype} results.hand.mSpec{cvtype} results.mSpec{cvtype}]');
 h = gca;
 h.YLim = [0.6 1];
 title('mean Sens and Spec')
@@ -154,13 +125,14 @@ l = load([filespath 'HomeDataAmp.mat']);
 F = l.F;
 sprintf('Data length = %.2f h',size(F,1)*5/60/60)
 
-metadata = [ones(size(F,1),3), 9*ones(size(F,1),1)];
-F = [metadata F];
-X_Amp = [X_Amp;F];
+inds= X_Amp(:,1)==5 | X_Amp(:,1)==6;
+
+X_Amp = [X_Amp(inds,:);F];
 
 % Train on waist
-[wAUC,wSens,wSpec] = LOSOCV(X,X_Amp,1,0:3,nData,1,featureset,cvtype);
+[wAUC,wSens,wSpec,AUCErr] = LOSOCV(X,X_Amp,1,0:3,nData,1,featureset,cvtype,0);
 results.waist.AUC = wAUC;
+results.waist.AUCErr = AUCErr;
 results.waist.Sens = wSens;
 results.waist.Spec = wSpec;
 results.waist.mAUC = cellfun(@nanmean,wAUC,'UniformOutput',false);
@@ -170,9 +142,134 @@ results.waist.sSens = cellfun(@nanstd,wSens,'UniformOutput',false);
 results.waist.mSpec = cellfun(@nanmean,wSpec,'UniformOutput',false);
 results.waist.sSpec = cellfun(@nanstd,wSpec,'UniformOutput',false);
 
+% Train on pocket
+[pAUC,pSens,pSpec,AUCErr] = LOSOCV(X,X_Amp,2,1:3,nData,1,featureset,cvtype,0);
+results.pock.AUC = pAUC;
+results.pock.AUCErr = AUCErr;
+results.pock.Sens = pSens;
+results.pock.Spec = pSpec;
+results.pock.mAUC = cellfun(@nanmean,pAUC,'UniformOutput',false);
+results.pock.sAUC = cellfun(@nanstd,pAUC,'UniformOutput',false);
+results.pock.mSens = cellfun(@nanmean,pSens,'UniformOutput',false);
+results.pock.sSens = cellfun(@nanstd,pSens,'UniformOutput',false);
+results.pock.mSpec = cellfun(@nanmean,pSpec,'UniformOutput',false);
+results.pock.sSpec = cellfun(@nanstd,pSpec,'UniformOutput',false);
 
+% Train on hand
+[hAUC,hSens,hSpec,AUCErr] = LOSOCV(X,X_Amp,3,1:3,nData,1,featureset,cvtype,0);
+results.hand.AUC = hAUC;
+results.hand.AUCErr = AUCErr;
+results.hand.Sens = hSens;
+results.hand.Spec = hSpec;
+results.hand.mAUC = cellfun(@nanmean,hAUC,'UniformOutput',false);
+results.hand.sAUC = cellfun(@nanstd,hAUC,'UniformOutput',false);
+results.hand.mSens = cellfun(@nanmean,hSens,'UniformOutput',false);
+results.hand.sSens = cellfun(@nanstd,hSens,'UniformOutput',false);
+results.hand.mSpec = cellfun(@nanmean,hSpec,'UniformOutput',false);
+results.hand.sSpec = cellfun(@nanstd,hSpec,'UniformOutput',false);
 
+% 3 Locations
+[AUC,Sens,Spec,AUCErr] = LOSOCV(X,X_Amp,1:3,1:3,nData,1,featureset,cvtype,0);
+results.AUC = AUC;
+results.AUCErr = AUCErr;
+results.Sens = Sens;
+results.Spec = Spec;
+results.mAUC = cellfun(@nanmean,AUC,'UniformOutput',false);
+results.sAUC = cellfun(@nanstd,AUC,'UniformOutput',false);
+results.mSens = cellfun(@nanmean,Sens,'UniformOutput',false);
+results.sSens = cellfun(@nanstd,Sens,'UniformOutput',false);
+results.mSpec = cellfun(@nanmean,Spec,'UniformOutput',false);
+results.sSpec = cellfun(@nanstd,Spec,'UniformOutput',false);
 
+%% Plot location results (Healthy-Amputee)
+%need to add error bars
+figure, hold on
+bar(1:4,[results.waist.mAUC{cvtype} results.pock.mAUC{cvtype} results.hand.mAUC{cvtype} results.mAUC{cvtype}])
+figauc = errorbar(1:4,[results.waist.mAUC{cvtype} results.pock.mAUC{cvtype} results.hand.mAUC{cvtype} results.mAUC{cvtype}],...
+    [results.waist.mAUC{cvtype}-results.waist.AUCErr{cvtype}(1) results.pock.mAUC{cvtype}-results.pock.AUCErr{cvtype}(1) results.hand.mAUC{cvtype}-results.hand.AUCErr{cvtype}(1) results.mAUC{cvtype}-results.AUCErr{cvtype}(1)],...
+    [results.waist.AUCErr{cvtype}(2)-results.waist.mAUC{cvtype} results.pock.AUCErr{cvtype}(2)-results.pock.mAUC{cvtype} results.hand.AUCErr{cvtype}(2)-results.hand.mAUC{cvtype} results.AUCErr{cvtype}(2)-results.mAUC{cvtype}],...
+    'linewidth',1.5,'linestyle','none','color','k');h = gca;
+h.YLim = [0.8 1];
+title('mean AUC')
+%plot Sens-Spec
+figure, hold on
+figSS = bar([results.waist.mSens{cvtype} results.pock.mSens{cvtype} results.hand.mSens{cvtype} results.mSens{cvtype}; ...
+    results.waist.mSpec{cvtype} results.pock.mSpec{cvtype} results.hand.mSpec{cvtype} results.mSpec{cvtype}]');
+h = gca;
+h.YLim = [0.6 1];
+title('mean Sens and Spec')
+
+%% Home Retraining
+
+% Train on waist
+[wAUC,wSens,wSpec,AUCErr] = LOSOCV(X,X_Amp,1,0:3,nData,1,featureset,cvtype,1);
+results.waist.AUC = wAUC;
+results.wiast.AUCErr = AUCErr;
+results.waist.Sens = wSens;
+results.waist.Spec = wSpec;
+results.waist.mAUC = cellfun(@nanmean,wAUC,'UniformOutput',false);
+results.waist.sAUC = cellfun(@nanstd,wAUC,'UniformOutput',false);
+results.waist.mSens = cellfun(@nanmean,wSens,'UniformOutput',false);
+results.waist.sSens = cellfun(@nanstd,wSens,'UniformOutput',false);
+results.waist.mSpec = cellfun(@nanmean,wSpec,'UniformOutput',false);
+results.waist.sSpec = cellfun(@nanstd,wSpec,'UniformOutput',false);
+
+% Train on pocket
+[pAUC,pSens,pSpec,AUCErr] = LOSOCV(X,X_Amp,2,1:3,nData,1,featureset,cvtype,1);
+results.pock.AUC = pAUC;
+results.pock.AUCErr = AUCErr;
+results.pock.Sens = pSens;
+results.pock.Spec = pSpec;
+results.pock.mAUC = cellfun(@nanmean,pAUC,'UniformOutput',false);
+results.pock.sAUC = cellfun(@nanstd,pAUC,'UniformOutput',false);
+results.pock.mSens = cellfun(@nanmean,pSens,'UniformOutput',false);
+results.pock.sSens = cellfun(@nanstd,pSens,'UniformOutput',false);
+results.pock.mSpec = cellfun(@nanmean,pSpec,'UniformOutput',false);
+results.pock.sSpec = cellfun(@nanstd,pSpec,'UniformOutput',false);
+
+% Train on hand
+[hAUC,hSens,hSpec,AUCErr] = LOSOCV(X,X_Amp,3,1:3,nData,1,featureset,cvtype,1);
+results.hand.AUC = hAUC;
+results.hand.AUCErr = AUCErr;
+results.hand.Sens = hSens;
+results.hand.Spec = hSpec;
+results.hand.mAUC = cellfun(@nanmean,hAUC,'UniformOutput',false);
+results.hand.sAUC = cellfun(@nanstd,hAUC,'UniformOutput',false);
+results.hand.mSens = cellfun(@nanmean,hSens,'UniformOutput',false);
+results.hand.sSens = cellfun(@nanstd,hSens,'UniformOutput',false);
+results.hand.mSpec = cellfun(@nanmean,hSpec,'UniformOutput',false);
+results.hand.sSpec = cellfun(@nanstd,hSpec,'UniformOutput',false);
+
+% 3 Locations
+[AUC,Sens,Spec,AUCErr] = LOSOCV(X,X_Amp,1:3,1:3,nData,1,featureset,cvtype,1);
+results.AUC = AUC;
+results.AUCErr = AUCErr;
+results.Sens = Sens;
+results.Spec = Spec;
+results.mAUC = cellfun(@nanmean,AUC,'UniformOutput',false);
+results.sAUC = cellfun(@nanstd,AUC,'UniformOutput',false);
+results.mSens = cellfun(@nanmean,Sens,'UniformOutput',false);
+results.sSens = cellfun(@nanstd,Sens,'UniformOutput',false);
+results.mSpec = cellfun(@nanmean,Spec,'UniformOutput',false);
+results.sSpec = cellfun(@nanstd,Spec,'UniformOutput',false);
+
+%% Plot location results (Healthy-Amputee)
+%need to add error bars
+figure, hold on
+bar(1:4,[results.waist.mAUC{cvtype} results.pock.mAUC{cvtype} results.hand.mAUC{cvtype} results.mAUC{cvtype}])
+figauc = errorbar(1:4,[results.waist.mAUC{cvtype} results.pock.mAUC{cvtype} results.hand.mAUC{cvtype} results.mAUC{cvtype}],...
+    [results.waist.mAUC{cvtype}-results.waist.AUCErr{cvtype}(1) results.pock.mAUC{cvtype}-results.pock.AUCErr{cvtype}(1) results.hand.mAUC{cvtype}-results.hand.AUCErr{cvtype}(1) results.mAUC{cvtype}-results.AUCErr{cvtype}(1)],...
+    [results.waist.AUCErr{cvtype}(2)-results.waist.mAUC{cvtype} results.pock.AUCErr{cvtype}(2)-results.pock.mAUC{cvtype} results.hand.AUCErr{cvtype}(2)-results.hand.mAUC{cvtype} results.AUCErr{cvtype}(2)-results.mAUC{cvtype}],...
+    'linewidth',1.5,'linestyle','none','color','k');h = gca;
+h.YLim = [0.8 1];
+title('mean AUC')
+%plot Sens-Spec
+figure, hold on
+figSS = bar([results.waist.mSens{cvtype} results.pock.mSens{cvtype} results.hand.mSens{cvtype} results.mSens{cvtype}; ...
+    results.waist.mSpec{cvtype} results.pock.mSpec{cvtype} results.hand.mSpec{cvtype} results.mSpec{cvtype}]');
+h = gca;
+h.YLim = [0.6 1];
+title('mean Sens and Spec')
 end
 
 
@@ -182,7 +279,16 @@ end
 
 %cvtype is a vector with the cases
 %[1 2 3] = H-H, H-A, A-A
-function [AUC,Sens,Spec] = LOSOCV(X,X_test,locations_train,locations_test,nData,model,featureset,cvtype)
+function [AUC,Sens,Spec,AUCErr] = LOSOCV(X,X_test,locations_train,locations_test,nData,model,featureset,cvtype,HomeFP_retrain)
+
+rng(400)
+
+if HomeFP_retrain
+    l=load('Z:/Amputee Phones-R01/Home Data Collection/Healthy/HomeDataHealthy.mat');
+    HomeData=l.F;
+    HomeData = HomeData(:,featureset);
+    HomeL = zeros(size(HomeData,1),1); %all labels are non-fall
+end
 
 %convert labels to binary (1,4=falls, 9=activities/nonfalls)
 % Assign fall categories as 1 (falls) or 0 (non-fall)
@@ -272,8 +378,8 @@ if find(cvtype==1)
     
     %plot ROC curves w confidence bounds
     figroc = figure;
-    [X, Y, T, AUC]=perfcurve(isfall_all, conf_all, true,'XVals',[0:0.05:1]); %conf bounds with CV
-    % [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'), cell2mat(conf_all'), true,'Nboot',0,'XVals',[0:0.05:1]); %cb with Bootstrap
+%     [X, Y, T, AUC]=perfcurve(isfall_all, conf_all, true,'XVals',[0:0.05:1]); %conf bounds with CV
+    [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'), cell2mat(conf_all'), true,'Nboot',1000,'XVals',[0:0.05:1]); %cb with Bootstrap
     e = errorbar(X,Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
     e.LineWidth = 2; e.Marker = 'o';
     xlabel('False positive rate')
@@ -300,20 +406,34 @@ if any(cvtype == 2)
         
         if model
             [fvar_si,b,nz_ind]=Modeltrain(F(indtrain,:),L(indtrain),alpha,lambda,0);
+            
+            if HomeFP_retrain
+                [pred,~,~] = Modeleval(HomeData,HomeL,fvar_si,nz_ind,b,.5,0);
+                sprintf('Spec = %.2f%', length(pred)/(length(pred)+sum(pred)))
+                indmisc=find(pred); %misclassified clips
+                sprintf('# of misclassified clips = %d/%d',length(indmisc),length(F))
+                Fmisc = HomeData(indmisc,:); Lmisc = false(length(indmisc),1);
+                FPHome = [F(indtrain,:);Fmisc]; LPHome = [L(indtrain);Lmisc];
+                disp('Training model on Healthy lab + misclassified home data')
+                [fvar_si,b,nz_ind]=Modeltrain(FPHome,LPHome,alpha,lambda,0);
+            end
+            
             % Testing the model on each amputee subj (external set)
-            for subj = 1:length(unique(X_test(:,1)))
+            S=unique(X_test(:,1));
+            for i = 1:length(unique(X_test(:,1)))
+                subj=S(i);
                 rowid = (X_test(:,1)==subj) & any(bsxfun(@eq,X_test(:,2),locations_test),2);
                 [pred,conf,confmat] = Modeleval(Ft(rowid,:),X_test(rowid,4)<5,fvar_si,nz_ind,b,0.5,0);
-                conf_all{subj}=conf;
+                conf_all{i}=conf;
                 confmat_all(:,:,subj)=confmat;
                 isfall = X_test(rowid,4)<5;
-                isfall_all{subj}=isfall;
+                isfall_all{i}=isfall;
                 if length(unique(isfall)) <2 %subject AF06 with missing activities - TO FIX
                     ;
                 else
-                    [~, ~, ~, AUC_HA(run,subj)]=perfcurve(isfall, conf, true);
-                    Sens_HA(run,subj) = sum(pred & isfall)/sum(isfall);
-                    Spec_HA(run,subj) = sum(~pred & ~isfall)/sum(~isfall);
+                    [~, ~, ~, AUC_HA(run,i)]=perfcurve(isfall, conf, true);
+                    Sens_HA(run,i) = sum(pred & isfall)/sum(isfall);
+                    Spec_HA(run,i) = sum(~pred & ~isfall)/sum(~isfall);
                 end
             end
         else
@@ -345,10 +465,11 @@ if any(cvtype == 2)
     end
     figure(figroc), hold on
 %     [X, Y, T, AUC]=perfcurve(isfall_all(2:end), conf_all(2:end), true,'XVals',[0:0.05:1]);
-    [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'), cell2mat(conf_all'), true,'Nboot',0,'XVals',[0:0.05:1]); %cb with Bootstrap
-%     e = errorbar(X,Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
-    e = plot(X,Y);
+    [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'), cell2mat(conf_all'), true,'Nboot',1000,'XVals',[0:0.05:1]); %cb with Bootstrap
+    e = errorbar(X,Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
+%     e = plot(X,Y);
     e.LineWidth = 2; e.Marker = 'o';
+    AUCerr_HA=AUC(2:end);
     
 end
 
@@ -433,8 +554,8 @@ if any(cvtype == 3)
         figroc = figure;
     end
     figure(figroc), hold on
-    [X, Y, T, AUC]=perfcurve(isfall_all(2:end), conf_all(2:end), true,'XVals',[0:0.05:1]);
-    %     [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'),cell2mat(conf_all'),true,'Nboot',0,'XVals',[0:0.05:1]);
+%     [X, Y, T, AUC]=perfcurve(isfall_all(2:end), conf_all(2:end), true,'XVals',[0:0.05:1]);
+    [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'),cell2mat(conf_all'),true,'Nboot',1000,'XVals',[0:0.05:1]);
     e = errorbar(X,Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
     e.LineWidth = 2; e.Marker = 'o';
     legend('Healthy-Healthy','Healthy-Amputee','Amputee-Amputee')
@@ -444,7 +565,7 @@ end
 AUC = {AUC_HH;AUC_HA;AUC_AA};
 Sens = {Sens_HH;Sens_HA;Sens_AA};
 Spec = {Spec_HH;Spec_HA;Spec_AA};
-
+AUCErr = {[];AUCerr_HA;[]};
 
 end
 
