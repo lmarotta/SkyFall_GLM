@@ -7,9 +7,9 @@
 function results = GeneratePaperResults
 close all
 
+rng(200)
 
-
-nData=160; %number of data points for training on 1 location only
+nData=500; %number of data points for training on 1 location only
 
 % features_used = ones(18,1); %full feature set
 features_used = zeros(18,1); features_used(8) = 1; %only magnitude features
@@ -143,7 +143,7 @@ sprintf('Data length = %.2f h',size(F,1)*5/60/60)
 
 inds= X_Amp(:,1)==5 | X_Amp(:,1)==6;
 
-X_Amp = [X_Amp(inds,:);F];
+X_Amp = [X_Amp(inds,:);F(randperm(size(F,1),2000),:)];
 
 % Train on waist
 [wAUC,wSens,wSpec,AUCErr,SpecCI] = LOSOCV(X,X_Amp,1,0:3,nData,1,featureset,cvtype,0);
