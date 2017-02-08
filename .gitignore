@@ -3,7 +3,6 @@
 *.m~
 class_params_Default.mat
 *.txt*
-*.fig
 *.jpg*
 *.asta
 plot_falls.m
