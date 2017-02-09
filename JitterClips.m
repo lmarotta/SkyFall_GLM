@@ -6,7 +6,7 @@ function data=JitterClips(data,n)
 
 m=length(data.acce);
 rng(200)
-X=3*rand(n, 1)+1;
+X=3*rand(n, 1)+0;
 
 acce=cell(m*n,1);
 gyro=cell(m*n,1);

@@ -1,4 +1,4 @@
-%Generate results for the paper
+%Generate results for   the paper
 
 % LOSO CV on Healthy - Train/Test on Indoor falls
 % Input: Features set (0:reduced, 1:full)
@@ -43,7 +43,7 @@ end
 %Train and Test on all 3 locations
 cvtype = [1 2 3]; %all cv
 % cvtype = 2; %H-A only
-[AUC,Sens,Spec,AUCErr,SpecCI] = LOSOCV(X,X_Amp,1:3,1:3,100,1,featureset,cvtype,0);
+[AUC,Sens,Spec,AUCErr,SpecCI] = LOSOCV(X,X_Amp,1:3,1:3,nData,1,featureset,cvtype,0);
 results.AUC = AUC;
 results.AUCErr = AUCErr;
 results.Sens = Sens;
@@ -230,91 +230,6 @@ h.YLim = [0.4 1];
 title('mean Spec at 90% Sens')
 
 
-%% Home Retraining
-
-% Train on waist
-[wAUC,wSens,wSpec,AUCErr,SpecCI] = LOSOCV(X,X_Amp,1,0:3,nData,1,featureset,cvtype,1);
-results.waist.AUC = wAUC;
-results.waist.AUCErr = AUCErr;
-results.waist.Sens = wSens;
-results.waist.Spec = wSpec;
-results.waist.SpecCI = SpecCI;
-results.waist.mAUC = cellfun(@nanmean,wAUC,'UniformOutput',false);
-results.waist.sAUC = cellfun(@nanstd,wAUC,'UniformOutput',false);
-results.waist.mSens = cellfun(@nanmean,wSens,'UniformOutput',false);
-results.waist.sSens = cellfun(@nanstd,wSens,'UniformOutput',false);
-results.waist.mSpec = cellfun(@nanmean,wSpec,'UniformOutput',false);
-results.waist.sSpec = cellfun(@nanstd,wSpec,'UniformOutput',false);
-
-% Train on pocket
-[pAUC,pSens,pSpec,AUCErr,SpecCI] = LOSOCV(X,X_Amp,2,1:3,nData,1,featureset,cvtype,1);
-results.pock.AUC = pAUC;
-results.pock.AUCErr = AUCErr;
-results.pock.Sens = pSens;
-results.pock.Spec = pSpec;
-results.pock.SpecCI = SpecCI;
-results.pock.mAUC = cellfun(@nanmean,pAUC,'UniformOutput',false);
-results.pock.sAUC = cellfun(@nanstd,pAUC,'UniformOutput',false);
-results.pock.mSens = cellfun(@nanmean,pSens,'UniformOutput',false);
-results.pock.sSens = cellfun(@nanstd,pSens,'UniformOutput',false);
-results.pock.mSpec = cellfun(@nanmean,pSpec,'UniformOutput',false);
-results.pock.sSpec = cellfun(@nanstd,pSpec,'UniformOutput',false);
-
-% Train on hand
-[hAUC,hSens,hSpec,AUCErr,SpecCI] = LOSOCV(X,X_Amp,3,1:3,nData,1,featureset,cvtype,1);
-results.hand.AUC = hAUC;
-results.hand.AUCErr = AUCErr;
-results.hand.Sens = hSens;
-results.hand.Spec = hSpec;
-results.hand.SpecCI = SpecCI;
-results.hand.mAUC = cellfun(@nanmean,hAUC,'UniformOutput',false);
-results.hand.sAUC = cellfun(@nanstd,hAUC,'UniformOutput',false);
-results.hand.mSens = cellfun(@nanmean,hSens,'UniformOutput',false);
-results.hand.sSens = cellfun(@nanstd,hSens,'UniformOutput',false);
-results.hand.mSpec = cellfun(@nanmean,hSpec,'UniformOutput',false);
-results.hand.sSpec = cellfun(@nanstd,hSpec,'UniformOutput',false);
-
-% 3 Locations
-[AUC,Sens,Spec,AUCErr,SpecCI] = LOSOCV(X,X_Amp,1:3,1:3,nData,1,featureset,cvtype,1);
-results.AUC = AUC;
-results.AUCErr = AUCErr;
-results.Sens = Sens;
-results.Spec = Spec;
-results.SpecCI = SpecCI;
-results.mAUC = cellfun(@nanmean,AUC,'UniformOutput',false);
-results.sAUC = cellfun(@nanstd,AUC,'UniformOutput',false);
-results.mSens = cellfun(@nanmean,Sens,'UniformOutput',false);
-results.sSens = cellfun(@nanstd,Sens,'UniformOutput',false);
-results.mSpec = cellfun(@nanmean,Spec,'UniformOutput',false);
-results.sSpec = cellfun(@nanstd,Spec,'UniformOutput',false);
-
-%% Plot location results (Healthy-Amputee)
-%need to add error bars
-figure, hold on
-bar(1:4,[results.waist.mAUC{cvtype} results.pock.mAUC{cvtype} results.hand.mAUC{cvtype} results.mAUC{cvtype}])
-figauc = errorbar(1:4,[results.waist.mAUC{cvtype} results.pock.mAUC{cvtype} results.hand.mAUC{cvtype} results.mAUC{cvtype}],...
-    [results.waist.mAUC{cvtype}-results.waist.AUCErr{cvtype}(1) results.pock.mAUC{cvtype}-results.pock.AUCErr{cvtype}(1) results.hand.mAUC{cvtype}-results.hand.AUCErr{cvtype}(1) results.mAUC{cvtype}-results.AUCErr{cvtype}(1)],...
-    [results.waist.AUCErr{cvtype}(2)-results.waist.mAUC{cvtype} results.pock.AUCErr{cvtype}(2)-results.pock.mAUC{cvtype} results.hand.AUCErr{cvtype}(2)-results.hand.mAUC{cvtype} results.AUCErr{cvtype}(2)-results.mAUC{cvtype}],...
-    'linewidth',1.5,'linestyle','none','color','k');h = gca;
-h.YLim = [0.8 1];
-title('mean AUC')
-%plot Sens-Spec
-figure, hold on
-figSS = bar([results.waist.mSens{cvtype} results.pock.mSens{cvtype} results.hand.mSens{cvtype} results.mSens{cvtype}; ...
-    results.waist.mSpec{cvtype} results.pock.mSpec{cvtype} results.hand.mSpec{cvtype} results.mSpec{cvtype}]');
-h = gca;
-h.YLim = [0.6 1];
-title('mean Sens and Spec')
-%plot Spec at 0.9 Sens
-figure, hold on
-bar(1:4,[results.waist.mSpec{cvtype} results.pock.mSpec{cvtype} results.hand.mSpec{cvtype} results.mSpec{cvtype}])
-figSSCI = errorbar(1:4,[results.waist.mSpec{cvtype} results.pock.mSpec{cvtype} results.hand.mSpec{cvtype} results.mSpec{cvtype}],...
-    [results.waist.mSpec{cvtype}-results.waist.SpecCI{cvtype}(1) results.pock.mSpec{cvtype}-results.pock.SpecCI{cvtype}(1) results.hand.mSpec{cvtype}-results.hand.SpecCI{cvtype}(1) results.mSpec{cvtype}-results.SpecCI{cvtype}(1)],...
-    [results.waist.SpecCI{cvtype}(2)-results.waist.mSpec{cvtype} results.pock.SpecCI{cvtype}(2)-results.pock.mSpec{cvtype} results.hand.SpecCI{cvtype}(2)-results.hand.mSpec{cvtype} results.SpecCI{cvtype}(2)-results.mSpec{cvtype}],...
-    'linewidth',1.5,'linestyle','none','color','k');
-h = gca;
-h.YLim = [0.4 1];
-title('mean Spec at 90% Sens')
 
 end
 
@@ -349,7 +264,7 @@ sprintf('Nlocs = %d, falls/non_falls = %f',length(locations_train),ratio)
 conf_all=cell(1,length(subj));
 isfall_all=cell(1,length(subj));
 confmat_all=zeros(2,2,length(subj));
-Nruns = 5;  %average multiple runs for each subject
+Nruns = 1;  %average multiple runs for each subject
 alpha = 0.6;
 lambda = 0.015;
 
@@ -433,6 +348,7 @@ end
 AUC_HA=NaN(Nruns,length(unique(X_test(:,1))),'double');
 Sens_HA=NaN(Nruns,length(unique(X_test(:,1))),'double');
 Spec_HA=NaN(Nruns,length(unique(X_test(:,1))),'double');
+
 if any(cvtype == 2)
     
     isfall_all = {};
@@ -463,17 +379,20 @@ if any(cvtype == 2)
             end
             
             % Testing the model on each amputee subj (external set)
+            locsdata = X_test(:,2);
             S=unique(X_test(:,1));
             for i = 1:length(unique(X_test(:,1)))
                 subj=S(i);
                 rowid = (X_test(:,1)==subj) & any(bsxfun(@eq,X_test(:,2),locations_test),2);
+                rowid_all{i}=find(rowid);
                 [pred,conf,confmat] = Modeleval(Ft(rowid,:),X_test(rowid,4)<5,fvar_si,nz_ind,b,0.5,0);
                 conf_all{i}=conf;
                 confmat_all(:,:,subj)=confmat;
                 isfall = X_test(rowid,4)<5;
                 isfall_all{i}=isfall;
                 if length(unique(isfall)) <2 %subject AF06 with missing activities - TO FIX
-                    isfall_all{i} = [];  conf_all{i}=[];
+                    isfall_all{i} = [];  conf_all{i}=[]; rowid_all{i}=[];
+                    locsdata(rowid) = 0;
                 else
                     [~, ~, ~, AUC_HA(run,i)]=perfcurve(isfall, conf, true);
                     Sens_HA(run,i) = sum(pred & isfall)/sum(isfall);
@@ -508,7 +427,12 @@ if any(cvtype == 2)
         figroc = figure;
     end
     figure(figroc), hold on
-    [X, Y, T, AUC]=perfcurve(isfall_all(~cellfun(@isempty,isfall_all)), conf_all(~cellfun(@isempty,isfall_all)), true,'XVals',[0:0.05:1]);
+    
+    rowid_all = rowid_all(~cellfun(@isempty,isfall_all));
+    conf_all = conf_all(~cellfun(@isempty,isfall_all));
+    isfall_all = isfall_all(~cellfun(@isempty,isfall_all)); %remove empty cell from missing subj
+        
+    [X, Y, T, AUC]=perfcurve(isfall_all, conf_all, true,'XVals',[0:0.05:1]);
 %     [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'), cell2mat(conf_all'), true,'Nboot',1000,'XVals',[0:0.05:1]); %cb with Bootstrap
     e = errorbar(X,Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1)); %plot ROC curve
 
@@ -526,8 +450,17 @@ if any(cvtype == 2)
     AUCerr_HA=ci_AUC;
     SpecCI_HA = ci_spec;
 
-    
-
+    %FPR and FNR by location
+    locsdata=locsdata(cell2mat(rowid_all'));
+    indFN = (cell2mat(conf_all')<.5 & cell2mat(isfall_all')==1);
+    indFP = (cell2mat(conf_all')>=.5 & cell2mat(isfall_all')==0);
+    locsFP = locsdata(indFP);
+    locsFN = locsdata(indFN);
+    hFP=sum(locsFP==3); wFP=sum(locsFP==1); pFP = sum(locsFP==2);
+    hFN=sum(locsFN==3); wFN=sum(locsFN==1); pFN = sum(locsFN==2);
+    figure, bar([wFP/sum(cell2mat(isfall_all') & locsdata==1) wFN/sum(~cell2mat(isfall_all') & locsdata==1); ...
+        pFP/sum(cell2mat(isfall_all') & locsdata==2) pFN/sum(~cell2mat(isfall_all') & locsdata==2); ... 
+        hFP/sum(cell2mat(isfall_all') & locsdata==3) hFN/sum(~cell2mat(isfall_all') & locsdata==3)]), legend('FP','FN')
 end
 
 %% LOSO on Amputees

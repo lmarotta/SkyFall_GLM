@@ -1,7 +1,7 @@
 clear all
 
-features_used = ones(18,1); features_used([4 7 10:18]) = 0; %full feature set
-% features_used = zeros(18,1); features_used([8]) = 1; %only magnitude features
+% features_used = ones(18,1); features_used([4 7 10:18]) = 0; %full feature set
+features_used = zeros(18,1); features_used([8]) = 1; %only magnitude features
 featureInds=getFeatureInds(features_used); 
 
 %default values - no grid search over params
@@ -37,12 +37,82 @@ display = 1;
 X_Amp = load('Test_Data_Amputees');
 X_Amp = X_Amp.F;
 L = X_Amp(:,4); L = L<9;
+locsdata = X_Amp(:,2);
 X_Amp(:,1:4) = []; %remove meta-data
 F = X_Amp(:,featureInds);
 [pred,conf,confmat] = Modeleval(F,L,fvar,nz_ind,b,Thres,display);
 conf_lab = conf;
-L_lab = L;
+F_Amplab = F;
+L_Amplab = L;
 
+indFN = (pred==0 & L==1);
+indFP = (pred==1 & L==0);
+indTN = (pred==0 & L==0);
+indTP = (pred==1 & L==1);
+
+%show 4 random TP clips 
+load Test_Data_Amputees_labels.mat
+figure('name','TRUE POSITIVES')
+clips = find(indTP); clips = clips(randperm(length(clips))); clips = clips(1:4);
+for i =1:4
+    subplot(2,2,i)
+    plot(labels.acce{clips(i)}(:,2:end),'LineWidth',2)
+    xlabel('Sample')
+    ylabel('Acceleration [g]')
+%     legend('X','Y','Z')
+    % save figure
+    ax = gca;
+    ax.FontSize = 16;
+end
+
+%show 4 random FN clips 
+figure('name','FALSE NEGATIVES')
+clips = find(indFN); clips = clips(randperm(length(clips))); clips = clips(1:4);
+for i =1:4
+    subplot(2,2,i)
+    plot(labels.acce{clips(i)}(:,2:end),'LineWidth',2)
+    xlabel('Sample')
+    ylabel('Acceleration [g]')
+%     legend('X','Y','Z')
+    % save figure
+    ax = gca;
+    ax.FontSize = 16;
+end
+
+%show 4 random TN clips 
+figure('name','TRUE NEGATIVES')
+clips = find(indTN); clips = clips(randperm(length(clips))); clips = clips(1:4);
+for i =1:4
+    subplot(2,2,i)
+    plot(labels.acce{clips(i)}(:,2:end),'LineWidth',2)
+    xlabel('Sample')
+    ylabel('Acceleration [g]')
+%     legend('X','Y','Z')
+    % save figure
+    ax = gca;
+    ax.FontSize = 16;
+end
+
+%show 4 random FP clips
+figure('name','FALSE POSITIVES')
+clips = find(indFP); clips = clips(randperm(length(clips))); clips = clips(1:4);
+for i =1:4
+    subplot(2,2,i)
+    plot(labels.acce{clips(i)}(:,2:end),'LineWidth',2)
+    xlabel('Sample')
+    ylabel('Acceleration [g]')
+%     legend('X','Y','Z')
+    % save figure
+    ax = gca;
+    ax.FontSize = 16;
+end
+
+%show errors per location
+locsFP = labels.location(indFP);
+locsFN = labels.location(indFN);
+hFP=sum(strcmp(locsFP,'hand')); wFP=sum(strcmp(locsFP,'pouch')); pFP = sum(strcmp(locsFP,'pocket'));
+hFN=sum(strcmp(locsFN,'hand')); wFN=sum(strcmp(locsFN,'pouch')); pFN = sum(strcmp(locsFN,'pocket'));
+figure, bar([wFP/sum(L & locsdata==1) wFN/sum(~L & locsdata==1); pFP/sum(L & locsdata==2) pFN/sum(~L & locsdata==2); hFP/sum(L & locsdata==3) hFN/sum(~L & locsdata==3)]), legend('FP','FN')
 
 %% Load Home data and test - Amputee
 display = 0;
@@ -80,6 +150,7 @@ else
 end
 
 %feature selection
+F(:,1:4) = [];
 F = F(:,featureInds);
 L = false(size(F,1),1); %all labels are non-fall
 [pred,conf,confmat] = Modeleval(F,L,fvar,nz_ind,b,Thres,display);
@@ -88,7 +159,7 @@ figure, histogram(conf)
 figure, histogram(pred), hold on, title(sprintf('Spec = %.2f%', length(pred)/(length(pred)+sum(pred))))
 
 roc = figure, hold on
-[X, Y, T, AUC]=perfcurve([L;L_lab], [conf;conf_lab], true,'TVals',[0:0.05:1]); %conf bounds with CV
+[X, Y, T, AUC]=perfcurve([L;L_Amplab], [conf;conf_lab], true,'TVals',[0:0.05:1]); %conf bounds with CV
 % [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'), cell2mat(conf_all'), true,'Nboot',0,'XVals',[0:0.05:1]); %cb with Bootstrap
 e = plot(X,Y);
 e.LineWidth = 2; e.Marker = 'o';
@@ -135,10 +206,6 @@ disp('Training model on Healthy lab + misclassified home data')
 Thres = 0.5; %model threshold
 disp('Test model on amputees - lab data')
 display = 1;
-X_Amp = load('Test_Data_Amputees');
-X_Amp = X_Amp.F;
-L = X_Amp(:,4); L = L<9;
-X_Amp(:,1:4) = []; %remove meta-data
 F = X_Amp(:,featureInds);
 [pred,conf,confmat] = Modeleval(F,L,fvar,nz_ind,b,Thres,display);
 conf_lab = conf;
