@@ -371,9 +371,9 @@ if find(cvtype==1)
         end
     end
     %average over runs
-    AUC_HH = [nanmean(AUC_HH,1) nanstd(AUC_HH,1)];
-    Sens_HH = [nanmean(Sens_HH,1) nanstd(Sens_HH,1)];
-    Spec_HH = [nanmean(Spec_HH,1) nanstd(Spec_HH,1)];
+    AUC_HH = [nanmean(AUC_HH) nanstd(AUC_HH)];
+    Sens_HH = [nanmean(Sens_HH) nanstd(Sens_HH)];
+    Spec_HH = [nanmean(Spec_HH) nanstd(Spec_HH)];
     
     confmat=sum(confmat_all,3);
     plotConfmat(confmat,'Healthy-Healthy');
@@ -461,9 +461,9 @@ if any(cvtype == 2)
             end
         end
     end
-    AUC_HA = [nanmean(AUC_HA,1) nanstd(AUC_HA,1)];
-    Sens_HA = [nanmean(Sens_HA,1) nanstd(Sens_HA,1)];
-    Spec_HA = [nanmean(Spec_HA,1) nanstd(Spec_HA,1)];
+    AUC_HA = [nanmean(AUC_HA) nanstd(AUC_HA)];
+    Sens_HA = [nanmean(Sens_HA) nanstd(Sens_HA)];
+    Spec_HA = [nanmean(Spec_HA) nanstd(Spec_HA)];
     
     confmat=sum(confmat_all,3);
     plotConfmat(confmat,'Healthy-Amputee');
@@ -583,9 +583,9 @@ if any(cvtype == 3)
             end
         end
     end
-    AUC_AA = [nanmean(AUC_AA,1) nanstd(AUC_AA,1)];
-    Sens_AA = [nanmean(Sens_AA,1) nanstd(Sens_AA,1)];
-    Spec_AA = [nanmean(Spec_AA,1) nanstd(Spec_AA,1)];
+    AUC_AA = [nanmean(AUC_AA) nanstd(AUC_AA)];
+    Sens_AA = [nanmean(Sens_AA) nanstd(Sens_AA)];
+    Spec_AA = [nanmean(Spec_AA) nanstd(Spec_AA)];
     
     confmat=sum(confmat_all,3);
     plotConfmat(confmat,'Amputee-Amputee');
