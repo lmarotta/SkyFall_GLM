@@ -182,7 +182,7 @@ l = load([filespath 'HomeDataAmp.mat']);
 F = l.F;
 sprintf('Data length = %.2f h',size(F,1)*5/60/60)
 
-inds= X_Amp(:,1)==5 | X_Amp(:,1)==6;
+inds= any(bsxfun(@eq,X_Amp(:,1),unique(F(:,1))'),2) & X_Amp(:,4)<5; % Use falls from subjects fwith Home Data 
 
 X_Amp = [X_Amp(inds,:);F(randperm(size(F,1),500),:)];
 
