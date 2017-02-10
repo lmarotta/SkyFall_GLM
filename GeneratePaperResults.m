@@ -43,12 +43,14 @@ end
 %Train and Test on all 3 locations
 cvtype = [1 2 3]; %all cv
 % cvtype = 2; %H-A only
-[AUC,Sens,Spec,AUCErr,SpecCI] = LOSOCV(X,X_Amp,1:3,1:3,nData,1,featureset,cvtype,0);
+[AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR] = LOSOCV(X,X_Amp,1:3,1:3,nData,1,featureset,cvtype,0);
 results.AUC = AUC;
 results.AUCErr = AUCErr;
 results.Sens = Sens;
 results.Spec = Spec;
 results.SpecCI = SpecCI;
+results.FPR = FPR;
+results.FNR = FNR;
 results.mAUC = cellfun(@nanmean,AUC,'UniformOutput',false);
 results.sAUC = cellfun(@nanstd,AUC,'UniformOutput',false);
 results.mSens = cellfun(@nanmean,Sens,'UniformOutput',false);
@@ -60,12 +62,14 @@ results.sSpec = cellfun(@nanstd,Spec,'UniformOutput',false);
 cvtype = 2; %H-A only
 
 % Train on waist
-[wAUC,wSens,wSpec,AUCErr,SpecCI] = LOSOCV(X,X_Amp,1,1:3,nData,1,featureset,cvtype,0);
+[wAUC,wSens,wSpec,AUCErr,SpecCI,FPR,FNR] = LOSOCV(X,X_Amp,1,1:3,nData,1,featureset,cvtype,0);
 results.waist.AUC = wAUC;
 results.waist.AUCErr = AUCErr;
 results.waist.Sens = wSens;
 results.waist.Spec = wSpec;
 results.waist.SpecCI = SpecCI;
+results.waist.FPR = FPR;
+results.waist.FNR = FNR;
 results.waist.mAUC = cellfun(@nanmean,wAUC,'UniformOutput',false);
 results.waist.sAUC = cellfun(@nanstd,wAUC,'UniformOutput',false);
 results.waist.mSens = cellfun(@nanmean,wSens,'UniformOutput',false);
@@ -74,12 +78,14 @@ results.waist.mSpec = cellfun(@nanmean,wSpec,'UniformOutput',false);
 results.waist.sSpec = cellfun(@nanstd,wSpec,'UniformOutput',false);
 
 % Train on pocket
-[pAUC,pSens,pSpec,AUCErr,SpecCI] = LOSOCV(X,X_Amp,2,1:3,nData,1,featureset,cvtype,0);
+[pAUC,pSens,pSpec,AUCErr,SpecCI,FPR,FNR] = LOSOCV(X,X_Amp,2,1:3,nData,1,featureset,cvtype,0);
 results.pock.AUC = pAUC;
 results.pock.AUCErr = AUCErr;
 results.pock.Sens = pSens;
 results.pock.Spec = pSpec;
 results.pock.SpecCI = SpecCI;
+results.pock.FPR = FPR;
+results.pock.FNR = FNR;
 results.pock.mAUC = cellfun(@nanmean,pAUC,'UniformOutput',false);
 results.pock.sAUC = cellfun(@nanstd,pAUC,'UniformOutput',false);
 results.pock.mSens = cellfun(@nanmean,pSens,'UniformOutput',false);
@@ -88,12 +94,14 @@ results.pock.mSpec = cellfun(@nanmean,pSpec,'UniformOutput',false);
 results.pock.sSpec = cellfun(@nanstd,pSpec,'UniformOutput',false);
 
 % Train on hand
-[hAUC,hSens,hSpec,AUCErr,SpecCI] = LOSOCV(X,X_Amp,3,1:3,nData,1,featureset,cvtype,0);
+[hAUC,hSens,hSpec,AUCErr,SpecCI,FPR,FNR] = LOSOCV(X,X_Amp,3,1:3,nData,1,featureset,cvtype,0);
 results.hand.AUC = hAUC;
 results.hand.AUCErr = AUCErr;
 results.hand.Sens = hSens;
 results.hand.Spec = hSpec;
 results.hand.SpecCI = SpecCI;
+results.hand.FPR = FPR;
+results.hand.FNR = FNR;
 results.hand.mAUC = cellfun(@nanmean,hAUC,'UniformOutput',false);
 results.hand.sAUC = cellfun(@nanstd,hAUC,'UniformOutput',false);
 results.hand.mSens = cellfun(@nanmean,hSens,'UniformOutput',false);
@@ -112,13 +120,6 @@ figauc = errorbar(1:4,[results.waist.mAUC{cvtype} results.pock.mAUC{cvtype} resu
 h = gca;
 h.YLim = [0.4 1];
 title('mean AUC')
-%plot Sens-Spec
-figure, hold on
-figSS = bar([results.waist.mSens{cvtype} results.pock.mSens{cvtype} results.hand.mSens{cvtype} results.mSens{cvtype}; ...
-    results.waist.mSpec{cvtype} results.pock.mSpec{cvtype} results.hand.mSpec{cvtype} results.mSpec{cvtype}]');
-h = gca;
-h.YLim = [0.6 1];
-title('mean Sens and Spec')
 
 %plot Spec at 0.9 Sens
 figure, hold on
@@ -131,7 +132,47 @@ h = gca;
 h.YLim = [0.4 1];
 title('mean Spec at 90% Sens')
 
+% plot FPR by location
+figure, hold on
+imagesc([results.waist.FPR{2}; results.pock.FPR{2}; results.hand.FPR{2}; results.FPR{2}]);
+M=max(max([results.waist.FPR{2}; results.pock.FPR{2}; results.hand.FPR{2}; results.FPR{2}]));
+for i=1:3
+    if results.waist.FPR{2}(i)<.2*M; Color='w'; else Color='k'; end
+    text(i,1,sprintf('%0.2f',results.waist.FPR{2}(i)*100),'Color',Color)
+    if results.pock.FPR{2}(i)<.2*M; Color='w'; else Color='k'; end
+    text(i,2,sprintf('%0.2f',results.pock.FPR{2}(i)*100),'Color',Color)
+    if results.hand.FPR{2}(i)<.2*M; Color='w'; else Color='k'; end
+    text(i,3,sprintf('%0.2f',results.hand.FPR{2}(i)*100),'Color',Color)
+    if results.FPR{2}(i)<.2*M; Color='w'; else Color='k'; end
+    text(i,4,sprintf('%0.2f',results.FPR{2}(i)*100),'Color',Color)
+end
+set(gca,'YDir','reverse')
+set(gca,'YTick',1:4)
+set(gca,'XTick',1:4)
+set(gca,'XTickLabel',{'Waist', 'Pocket', 'Hand'})
+set(gca,'YTickLabel',{'Waist', 'Pocket', 'Hand', 'All'})
+title('FPR')
 
+% plot FNR by location
+figure, hold on
+imagesc([results.waist.FNR{2}; results.pock.FNR{2}; results.hand.FNR{2}; results.FNR{2}]);
+M=max(max([results.waist.FNR{2}; results.pock.FNR{2}; results.hand.FNR{2}; results.FNR{2}]));
+for i=1:3
+    if results.waist.FNR{2}(i)<.2*M; Color='w'; else Color='k'; end
+    text(i,1,sprintf('%0.2f',results.waist.FNR{2}(i)*100),'Color',Color)
+    if results.pock.FNR{2}(i)<.2*M; Color='w'; else Color='k'; end
+    text(i,2,sprintf('%0.2f',results.pock.FNR{2}(i)*100),'Color',Color)
+    if results.hand.FNR{2}(i)<.2*M; Color='w'; else Color='k'; end
+    text(i,3,sprintf('%0.2f',results.hand.FNR{2}(i)*100),'Color',Color)
+    if results.FNR{2}(i)<.2*M; Color='w'; else Color='k'; end
+    text(i,4,sprintf('%0.2f',results.FNR{2}(i)*100),'Color',Color)
+end
+set(gca,'YDir','reverse')
+set(gca,'YTick',1:4)
+set(gca,'XTick',1:4)
+set(gca,'XTickLabel',{'Waist', 'Pocket', 'Hand'})
+set(gca,'YTickLabel',{'Waist', 'Pocket', 'Hand', 'All'})
+title('FNR')
 
 %% HOME DATA ANALYSIS 
 cvtype = 2;
@@ -146,7 +187,7 @@ inds= X_Amp(:,1)==5 | X_Amp(:,1)==6;
 X_Amp = [X_Amp(inds,:);F(randperm(size(F,1),500),:)];
 
 % Train on waist
-[wAUC,wSens,wSpec,AUCErr,SpecCI] = LOSOCV(X,X_Amp,1,0:3,nData,1,featureset,cvtype,0);
+[wAUC,wSens,wSpec,AUCErr,SpecCI,~,~] = LOSOCV(X,X_Amp,1,0:3,nData,1,featureset,cvtype,0);
 results.waist.AUC = wAUC;
 results.waist.AUCErr = AUCErr;
 results.waist.Sens = wSens;
@@ -160,7 +201,7 @@ results.waist.mSpec = cellfun(@nanmean,wSpec,'UniformOutput',false);
 results.waist.sSpec = cellfun(@nanstd,wSpec,'UniformOutput',false);
 
 % Train on pocket
-[pAUC,pSens,pSpec,AUCErr,SpecCI] = LOSOCV(X,X_Amp,2,1:3,nData,1,featureset,cvtype,0);
+[pAUC,pSens,pSpec,AUCErr,SpecCI,~,~] = LOSOCV(X,X_Amp,2,1:3,nData,1,featureset,cvtype,0);
 results.pock.AUC = pAUC;
 results.pock.AUCErr = AUCErr;
 results.pock.Sens = pSens;
@@ -174,7 +215,7 @@ results.pock.mSpec = cellfun(@nanmean,pSpec,'UniformOutput',false);
 results.pock.sSpec = cellfun(@nanstd,pSpec,'UniformOutput',false);
 
 % Train on hand
-[hAUC,hSens,hSpec,AUCErr,SpecCI] = LOSOCV(X,X_Amp,3,1:3,nData,1,featureset,cvtype,0);
+[hAUC,hSens,hSpec,AUCErr,SpecCI,~,~] = LOSOCV(X,X_Amp,3,1:3,nData,1,featureset,cvtype,0);
 results.hand.AUC = hAUC;
 results.hand.AUCErr = AUCErr;
 results.hand.Sens = hSens;
@@ -188,7 +229,7 @@ results.hand.mSpec = cellfun(@nanmean,hSpec,'UniformOutput',false);
 results.hand.sSpec = cellfun(@nanstd,hSpec,'UniformOutput',false);
 
 % 3 Locations
-[AUC,Sens,Spec,AUCErr,SpecCI] = LOSOCV(X,X_Amp,1:3,1:3,nData,1,featureset,cvtype,0);
+[AUC,Sens,Spec,AUCErr,SpecCI,~,~] = LOSOCV(X,X_Amp,1:3,1:3,nData,1,featureset,cvtype,0);
 results.AUC = AUC;
 results.AUCErr = AUCErr;
 results.Sens = Sens;
@@ -237,7 +278,7 @@ end
 
 %cvtype is a vector with the cases
 %[1 2 3] = H-H, H-A, A-A
-function [AUC,Sens,Spec,AUCErr,SpecCI] = LOSOCV(X,X_test,locations_train,locations_test,nData,model,featureset,cvtype,HomeFP_retrain)
+function [AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR] = LOSOCV(X,X_test,locations_train,locations_test,nData,model,featureset,cvtype,HomeFP_retrain)
 
 rng(400)
 
@@ -458,9 +499,12 @@ if any(cvtype == 2)
     locsFN = locsdata(indFN);
     hFP=sum(locsFP==3); wFP=sum(locsFP==1); pFP = sum(locsFP==2);
     hFN=sum(locsFN==3); wFN=sum(locsFN==1); pFN = sum(locsFN==2);
-    figure, bar([wFP/sum(cell2mat(isfall_all') & locsdata==1) wFN/sum(~cell2mat(isfall_all') & locsdata==1); ...
-        pFP/sum(cell2mat(isfall_all') & locsdata==2) pFN/sum(~cell2mat(isfall_all') & locsdata==2); ... 
-        hFP/sum(cell2mat(isfall_all') & locsdata==3) hFN/sum(~cell2mat(isfall_all') & locsdata==3)]), legend('FP','FN')
+%     figure, bar([wFP/sum(cell2mat(isfall_all') & locsdata==1) wFN/sum(~cell2mat(isfall_all') & locsdata==1); ...
+%         pFP/sum(cell2mat(isfall_all') & locsdata==2) pFN/sum(~cell2mat(isfall_all') & locsdata==2); ... 
+%         hFP/sum(cell2mat(isfall_all') & locsdata==3) hFN/sum(~cell2mat(isfall_all') & locsdata==3)]), legend('FP','FN')
+    
+    FPR_HA=[wFP/sum(cell2mat(isfall_all') & locsdata==1) pFP/sum(cell2mat(isfall_all') & locsdata==2) hFP/sum(cell2mat(isfall_all') & locsdata==3)];
+    FNR_HA=[wFN/sum(~cell2mat(isfall_all') & locsdata==1) pFN/sum(~cell2mat(isfall_all') & locsdata==2) hFN/sum(~cell2mat(isfall_all') & locsdata==3)];
 end
 
 %% LOSO on Amputees
@@ -557,6 +601,8 @@ Sens = {Sens_HH;Sens_HA;Sens_AA};
 Spec = {Spec_HH;Spec_HA;Spec_AA};
 AUCErr = {[];AUCerr_HA;[]};
 SpecCI = {[];SpecCI_HA;[]};
+FPR = {[];FPR_HA;[]};
+FNR = {[];FNR_HA;[]};
 
 
 end
