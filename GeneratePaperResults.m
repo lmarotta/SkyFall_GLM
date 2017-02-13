@@ -190,60 +190,44 @@ inds= any(bsxfun(@eq,X_Amp(:,1),unique(F(:,1))'),2) & X_Amp(:,4)<5; % Use falls 
 X_Amp = [X_Amp(inds,:);F(randperm(size(F,1),500),:)];
 
 % Train on waist
-[wAUC,wSens,wSpec,AUCErr,SpecCI,~,~,~] = LOSOCV(X,X_Amp,1,0:3,nData,1,featureset,cvtype,0);
+[wAUC,wSens,wSpec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,1,0:3,nData,1,featureset,cvtype,0);
 results.waist.AUC = wAUC;
 results.waist.AUCErr = AUCErr;
 results.waist.Sens = wSens;
 results.waist.Spec = wSpec;
 results.waist.SpecCI = SpecCI;
-results.waist.mAUC = cellfun(@nanmean,wAUC,'UniformOutput',false);
-results.waist.sAUC = cellfun(@nanstd,wAUC,'UniformOutput',false);
-results.waist.mSens = cellfun(@nanmean,wSens,'UniformOutput',false);
-results.waist.sSens = cellfun(@nanstd,wSens,'UniformOutput',false);
-results.waist.mSpec = cellfun(@nanmean,wSpec,'UniformOutput',false);
-results.waist.sSpec = cellfun(@nanstd,wSpec,'UniformOutput',false);
+results.waist.FPR = FPR;
+results.waist.FNR = FNR;
 
 % Train on pocket
-[pAUC,pSens,pSpec,AUCErr,SpecCI,~,~,~] = LOSOCV(X,X_Amp,2,1:3,nData,1,featureset,cvtype,0);
+[pAUC,pSens,pSpec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,2,1:3,nData,1,featureset,cvtype,0);
 results.pock.AUC = pAUC;
 results.pock.AUCErr = AUCErr;
 results.pock.Sens = pSens;
 results.pock.Spec = pSpec;
 results.pock.SpecCI = SpecCI;
-results.pock.mAUC = cellfun(@nanmean,pAUC,'UniformOutput',false);
-results.pock.sAUC = cellfun(@nanstd,pAUC,'UniformOutput',false);
-results.pock.mSens = cellfun(@nanmean,pSens,'UniformOutput',false);
-results.pock.sSens = cellfun(@nanstd,pSens,'UniformOutput',false);
-results.pock.mSpec = cellfun(@nanmean,pSpec,'UniformOutput',false);
-results.pock.sSpec = cellfun(@nanstd,pSpec,'UniformOutput',false);
+results.pock.FPR = FPR;
+results.pock.FNR = FNR;
 
 % Train on hand
-[hAUC,hSens,hSpec,AUCErr,SpecCI,~,~,~] = LOSOCV(X,X_Amp,3,1:3,nData,1,featureset,cvtype,0);
+[hAUC,hSens,hSpec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,3,1:3,nData,1,featureset,cvtype,0);
 results.hand.AUC = hAUC;
 results.hand.AUCErr = AUCErr;
 results.hand.Sens = hSens;
 results.hand.Spec = hSpec;
 results.hand.SpecCI = SpecCI;
-results.hand.mAUC = cellfun(@nanmean,hAUC,'UniformOutput',false);
-results.hand.sAUC = cellfun(@nanstd,hAUC,'UniformOutput',false);
-results.hand.mSens = cellfun(@nanmean,hSens,'UniformOutput',false);
-results.hand.sSens = cellfun(@nanstd,hSens,'UniformOutput',false);
-results.hand.mSpec = cellfun(@nanmean,hSpec,'UniformOutput',false);
-results.hand.sSpec = cellfun(@nanstd,hSpec,'UniformOutput',false);
+results.hand.FPR = FPR;
+results.hand.FNR = FNR;
 
 % 3 Locations
-[AUC,Sens,Spec,AUCErr,SpecCI,~,~,~] = LOSOCV(X,X_Amp,1:3,1:3,nData,1,featureset,cvtype,0);
+[AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,1:3,1:3,nData,1,featureset,cvtype,0);
 results.AUC = AUC;
 results.AUCErr = AUCErr;
 results.Sens = Sens;
 results.Spec = Spec;
 results.SpecCI = SpecCI;
-results.mAUC = cellfun(@nanmean,AUC,'UniformOutput',false);
-results.sAUC = cellfun(@nanstd,AUC,'UniformOutput',false);
-results.mSens = cellfun(@nanmean,Sens,'UniformOutput',false);
-results.sSens = cellfun(@nanstd,Sens,'UniformOutput',false);
-results.mSpec = cellfun(@nanmean,Spec,'UniformOutput',false);
-results.sSpec = cellfun(@nanstd,Spec,'UniformOutput',false);
+results.FPR = FPR;
+results.FNR = FNR;
 
 %% Plot location results (Healthy-Amputee)
 %need to add error bars
@@ -273,7 +257,26 @@ h = gca;
 h.YLim = [0.4 1];
 title('mean Spec at 90% Sens')
 
-results=keepResults;
+% plot FNR by location
+figure, hold on
+imagesc([results.waist.FNR{2}; results.pock.FNR{2}; results.hand.FNR{2}; results.FNR{2}]);
+M=max(max([results.waist.FNR{2}; results.pock.FNR{2}; results.hand.FNR{2}; results.FNR{2}]));
+for i=1:3
+    if results.waist.FNR{2}(i)<.2*M; Color='w'; else Color='k'; end
+    text(i,1,sprintf('%0.2f',results.waist.FNR{2}(i)*100),'Color',Color)
+    if results.pock.FNR{2}(i)<.2*M; Color='w'; else Color='k'; end
+    text(i,2,sprintf('%0.2f',results.pock.FNR{2}(i)*100),'Color',Color)
+    if results.hand.FNR{2}(i)<.2*M; Color='w'; else Color='k'; end
+    text(i,3,sprintf('%0.2f',results.hand.FNR{2}(i)*100),'Color',Color)
+    if results.FNR{2}(i)<.2*M; Color='w'; else Color='k'; end
+    text(i,4,sprintf('%0.2f',results.FNR{2}(i)*100),'Color',Color)
+end
+set(gca,'YDir','reverse')
+set(gca,'YTick',1:4)
+set(gca,'XTick',1:4)
+set(gca,'XTickLabel',{'Waist', 'Pocket', 'Hand'})
+set(gca,'YTickLabel',{'Waist', 'Pocket', 'Hand', 'All'})
+title('FNR')
 
 end
 
