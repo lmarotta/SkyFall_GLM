@@ -49,8 +49,8 @@ results.AUCErr = AUCErr; %bootstrap CI
 results.Sens = Sens; %mean and SEM
 results.Spec = Spec;  %mean and SEM
 results.SpecCI = SpecCI; %bootstrap CI @90% Sens
-results.FPR = [FPR{1} FPR{2}(1:3) FPR{3}];
-results.FNR = [FNR{1} FNR{2}(1:3) FNR{3}];
+results.FPR = {FPR{1} FPR{2}(1:3) FPR{3}};
+results.FNR = {FNR{1} FNR{2}(1:3) FNR{3}};
 results.AUCboot = mean(bootstat(:,2)); %bootstrapped mean
 results.Specboot = mean(bootstat(:,1));
 
@@ -89,8 +89,8 @@ results.waist.AUCErr = AUCErr;
 results.waist.Sens = wSens;
 results.waist.Spec = wSpec;
 results.waist.SpecCI = SpecCI;
-results.waist.FPR = [FPR{1} FPR{2}(1:3) FPR{3}];
-results.waist.FNR = [FNR{1} FNR{2}(1:3) FNR{3}];
+results.waist.FPR = {FPR{1} FPR{2}(1:3) FPR{3}};
+results.waist.FNR = {FNR{1} FNR{2}(1:3) FNR{3}};
 results.waist.mAUC = cellfun(@nanmean,wAUC,'UniformOutput',false);
 
 % Train on pocket
@@ -100,8 +100,8 @@ results.pock.AUCErr = AUCErr;
 results.pock.Sens = pSens;
 results.pock.Spec = pSpec;
 results.pock.SpecCI = SpecCI;
-results.pock.FPR = [FPR{1} FPR{2}(1:3) FPR{3}];
-results.pock.FNR = [FNR{1} FNR{2}(1:3) FNR{3}];
+results.pock.FPR = {FPR{1} FPR{2}(1:3) FPR{3}};
+results.pock.FNR = {FNR{1} FNR{2}(1:3) FNR{3}};
 results.pock.mAUC = cellfun(@nanmean,pAUC,'UniformOutput',false);
 
 % Train on hand
@@ -111,8 +111,8 @@ results.hand.AUCErr = AUCErr;
 results.hand.Sens = hSens;
 results.hand.Spec = hSpec;
 results.hand.SpecCI = SpecCI;
-results.hand.FPR = [FPR{1} FPR{2}(1:3) FPR{3}];
-results.hand.FNR = [FNR{1} FNR{2}(1:3) FNR{3}];
+results.hand.FPR = {FPR{1} FPR{2}(1:3) FPR{3}};
+results.hand.FNR = {FNR{1} FNR{2}(1:3) FNR{3}};
 results.hand.mAUC = cellfun(@nanmean,hAUC,'UniformOutput',false);
 
 Labresults=results;
@@ -179,7 +179,10 @@ title('FNR')
 
 FNRLab=table(FNR(:,1),FNR(:,2),FNR(:,3),'VariableNames',{'Waist','Pocket','Hand'},'RowNames',{'Waist','Pocket','Hand','All'});
 
-LabResults.FPRTable=FPRLab; LabResults.FNRTable=FNRLab;
+Labresults.FPRTable=FPRLab; Labresults.FNRTable=FNRLab;
+
+writetable(Labresults.FPRTable,'./Figs/Paper/LabFPR.xlsx','WriteRowNames',true)
+writetable(Labresults.FNRTable,'./Figs/Paper/LabFNR.xlsx','WriteRowNames',true)
 
 %% HOME DATA ANALYSIS 
 cvtype = 2;
@@ -200,8 +203,8 @@ results.waist.AUCErr = AUCErr;
 results.waist.Sens = wSens;
 results.waist.Spec = wSpec;
 results.waist.SpecCI = SpecCI;
-results.waist.FPR = [FPR{1} FPR{2}(4) FPR{3}];
-results.waist.FNR = [FNR{1} FNR{2}(4) FNR{3}];
+results.waist.FPR = {FPR{1} FPR{2}(4) FPR{3}};
+results.waist.FNR = {FNR{1} FNR{2}(4) FNR{3}};
 
 % Train on pocket
 [pAUC,pSens,pSpec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,2,1:3,nData,1,featureset,cvtype,0);
@@ -210,8 +213,8 @@ results.pock.AUCErr = AUCErr;
 results.pock.Sens = pSens;
 results.pock.Spec = pSpec;
 results.pock.SpecCI = SpecCI;
-results.pock.FPR = [FPR{1} FPR{2}(4) FPR{3}];
-results.pock.FNR = [FNR{1} FNR{2}(4) FNR{3}];
+results.pock.FPR = {FPR{1} FPR{2}(4) FPR{3}};
+results.pock.FNR = {FNR{1} FNR{2}(4) FNR{3}};
 
 % Train on hand
 [hAUC,hSens,hSpec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,3,1:3,nData,1,featureset,cvtype,0);
@@ -220,8 +223,8 @@ results.hand.AUCErr = AUCErr;
 results.hand.Sens = hSens;
 results.hand.Spec = hSpec;
 results.hand.SpecCI = SpecCI;
-results.hand.FPR = [FPR{1} FPR{2}(4) FPR{3}];
-results.hand.FNR = [FNR{1} FNR{2}(4) FNR{3}];
+results.hand.FPR = {FPR{1} FPR{2}(4) FPR{3}};
+results.hand.FNR = {FNR{1} FNR{2}(4) FNR{3}};
 
 % 3 Locations
 [AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,1:3,1:3,nData,1,featureset,cvtype,0);
@@ -230,8 +233,8 @@ results.AUCErr = AUCErr;
 results.Sens = Sens;
 results.Spec = Spec;
 results.SpecCI = SpecCI;
-results.FPR = [FPR{1} FPR{2}(4) FPR{3}];
-results.FNR = [FNR{1} FNR{2}(4) FNR{3}];
+results.FPR = {FPR{1} FPR{2}(4) FPR{3}};
+results.FNR = {FNR{1} FNR{2}(4) FNR{3}};
 
 Homeresults = results;
 %% Plot location results (Healthy-Amputee)
@@ -251,16 +254,16 @@ FPR=[results.waist.FPR{2}; results.pock.FPR{2}; results.hand.FPR{2}; results.FPR
 figure, hold on
 imagesc(FPR);
 M=max(max(FPR));
-for i=1:3
-    if results.waist.FPR{2}(i)<.2*M; Color='w'; else Color='k'; end
-    text(i,1,sprintf('%0.2f',results.waist.FPR{2}(i)*100),'Color',Color)
-    if results.pock.FPR{2}(i)<.2*M; Color='w'; else Color='k'; end
-    text(i,2,sprintf('%0.2f',results.pock.FPR{2}(i)*100),'Color',Color)
-    if results.hand.FPR{2}(i)<.2*M; Color='w'; else Color='k'; end
-    text(i,3,sprintf('%0.2f',results.hand.FPR{2}(i)*100),'Color',Color)
-    if results.FPR{2}(i)<.2*M; Color='w'; else Color='k'; end
-    text(i,4,sprintf('%0.2f',results.FPR{2}(i)*100),'Color',Color)
-end
+i = 1;
+if results.waist.FPR{2}(i)<.2*M; Color='w'; else Color='k'; end
+text(i,1,sprintf('%0.2f',results.waist.FPR{2}(i)*100),'Color',Color)
+if results.pock.FPR{2}(i)<.2*M; Color='w'; else Color='k'; end
+text(i,2,sprintf('%0.2f',results.pock.FPR{2}(i)*100),'Color',Color)
+if results.hand.FPR{2}(i)<.2*M; Color='w'; else Color='k'; end
+text(i,3,sprintf('%0.2f',results.hand.FPR{2}(i)*100),'Color',Color)
+if results.FPR{2}(i)<.2*M; Color='w'; else Color='k'; end
+text(i,4,sprintf('%0.2f',results.FPR{2}(i)*100),'Color',Color)
+
 set(gca,'YDir','reverse')
 set(gca,'YTick',1:4)
 set(gca,'XTick',1:4)
@@ -276,16 +279,14 @@ FNR=[results.waist.FNR{2}; results.pock.FNR{2}; results.hand.FNR{2}; results.FNR
 figure, hold on
 imagesc(FNR);
 M=max(max(FNR));
-for i=1:3
-    if results.waist.FNR{2}(i)<.2*M; Color='w'; else Color='k'; end
-    text(i,1,sprintf('%0.2f',results.waist.FNR{2}(i)*100),'Color',Color)
-    if results.pock.FNR{2}(i)<.2*M; Color='w'; else Color='k'; end
-    text(i,2,sprintf('%0.2f',results.pock.FNR{2}(i)*100),'Color',Color)
-    if results.hand.FNR{2}(i)<.2*M; Color='w'; else Color='k'; end
-    text(i,3,sprintf('%0.2f',results.hand.FNR{2}(i)*100),'Color',Color)
-    if results.FNR{2}(i)<.2*M; Color='w'; else Color='k'; end
-    text(i,4,sprintf('%0.2f',results.FNR{2}(i)*100),'Color',Color)
-end
+if results.waist.FNR{2}(i)<.2*M; Color='w'; else Color='k'; end
+text(i,1,sprintf('%0.2f',results.waist.FNR{2}(i)*100),'Color',Color)
+if results.pock.FNR{2}(i)<.2*M; Color='w'; else Color='k'; end
+text(i,2,sprintf('%0.2f',results.pock.FNR{2}(i)*100),'Color',Color)
+if results.hand.FNR{2}(i)<.2*M; Color='w'; else Color='k'; end
+text(i,3,sprintf('%0.2f',results.hand.FNR{2}(i)*100),'Color',Color)
+if results.FNR{2}(i)<.2*M; Color='w'; else Color='k'; end
+text(i,4,sprintf('%0.2f',results.FNR{2}(i)*100),'Color',Color)
 set(gca,'YDir','reverse')
 set(gca,'YTick',1:4)
 set(gca,'XTick',1:4)
@@ -295,7 +296,10 @@ title('FNR')
 
 FNRHome=table(FNR(:,1),'VariableNames',{'All'},'RowNames',{'Waist','Pocket','Hand','All'});
 
-HomeResults.FPRTable=FPRHome; HomeResults.FNRTable=FNRHome;
+Homeresults.FPRTable=FPRHome; Homeresults.FNRTable=FNRHome;
+writetable(Homeresults.FPRTable,'./Figs/Paper/HomeFPR.xlsx','WriteRowNames',true)
+writetable(Homeresults.FNRTable,'./Figs/Paper/HomeFNR.xlsx','WriteRowNames',true)
+
 end
 
 
