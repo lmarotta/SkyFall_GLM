@@ -4,7 +4,7 @@
 % Input: Features set (0:reduced, 1:full)
 %Number of locations (1:waist, 2:waist+pocket, 3:all)
 % Output: AUC, Sens, Spec
-function results = GeneratePaperResults
+function [Labresults,Homeresults] = GeneratePaperResults
 close all
 
 rng(200)
@@ -44,22 +44,31 @@ end
 cvtype = [1 2 3]; %all cv
 % cvtype = 2; %H-A only
 [AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1:3,1:3,nData,1,featureset,cvtype,0);
-results.AUC = AUC;
-results.AUCErr = AUCErr;
-results.Sens = Sens;
-results.Spec = Spec;
-results.SpecCI = SpecCI;
+results.AUC = AUC;   %mean and SEM
+results.AUCErr = AUCErr; %bootstrap CI
+results.Sens = Sens; %mean and SEM
+results.Spec = Spec;  %mean and SEM
+results.SpecCI = SpecCI; %bootstrap CI @90% Sens
 results.FPR = FPR;
 results.FNR = FNR;
-results.bootstat = bootstat;
-results.mAUC = cellfun(@nanmean,AUC,'UniformOutput',false);
-results.sAUC = cellfun(@nanstd,AUC,'UniformOutput',false);
-results.mSens = cellfun(@nanmean,Sens,'UniformOutput',false);
-results.sSens = cellfun(@nanstd,Sens,'UniformOutput',false);
-results.mSpec = cellfun(@nanmean,Spec,'UniformOutput',false);
-results.sSpec = cellfun(@nanstd,Spec,'UniformOutput',false);
+results.AUCboot = mean(bootstat(:,2)); %bootstrapped mean
+results.Specboot = mean(bootstat(:,1));
 
-keepResults=results;
+[h,p] = ttest2(results.AUC{2},results.AUC{1},'tail','left','VarType','unequal');
+[h,p] = ttest(results.AUC{2},results.AUC{3},'tail','left');
+
+sprintf('\nH-H Mean AUC %.3f +- %.3f',nanmean(results.AUC{1}),nanstd(results.AUC{1})/sqrt(sum(~isnan(results.AUC{1}))))
+sprintf('\nA-A Mean AUC %.3f +- %.3f',nanmean(results.AUC{3}),nanstd(results.AUC{3})/sqrt(sum(~isnan(results.AUC{3}))))
+sprintf('\nH-A Mean AUC %.3f +- %.3f',nanmean(results.AUC{1}),nanstd(results.AUC{2})/sqrt(sum(~isnan(results.AUC{2}))))
+
+%save figures
+for f = 1:4
+    figure(f)
+    ax = gca;
+    ax.FontSize = 16;
+    fig = gcf;
+    print(fig,['./Figs/Paper/Fig',num2str(f)],'-depsc','-r300')
+end
 
 %% Train on 1 location and test on 3
 cvtype = 2; %H-A only
@@ -74,11 +83,6 @@ results.waist.SpecCI = SpecCI;
 results.waist.FPR = FPR;
 results.waist.FNR = FNR;
 results.waist.mAUC = cellfun(@nanmean,wAUC,'UniformOutput',false);
-results.waist.sAUC = cellfun(@nanstd,wAUC,'UniformOutput',false);
-results.waist.mSens = cellfun(@nanmean,wSens,'UniformOutput',false);
-results.waist.sSens = cellfun(@nanstd,wSens,'UniformOutput',false);
-results.waist.mSpec = cellfun(@nanmean,wSpec,'UniformOutput',false);
-results.waist.sSpec = cellfun(@nanstd,wSpec,'UniformOutput',false);
 
 % Train on pocket
 [pAUC,pSens,pSpec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,2,1:3,nData,1,featureset,cvtype,0);
@@ -90,11 +94,6 @@ results.pock.SpecCI = SpecCI;
 results.pock.FPR = FPR;
 results.pock.FNR = FNR;
 results.pock.mAUC = cellfun(@nanmean,pAUC,'UniformOutput',false);
-results.pock.sAUC = cellfun(@nanstd,pAUC,'UniformOutput',false);
-results.pock.mSens = cellfun(@nanmean,pSens,'UniformOutput',false);
-results.pock.sSens = cellfun(@nanstd,pSens,'UniformOutput',false);
-results.pock.mSpec = cellfun(@nanmean,pSpec,'UniformOutput',false);
-results.pock.sSpec = cellfun(@nanstd,pSpec,'UniformOutput',false);
 
 % Train on hand
 [hAUC,hSens,hSpec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,3,1:3,nData,1,featureset,cvtype,0);
@@ -106,19 +105,16 @@ results.hand.SpecCI = SpecCI;
 results.hand.FPR = FPR;
 results.hand.FNR = FNR;
 results.hand.mAUC = cellfun(@nanmean,hAUC,'UniformOutput',false);
-results.hand.sAUC = cellfun(@nanstd,hAUC,'UniformOutput',false);
-results.hand.mSens = cellfun(@nanmean,hSens,'UniformOutput',false);
-results.hand.sSens = cellfun(@nanstd,hSens,'UniformOutput',false);
-results.hand.mSpec = cellfun(@nanmean,hSpec,'UniformOutput',false);
-results.hand.sSpec = cellfun(@nanstd,hSpec,'UniformOutput',false);
+
+Labresults=results;
 
 %% Plot location results (Healthy-Amputee)
 %need to add error bars
 figure, hold on
-bar(1:4,[results.waist.mAUC{cvtype} results.pock.mAUC{cvtype} results.hand.mAUC{cvtype} mean(results.bootstat(:,2))])
-figauc = errorbar(1:4,[results.waist.mAUC{cvtype} results.pock.mAUC{cvtype} results.hand.mAUC{cvtype} results.mAUC{cvtype}],...
-    [results.waist.mAUC{cvtype}-results.waist.AUCErr{cvtype}(1) results.pock.mAUC{cvtype}-results.pock.AUCErr{cvtype}(1) results.hand.mAUC{cvtype}-results.hand.AUCErr{cvtype}(1) results.mAUC{cvtype}-results.AUCErr{cvtype}(1)],...
-    [results.waist.AUCErr{cvtype}(2)-results.waist.mAUC{cvtype} results.pock.AUCErr{cvtype}(2)-results.pock.mAUC{cvtype} results.hand.AUCErr{cvtype}(2)-results.hand.mAUC{cvtype} results.AUCErr{cvtype}(2)-results.mAUC{cvtype}],...
+bar(1:4,[results.waist.AUC{cvtype} results.pock.AUC{cvtype} results.hand.AUC{cvtype} results.AUCboot])
+figauc = errorbar(1:4,[results.waist.AUC{cvtype} results.pock.AUC{cvtype} results.hand.AUC{cvtype} results.AUCboot],...
+    [results.waist.AUC{cvtype}-results.waist.AUCErr{cvtype}(1) results.pock.AUC{cvtype}-results.pock.AUCErr{cvtype}(1) results.hand.AUC{cvtype}-results.hand.AUCErr{cvtype}(1) results.AUCboot-results.AUCErr{cvtype}(1)],...
+    [results.waist.AUCErr{cvtype}(2)-results.waist.AUC{cvtype} results.pock.AUCErr{cvtype}(2)-results.pock.AUC{cvtype} results.hand.AUCErr{cvtype}(2)-results.hand.AUC{cvtype} results.AUCErr{cvtype}(2)-results.AUCboot],...
     'linewidth',1.5,'linestyle','none','color','k');
 h = gca;
 h.YLim = [0.4 1];
@@ -126,10 +122,10 @@ title('mean AUC')
 
 %plot Spec at 0.9 Sens
 figure, hold on
-bar(1:4,[results.waist.mSpec{cvtype} results.pock.mSpec{cvtype} results.hand.mSpec{cvtype} mean(results.bootstat(:,1))])
-figSSCI = errorbar(1:4,[results.waist.mSpec{cvtype} results.pock.mSpec{cvtype} results.hand.mSpec{cvtype} results.mSpec{cvtype}],...
-    [results.waist.mSpec{cvtype}-results.waist.SpecCI{cvtype}(1) results.pock.mSpec{cvtype}-results.pock.SpecCI{cvtype}(1) results.hand.mSpec{cvtype}-results.hand.SpecCI{cvtype}(1) results.mSpec{cvtype}-results.SpecCI{cvtype}(1)],...
-    [results.waist.SpecCI{cvtype}(2)-results.waist.mSpec{cvtype} results.pock.SpecCI{cvtype}(2)-results.pock.mSpec{cvtype} results.hand.SpecCI{cvtype}(2)-results.hand.mSpec{cvtype} results.SpecCI{cvtype}(2)-results.mSpec{cvtype}],...
+bar(1:4,[results.waist.Spec{cvtype} results.pock.Spec{cvtype} results.hand.Spec{cvtype} results.Specboot])
+figSSCI = errorbar(1:4,[results.waist.Spec{cvtype} results.pock.Spec{cvtype} results.hand.Spec{cvtype} results.Specboot],...
+    [results.waist.Spec{cvtype}-results.waist.SpecCI{cvtype}(1) results.pock.Spec{cvtype}-results.pock.SpecCI{cvtype}(1) results.hand.Spec{cvtype}-results.hand.SpecCI{cvtype}(1) results.Specboot-results.SpecCI{cvtype}(1)],...
+    [results.waist.SpecCI{cvtype}(2)-results.waist.Spec{cvtype} results.pock.SpecCI{cvtype}(2)-results.pock.Spec{cvtype} results.hand.SpecCI{cvtype}(2)-results.hand.Spec{cvtype} results.SpecCI{cvtype}(2)-results.Specboot],...
     'linewidth',1.5,'linestyle','none','color','k');
 h = gca;
 h.YLim = [0.4 1];
@@ -229,29 +225,23 @@ results.SpecCI = SpecCI;
 results.FPR = FPR;
 results.FNR = FNR;
 
+Homeresults = results;
 %% Plot location results (Healthy-Amputee)
 %need to add error bars
 figure, hold on
-bar(1:4,[results.waist.mAUC{cvtype} results.pock.mAUC{cvtype} results.hand.mAUC{cvtype} results.mAUC{cvtype}])
-figauc = errorbar(1:4,[results.waist.mAUC{cvtype} results.pock.mAUC{cvtype} results.hand.mAUC{cvtype} results.mAUC{cvtype}],...
-    [results.waist.mAUC{cvtype}-results.waist.AUCErr{cvtype}(1) results.pock.mAUC{cvtype}-results.pock.AUCErr{cvtype}(1) results.hand.mAUC{cvtype}-results.hand.AUCErr{cvtype}(1) results.mAUC{cvtype}-results.AUCErr{cvtype}(1)],...
-    [results.waist.AUCErr{cvtype}(2)-results.waist.mAUC{cvtype} results.pock.AUCErr{cvtype}(2)-results.pock.mAUC{cvtype} results.hand.AUCErr{cvtype}(2)-results.hand.mAUC{cvtype} results.AUCErr{cvtype}(2)-results.mAUC{cvtype}],...
+bar(1:4,[results.waist.AUC{cvtype} results.pock.AUC{cvtype} results.hand.AUC{cvtype} results.AUC{cvtype}])
+figauc = errorbar(1:4,[results.waist.AUC{cvtype} results.pock.AUC{cvtype} results.hand.AUC{cvtype} results.AUC{cvtype}],...
+    [results.waist.AUC{cvtype}-results.waist.AUCErr{cvtype}(1) results.pock.AUC{cvtype}-results.pock.AUCErr{cvtype}(1) results.hand.AUC{cvtype}-results.hand.AUCErr{cvtype}(1) results.AUC{cvtype}-results.AUCErr{cvtype}(1)],...
+    [results.waist.AUCErr{cvtype}(2)-results.waist.AUC{cvtype} results.pock.AUCErr{cvtype}(2)-results.pock.AUC{cvtype} results.hand.AUCErr{cvtype}(2)-results.hand.AUC{cvtype} results.AUCErr{cvtype}(2)-results.AUC{cvtype}],...
     'linewidth',1.5,'linestyle','none','color','k');h = gca;
 h.YLim = [0.8 1];
 title('mean AUC')
-%plot Sens-Spec
-figure, hold on
-figSS = bar([results.waist.mSens{cvtype} results.pock.mSens{cvtype} results.hand.mSens{cvtype} results.mSens{cvtype}; ...
-    results.waist.mSpec{cvtype} results.pock.mSpec{cvtype} results.hand.mSpec{cvtype} results.mSpec{cvtype}]');
-h = gca;
-h.YLim = [0.6 1];
-title('mean Sens and Spec')
 %plot Spec at 0.9 Sens
 figure, hold on
-bar(1:4,[results.waist.mSpec{cvtype} results.pock.mSpec{cvtype} results.hand.mSpec{cvtype} results.mSpec{cvtype}])
-figSSCI = errorbar(1:4,[results.waist.mSpec{cvtype} results.pock.mSpec{cvtype} results.hand.mSpec{cvtype} results.mSpec{cvtype}],...
-    [results.waist.mSpec{cvtype}-results.waist.SpecCI{cvtype}(1) results.pock.mSpec{cvtype}-results.pock.SpecCI{cvtype}(1) results.hand.mSpec{cvtype}-results.hand.SpecCI{cvtype}(1) results.mSpec{cvtype}-results.SpecCI{cvtype}(1)],...
-    [results.waist.SpecCI{cvtype}(2)-results.waist.mSpec{cvtype} results.pock.SpecCI{cvtype}(2)-results.pock.mSpec{cvtype} results.hand.SpecCI{cvtype}(2)-results.hand.mSpec{cvtype} results.SpecCI{cvtype}(2)-results.mSpec{cvtype}],...
+bar(1:4,[results.waist.Spec{cvtype} results.pock.Spec{cvtype} results.hand.Spec{cvtype} results.Spec{cvtype}])
+figSSCI = errorbar(1:4,[results.waist.Spec{cvtype} results.pock.Spec{cvtype} results.hand.Spec{cvtype} results.Spec{cvtype}],...
+    [results.waist.Spec{cvtype}-results.waist.SpecCI{cvtype}(1) results.pock.Spec{cvtype}-results.pock.SpecCI{cvtype}(1) results.hand.Spec{cvtype}-results.hand.SpecCI{cvtype}(1) results.Spec{cvtype}-results.SpecCI{cvtype}(1)],...
+    [results.waist.SpecCI{cvtype}(2)-results.waist.Spec{cvtype} results.pock.SpecCI{cvtype}(2)-results.pock.Spec{cvtype} results.hand.SpecCI{cvtype}(2)-results.hand.Spec{cvtype} results.SpecCI{cvtype}(2)-results.Spec{cvtype}],...
     'linewidth',1.5,'linestyle','none','color','k');
 h = gca;
 h.YLim = [0.4 1];
@@ -373,10 +363,6 @@ if find(cvtype==1)
             end
         end
     end
-    %average over runs
-    AUC_HH = [nanmean(AUC_HH) nanstd(AUC_HH)];
-    Sens_HH = [nanmean(Sens_HH) nanstd(Sens_HH)];
-    Spec_HH = [nanmean(Spec_HH) nanstd(Spec_HH)];
     
     confmat=sum(confmat_all,3);
     plotConfmat(confmat,'Healthy-Healthy');
@@ -464,9 +450,6 @@ if any(cvtype == 2)
             end
         end
     end
-    AUC_HA = [nanmean(AUC_HA) nanstd(AUC_HA)];
-    Sens_HA = [nanmean(Sens_HA) nanstd(Sens_HA)];
-    Spec_HA = [nanmean(Spec_HA) nanstd(Spec_HA)];
     
     confmat=sum(confmat_all,3);
     plotConfmat(confmat,'Healthy-Amputee');
@@ -586,9 +569,6 @@ if any(cvtype == 3)
             end
         end
     end
-    AUC_AA = [nanmean(AUC_AA) nanstd(AUC_AA)];
-    Sens_AA = [nanmean(Sens_AA) nanstd(Sens_AA)];
-    Spec_AA = [nanmean(Spec_AA) nanstd(Spec_AA)];
     
     confmat=sum(confmat_all,3);
     plotConfmat(confmat,'Amputee-Amputee');
