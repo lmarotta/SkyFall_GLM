@@ -120,17 +120,6 @@ h = gca;
 h.YLim = [0.4 1];
 title('mean AUC')
 
-%plot Spec at 0.9 Sens
-figure, hold on
-bar(1:4,[results.waist.Spec{cvtype} results.pock.Spec{cvtype} results.hand.Spec{cvtype} results.Specboot])
-figSSCI = errorbar(1:4,[results.waist.Spec{cvtype} results.pock.Spec{cvtype} results.hand.Spec{cvtype} results.Specboot],...
-    [results.waist.Spec{cvtype}-results.waist.SpecCI{cvtype}(1) results.pock.Spec{cvtype}-results.pock.SpecCI{cvtype}(1) results.hand.Spec{cvtype}-results.hand.SpecCI{cvtype}(1) results.Specboot-results.SpecCI{cvtype}(1)],...
-    [results.waist.SpecCI{cvtype}(2)-results.waist.Spec{cvtype} results.pock.SpecCI{cvtype}(2)-results.pock.Spec{cvtype} results.hand.SpecCI{cvtype}(2)-results.hand.Spec{cvtype} results.SpecCI{cvtype}(2)-results.Specboot],...
-    'linewidth',1.5,'linestyle','none','color','k');
-h = gca;
-h.YLim = [0.4 1];
-title('mean Spec at 90% Sens')
-
 % plot FPR by location
 FPR=[results.waist.FPR{2}; results.pock.FPR{2}; results.hand.FPR{2}; results.FPR{2}];
 
@@ -246,16 +235,6 @@ figauc = errorbar(1:4,[results.waist.AUC{cvtype} results.pock.AUC{cvtype} result
     'linewidth',1.5,'linestyle','none','color','k');h = gca;
 h.YLim = [0.8 1];
 title('mean AUC')
-%plot Spec at 0.9 Sens
-figure, hold on
-bar(1:4,[results.waist.Spec{cvtype} results.pock.Spec{cvtype} results.hand.Spec{cvtype} results.Spec{cvtype}])
-figSSCI = errorbar(1:4,[results.waist.Spec{cvtype} results.pock.Spec{cvtype} results.hand.Spec{cvtype} results.Spec{cvtype}],...
-    [results.waist.Spec{cvtype}-results.waist.SpecCI{cvtype}(1) results.pock.Spec{cvtype}-results.pock.SpecCI{cvtype}(1) results.hand.Spec{cvtype}-results.hand.SpecCI{cvtype}(1) results.Spec{cvtype}-results.SpecCI{cvtype}(1)],...
-    [results.waist.SpecCI{cvtype}(2)-results.waist.Spec{cvtype} results.pock.SpecCI{cvtype}(2)-results.pock.Spec{cvtype} results.hand.SpecCI{cvtype}(2)-results.hand.Spec{cvtype} results.SpecCI{cvtype}(2)-results.Spec{cvtype}],...
-    'linewidth',1.5,'linestyle','none','color','k');
-h = gca;
-h.YLim = [0.4 1];
-title('mean Spec at 90% Sens')
 
 % plot FPR by location
 FPR=[results.waist.FPR{2}; results.pock.FPR{2}; results.hand.FPR{2}; results.FPR{2}];
