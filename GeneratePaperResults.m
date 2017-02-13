@@ -61,14 +61,14 @@ sprintf('\nH-H Mean AUC %.3f +- %.3f',nanmean(results.AUC{1}),nanstd(results.AUC
 sprintf('\nA-A Mean AUC %.3f +- %.3f',nanmean(results.AUC{3}),nanstd(results.AUC{3})/sqrt(sum(~isnan(results.AUC{3}))))
 sprintf('\nH-A Mean AUC %.3f +- %.3f',nanmean(results.AUC{1}),nanstd(results.AUC{2})/sqrt(sum(~isnan(results.AUC{2}))))
 
-%save figures
-for f = 1:4
-    figure(f)
-    ax = gca;
-    ax.FontSize = 16;
-    fig = gcf;
-    print(fig,['./Figs/Paper/Fig',num2str(f)],'-depsc','-r300')
-end
+% %save figures
+% for f = 1:4
+%     figure(f)
+%     ax = gca;
+%     ax.FontSize = 16;
+%     fig = gcf;
+%     print(fig,['./Figs/Paper/Fig',num2str(f)],'-depsc','-r300')
+% end
 
 %% Train on 1 location and test on 3
 cvtype = 2; %H-A only
@@ -365,17 +365,27 @@ if find(cvtype==1)
     end
     
     confmat=sum(confmat_all,3);
-    plotConfmat(confmat,'Healthy-Healthy');
-    
-    %plot ROC curves w confidence bounds
-    figroc = figure;
     [X, Y, T, AUC]=perfcurve(isfall_all, conf_all, true,'TVals',[0:0.05:1]); %conf bounds with CV
-%     [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'), cell2mat(conf_all'), true,'Nboot',1000,'XVals',[0:0.05:1]); %cb with Bootstrap
-    e = errorbar(X(:,1),Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
-    e.LineWidth = 2; e.Marker = 'o';
-    xlabel('False positive rate')
-    ylabel('True positive rate')
-    
+        %     [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'), cell2mat(conf_all'), true,'Nboot',1000,'XVals',[0:0.05:1]); %cb with Bootstrap
+
+    if length(cvtype) == 3
+        plotConfmat(confmat,'Healthy-Healthy',1)
+        figure(gcf), subplot(2,2,4), hold on
+        e = errorbar(X(:,1),Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
+        e.LineWidth = 2; e.Marker = 'o';
+        xlabel('False positive rate')
+        ylabel('True positive rate')
+        
+    else
+        plotConfmat(confmat,'Healthy-Healthy');
+        %plot ROC curves w confidence bounds
+        figroc = figure;
+        e = errorbar(X(:,1),Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
+        e.LineWidth = 2; e.Marker = 'o';
+        xlabel('False positive rate')
+        ylabel('True positive rate')
+    end
+
 end
 %% Train on Healthy, Test on Amputees
 AUC_HA=NaN(Nruns,length(unique(X_test(:,1))),'double');
@@ -451,12 +461,7 @@ if any(cvtype == 2)
         end
     end
     
-    confmat=sum(confmat_all,3);
-    plotConfmat(confmat,'Healthy-Amputee');
-    if ~exist('figroc','var')
-        figroc = figure;
-    end
-    figure(figroc), hold on
+    confmat=sum(confmat_all,3);   
     
     rowid_all = rowid_all(~cellfun(@isempty,isfall_all));
     conf_all = conf_all(~cellfun(@isempty,isfall_all));
@@ -464,8 +469,30 @@ if any(cvtype == 2)
         
     [X, Y, T, AUC]=perfcurve(isfall_all, conf_all, true,'TVals',[0:0.05:1]);
 %     [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'), cell2mat(conf_all'), true,'Nboot',1000,'XVals',[0:0.05:1]); %cb with Bootstrap
-    e = errorbar(X(:,1),Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1)); %plot ROC curve
 
+    %plot cmat and RIC
+    if length(cvtype) == 3
+        plotConfmat(confmat,'Healthy-Amputee',3)
+        figure(gcf), subplot(2,2,4), hold on,
+        e = errorbar(X(:,1),Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
+        e.LineWidth = 2; e.Marker = 'o';
+        xlabel('False positive rate')
+        ylabel('True positive rate')
+        
+    else
+        plotConfmat(confmat,'Healthy-Amputee');
+        %plot ROC curves w confidence bounds    
+        if ~exist('figroc','var')
+            figroc = figure;
+        end
+        figure(figroc), hold on  
+        e = errorbar(X(:,1),Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
+        e.LineWidth = 2; e.Marker = 'o';
+        xlabel('False positive rate')
+        ylabel('True positive rate')
+    end
+ 
+    
     %95% CI on specificity for fixed sensitivity
     sens = 0.9;
     TL = [cell2mat(conf_all') cell2mat(cellfun(@double,isfall_all','UniformOutput',false))];
@@ -571,16 +598,33 @@ if any(cvtype == 3)
     end
     
     confmat=sum(confmat_all,3);
-    plotConfmat(confmat,'Amputee-Amputee');
-    if ~exist('figroc','var')
-        figroc = figure;
-    end
-    figure(figroc), hold on
     [X, Y, T, AUC]=perfcurve(isfall_all(~cellfun(@isempty,isfall_all)), conf_all(~cellfun(@isempty,isfall_all)), true,'TVals',[0:0.05:1]);
 %     [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'),cell2mat(conf_all'),true,'Nboot',1000,'XVals',[0:0.05:1]);
-    e = errorbar(X(:,1),Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
-    e.LineWidth = 2; e.Marker = 'o';
-    legend('Healthy-Healthy','Healthy-Amputee','Amputee-Amputee')
+
+    %plot cmat and ROC
+    if length(cvtype) == 3
+        plotConfmat(confmat,'Amputee-Amputee',2)
+        figure(gcf), subplot(2,2,4),  hold on
+        e = errorbar(X(:,1),Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
+        e.LineWidth = 2; e.Marker = 'o';
+        xlabel('False positive rate')
+        ylabel('True positive rate')
+        legend('Healthy-Healthy','Healthy-Amputee','Amputee-Amputee')
+        xlim([-0.1 0.6]), ylim([0 1.05]), axis square
+    else
+        plotConfmat(confmat,'Amputee-Amputee');
+        %plot ROC curves w confidence bounds    
+        if ~exist('figroc','var')
+            figroc = figure;
+        end
+        figure(figroc), hold on  
+        e = errorbar(X(:,1),Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
+        e.LineWidth = 2; e.Marker = 'o';
+        xlabel('False positive rate')
+        ylabel('True positive rate')
+        legend('Healthy-Healthy','Healthy-Amputee','Amputee-Amputee')
+    end
+
 end
 
 
@@ -595,10 +639,15 @@ FNR = {[];FNR_HA;[]};
 
 end
 
-function plotConfmat(confmat,figtitle)
+function plotConfmat(confmat,figtitle,varargin)
+if length(varargin) < 1
+    figure;
+else
+    figure(gcf), subplot(2,2,varargin{1})
+end
 
 activities = {'Non-Fall','Fall'};
-figure; imagesc(confmat./repmat(sum(confmat,2),[1 2]));
+imagesc(confmat./repmat(sum(confmat,2),[1 2]));
 confmat = confmat./repmat(sum(confmat,2),[1 2]);
 % [cmin,cmax] = caxis;
 caxis([0,1]) %set colormap to 0 1
