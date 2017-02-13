@@ -49,8 +49,8 @@ results.AUCErr = AUCErr; %bootstrap CI
 results.Sens = Sens; %mean and SEM
 results.Spec = Spec;  %mean and SEM
 results.SpecCI = SpecCI; %bootstrap CI @90% Sens
-results.FPR = FPR;
-results.FNR = FNR;
+results.FPR = [FPR{1} FPR{2}(1:3) FPR{3}];
+results.FNR = [FNR{1} FNR{2}(1:3) FNR{3}];
 results.AUCboot = mean(bootstat(:,2)); %bootstrapped mean
 results.Specboot = mean(bootstat(:,1));
 
@@ -80,8 +80,8 @@ results.waist.AUCErr = AUCErr;
 results.waist.Sens = wSens;
 results.waist.Spec = wSpec;
 results.waist.SpecCI = SpecCI;
-results.waist.FPR = FPR;
-results.waist.FNR = FNR;
+results.waist.FPR = [FPR{1} FPR{2}(1:3) FPR{3}];
+results.waist.FNR = [FNR{1} FNR{2}(1:3) FNR{3}];
 results.waist.mAUC = cellfun(@nanmean,wAUC,'UniformOutput',false);
 
 % Train on pocket
@@ -91,8 +91,8 @@ results.pock.AUCErr = AUCErr;
 results.pock.Sens = pSens;
 results.pock.Spec = pSpec;
 results.pock.SpecCI = SpecCI;
-results.pock.FPR = FPR;
-results.pock.FNR = FNR;
+results.pock.FPR = [FPR{1} FPR{2}(1:3) FPR{3}];
+results.pock.FNR = [FNR{1} FNR{2}(1:3) FNR{3}];
 results.pock.mAUC = cellfun(@nanmean,pAUC,'UniformOutput',false);
 
 % Train on hand
@@ -102,8 +102,8 @@ results.hand.AUCErr = AUCErr;
 results.hand.Sens = hSens;
 results.hand.Spec = hSpec;
 results.hand.SpecCI = SpecCI;
-results.hand.FPR = FPR;
-results.hand.FNR = FNR;
+results.hand.FPR = [FPR{1} FPR{2}(1:3) FPR{3}];
+results.hand.FNR = [FNR{1} FNR{2}(1:3) FNR{3}];
 results.hand.mAUC = cellfun(@nanmean,hAUC,'UniformOutput',false);
 
 Labresults=results;
@@ -132,9 +132,11 @@ h.YLim = [0.4 1];
 title('mean Spec at 90% Sens')
 
 % plot FPR by location
+FPR=[results.waist.FPR{2}; results.pock.FPR{2}; results.hand.FPR{2}; results.FPR{2}];
+
 figure, hold on
-imagesc([results.waist.FPR{2}; results.pock.FPR{2}; results.hand.FPR{2}; results.FPR{2}]);
-M=max(max([results.waist.FPR{2}; results.pock.FPR{2}; results.hand.FPR{2}; results.FPR{2}]));
+imagesc(FPR);
+M=max(max(FPR));
 for i=1:3
     if results.waist.FPR{2}(i)<.2*M; Color='w'; else Color='k'; end
     text(i,1,sprintf('%0.2f',results.waist.FPR{2}(i)*100),'Color',Color)
@@ -152,10 +154,14 @@ set(gca,'XTickLabel',{'Waist', 'Pocket', 'Hand'})
 set(gca,'YTickLabel',{'Waist', 'Pocket', 'Hand', 'All'})
 title('FPR')
 
+FPRLab=table(FPR(:,1), FPR(:,2),FPR(:,3),'VariableNames',{'Waist','Pocket','Hand'},'RowNames',{'Waist','Pocket','Hand','All'});
+
 % plot FNR by location
+FNR=[results.waist.FNR{2}; results.pock.FNR{2}; results.hand.FNR{2}; results.FNR{2}];
+
 figure, hold on
-imagesc([results.waist.FNR{2}; results.pock.FNR{2}; results.hand.FNR{2}; results.FNR{2}]);
-M=max(max([results.waist.FNR{2}; results.pock.FNR{2}; results.hand.FNR{2}; results.FNR{2}]));
+imagesc(FNR);
+M=max(max(FNR));
 for i=1:3
     if results.waist.FNR{2}(i)<.2*M; Color='w'; else Color='k'; end
     text(i,1,sprintf('%0.2f',results.waist.FNR{2}(i)*100),'Color',Color)
@@ -172,6 +178,10 @@ set(gca,'XTick',1:4)
 set(gca,'XTickLabel',{'Waist', 'Pocket', 'Hand'})
 set(gca,'YTickLabel',{'Waist', 'Pocket', 'Hand', 'All'})
 title('FNR')
+
+FNRLab=table(FNR(:,1),FNR(:,2),FNR(:,3),'VariableNames',{'Waist','Pocket','Hand'},'RowNames',{'Waist','Pocket','Hand','All'});
+
+LabResults.FPRTable=FPRLab; LabResults.FNRTable=FNRLab;
 
 %% HOME DATA ANALYSIS 
 cvtype = 2;
@@ -192,8 +202,8 @@ results.waist.AUCErr = AUCErr;
 results.waist.Sens = wSens;
 results.waist.Spec = wSpec;
 results.waist.SpecCI = SpecCI;
-results.waist.FPR = FPR;
-results.waist.FNR = FNR;
+results.waist.FPR = [FPR{1} FPR{2}(4) FPR{3}];
+results.waist.FNR = [FNR{1} FNR{2}(4) FNR{3}];
 
 % Train on pocket
 [pAUC,pSens,pSpec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,2,1:3,nData,1,featureset,cvtype,0);
@@ -202,8 +212,8 @@ results.pock.AUCErr = AUCErr;
 results.pock.Sens = pSens;
 results.pock.Spec = pSpec;
 results.pock.SpecCI = SpecCI;
-results.pock.FPR = FPR;
-results.pock.FNR = FNR;
+results.pock.FPR = [FPR{1} FPR{2}(4) FPR{3}];
+results.pock.FNR = [FNR{1} FNR{2}(4) FNR{3}];
 
 % Train on hand
 [hAUC,hSens,hSpec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,3,1:3,nData,1,featureset,cvtype,0);
@@ -212,8 +222,8 @@ results.hand.AUCErr = AUCErr;
 results.hand.Sens = hSens;
 results.hand.Spec = hSpec;
 results.hand.SpecCI = SpecCI;
-results.hand.FPR = FPR;
-results.hand.FNR = FNR;
+results.hand.FPR = [FPR{1} FPR{2}(4) FPR{3}];
+results.hand.FNR = [FNR{1} FNR{2}(4) FNR{3}];
 
 % 3 Locations
 [AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,1:3,1:3,nData,1,featureset,cvtype,0);
@@ -222,8 +232,8 @@ results.AUCErr = AUCErr;
 results.Sens = Sens;
 results.Spec = Spec;
 results.SpecCI = SpecCI;
-results.FPR = FPR;
-results.FNR = FNR;
+results.FPR = [FPR{1} FPR{2}(4) FPR{3}];
+results.FNR = [FNR{1} FNR{2}(4) FNR{3}];
 
 Homeresults = results;
 %% Plot location results (Healthy-Amputee)
@@ -247,10 +257,37 @@ h = gca;
 h.YLim = [0.4 1];
 title('mean Spec at 90% Sens')
 
-% plot FNR by location
+% plot FPR by location
+FPR=[results.waist.FPR{2}; results.pock.FPR{2}; results.hand.FPR{2}; results.FPR{2}];
+
 figure, hold on
-imagesc([results.waist.FNR{2}; results.pock.FNR{2}; results.hand.FNR{2}; results.FNR{2}]);
-M=max(max([results.waist.FNR{2}; results.pock.FNR{2}; results.hand.FNR{2}; results.FNR{2}]));
+imagesc(FPR);
+M=max(max(FPR));
+for i=1:3
+    if results.waist.FPR{2}(i)<.2*M; Color='w'; else Color='k'; end
+    text(i,1,sprintf('%0.2f',results.waist.FPR{2}(i)*100),'Color',Color)
+    if results.pock.FPR{2}(i)<.2*M; Color='w'; else Color='k'; end
+    text(i,2,sprintf('%0.2f',results.pock.FPR{2}(i)*100),'Color',Color)
+    if results.hand.FPR{2}(i)<.2*M; Color='w'; else Color='k'; end
+    text(i,3,sprintf('%0.2f',results.hand.FPR{2}(i)*100),'Color',Color)
+    if results.FPR{2}(i)<.2*M; Color='w'; else Color='k'; end
+    text(i,4,sprintf('%0.2f',results.FPR{2}(i)*100),'Color',Color)
+end
+set(gca,'YDir','reverse')
+set(gca,'YTick',1:4)
+set(gca,'XTick',1:4)
+set(gca,'XTickLabel',{'Waist', 'Pocket', 'Hand'})
+set(gca,'YTickLabel',{'Waist', 'Pocket', 'Hand', 'All'})
+title('FPR')
+
+FPRHome=table(FPR(:,1),'VariableNames',{'All'},'RowNames',{'Waist','Pocket','Hand','All'});
+
+% plot FNR by location
+FNR=[results.waist.FNR{2}; results.pock.FNR{2}; results.hand.FNR{2}; results.FNR{2}];
+
+figure, hold on
+imagesc(FNR);
+M=max(max(FNR));
 for i=1:3
     if results.waist.FNR{2}(i)<.2*M; Color='w'; else Color='k'; end
     text(i,1,sprintf('%0.2f',results.waist.FNR{2}(i)*100),'Color',Color)
@@ -268,6 +305,9 @@ set(gca,'XTickLabel',{'Waist', 'Pocket', 'Hand'})
 set(gca,'YTickLabel',{'Waist', 'Pocket', 'Hand', 'All'})
 title('FNR')
 
+FNRHome=table(FNR(:,1),'VariableNames',{'All'},'RowNames',{'Waist','Pocket','Hand','All'});
+
+HomeResults.FPRTable=FPRHome; HomeResults.FNRTable=FNRHome;
 end
 
 
@@ -521,8 +561,8 @@ if any(cvtype == 2)
 %         pFP/sum(cell2mat(isfall_all') & locsdata==2) pFN/sum(~cell2mat(isfall_all') & locsdata==2); ... 
 %         hFP/sum(cell2mat(isfall_all') & locsdata==3) hFN/sum(~cell2mat(isfall_all') & locsdata==3)]), legend('FP','FN')
     
-    FPR_HA=[wFP/sum(cell2mat(isfall_all') & locsdata==1) pFP/sum(cell2mat(isfall_all') & locsdata==2) hFP/sum(cell2mat(isfall_all') & locsdata==3)];
-    FNR_HA=[wFN/sum(~cell2mat(isfall_all') & locsdata==1) pFN/sum(~cell2mat(isfall_all') & locsdata==2) hFN/sum(~cell2mat(isfall_all') & locsdata==3)];
+    FPR_HA=[wFP/sum(~cell2mat(isfall_all') & locsdata==1) pFP/sum(~cell2mat(isfall_all') & locsdata==2) hFP/sum(~cell2mat(isfall_all') & locsdata==3) length(locsFP)/sum(~cell2mat(isfall_all'))];
+    FNR_HA=[wFN/sum(cell2mat(isfall_all') & locsdata==1) pFN/sum(cell2mat(isfall_all') & locsdata==2) hFN/sum(cell2mat(isfall_all') & locsdata==3) length(locsFN)/sum(cell2mat(isfall_all'))];
 end
 
 %% LOSO on Amputees
