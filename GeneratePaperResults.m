@@ -83,7 +83,7 @@ sprintf('\nH-A Mean Spec %.3f +- %.3f',nanmean(results.Spec{1}),nanstd(results.S
 cvtype = 2; %H-A only
 
 % Train on waist
-[wAUC,wSens,wSpec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,1,1:3,nData,1,featureset,cvtype,0);
+[wAUC,wSens,wSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1,1:3,nData,1,featureset,cvtype,0);
 results.waist.AUC = wAUC;
 results.waist.AUCErr = AUCErr;
 results.waist.Sens = wSens;
@@ -91,10 +91,12 @@ results.waist.Spec = wSpec;
 results.waist.SpecCI = SpecCI;
 results.waist.FPR = {FPR{1} FPR{2}(1:3) FPR{3}};
 results.waist.FNR = {FNR{1} FNR{2}(1:3) FNR{3}};
+results.waist.AUCboot = mean(bootstat(:,2)); %bootstrapped mean
+results.waist.Specboot = mean(bootstat(:,1));
 results.waist.mAUC = cellfun(@nanmean,wAUC,'UniformOutput',false);
 
 % Train on pocket
-[pAUC,pSens,pSpec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,2,1:3,nData,1,featureset,cvtype,0);
+[pAUC,pSens,pSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,2,1:3,nData,1,featureset,cvtype,0);
 results.pock.AUC = pAUC;
 results.pock.AUCErr = AUCErr;
 results.pock.Sens = pSens;
@@ -102,6 +104,8 @@ results.pock.Spec = pSpec;
 results.pock.SpecCI = SpecCI;
 results.pock.FPR = {FPR{1} FPR{2}(1:3) FPR{3}};
 results.pock.FNR = {FNR{1} FNR{2}(1:3) FNR{3}};
+results.pock.AUCboot = mean(bootstat(:,2)); %bootstrapped mean
+results.pock.Specboot = mean(bootstat(:,1));
 results.pock.mAUC = cellfun(@nanmean,pAUC,'UniformOutput',false);
 
 % Train on hand
@@ -113,6 +117,8 @@ results.hand.Spec = hSpec;
 results.hand.SpecCI = SpecCI;
 results.hand.FPR = {FPR{1} FPR{2}(1:3) FPR{3}};
 results.hand.FNR = {FNR{1} FNR{2}(1:3) FNR{3}};
+results.hand.AUCboot = mean(bootstat(:,2)); %bootstrapped mean
+results.hand.Specboot = mean(bootstat(:,1));
 results.hand.mAUC = cellfun(@nanmean,hAUC,'UniformOutput',false);
 
 Labresults=results;
@@ -120,13 +126,17 @@ Labresults=results;
 %% Plot location results (Healthy-Amputee)
 %need to add error bars
 figure, hold on
-bar(1:4,[results.waist.AUC{cvtype} results.pock.AUC{cvtype} results.hand.AUC{cvtype} results.AUCboot])
-figauc = errorbar(1:4,[results.waist.AUC{cvtype} results.pock.AUC{cvtype} results.hand.AUC{cvtype} results.AUCboot],...
-    [results.waist.AUC{cvtype}-results.waist.AUCErr{cvtype}(1) results.pock.AUC{cvtype}-results.pock.AUCErr{cvtype}(1) results.hand.AUC{cvtype}-results.hand.AUCErr{cvtype}(1) results.AUCboot-results.AUCErr{cvtype}(1)],...
-    [results.waist.AUCErr{cvtype}(2)-results.waist.AUC{cvtype} results.pock.AUCErr{cvtype}(2)-results.pock.AUC{cvtype} results.hand.AUCErr{cvtype}(2)-results.hand.AUC{cvtype} results.AUCErr{cvtype}(2)-results.AUCboot],...
+bar(1:4,[results.waist.AUCboot results.pock.AUCboot results.hand.AUCboot results.AUCboot])
+figauc = errorbar(1:4,[results.waist.AUCboot results.pock.AUCboot results.hand.AUCboot results.AUCboot],...
+    [results.waist.AUCboot-results.waist.AUCErr{cvtype}(1) results.pock.AUCboot-results.pock.AUCErr{cvtype}(1) results.hand.AUCboot-results.hand.AUCErr{cvtype}(1) results.AUCboot-results.AUCErr{cvtype}(1)],...
+    [results.waist.AUCErr{cvtype}(2)-results.waist.AUCboot results.pock.AUCErr{cvtype}(2)-results.pock.AUCboot results.hand.AUCErr{cvtype}(2)-results.hand.AUCboot results.AUCErr{cvtype}(2)-results.AUCboot],...
     'linewidth',1.5,'linestyle','none','color','k');
 h = gca;
-h.YLim = [0.4 1];
+h.YLim = [0.8 1];
+h.XTicks = 1:4;
+h.XTickLabels = {'Waist','Pocket','Hand','All'};
+set(get(gca,'Xlabel'),'FontSize',16);
+set(gca,'FontSize',16);
 title('mean AUC')
 
 % plot FPR by location
@@ -179,7 +189,19 @@ title('FNR')
 
 FNRLab=table(FNR(:,1),FNR(:,2),FNR(:,3),'VariableNames',{'Waist','Pocket','Hand'},'RowNames',{'Waist','Pocket','Hand','All'});
 
-Labresults.FPRTable=FPRLab; Labresults.FNRTable=FNRLab;
+StatsLab=table({getMeanSEMStr(results.waist.AUC{2}); getMeanSEMStr(results.waist.Sens{2}); getMeanSEMStr(results.waist.Spec{2})},...
+    {getMeanSEMStr(results.pock.AUC{2}); getMeanSEMStr(results.pock.Sens{2}); getMeanSEMStr(results.pock.Spec{2})},...
+    {getMeanSEMStr(results.hand.AUC{2}); getMeanSEMStr(results.hand.Sens{2}); getMeanSEMStr(results.hand.Spec{2})},...
+    {getMeanSEMStr(results.AUC{2}); getMeanSEMStr(results.Sens{2}); getMeanSEMStr(results.Spec{2})},...
+    'VariableNames',{'Waist','Pocket','Hand','All'},'RowNames',{'AUC','Sensitivity','Specificity'});
+
+StatsPop=table({getMeanSEMStr(results.AUC{1}); getMeanSEMStr(results.Sens{1}); getMeanSEMStr(results.Spec{1})},...
+    {getMeanSEMStr(results.AUC{2}); getMeanSEMStr(results.Sens{2}); getMeanSEMStr(results.Spec{2})},...
+    {getMeanSEMStr(results.AUC{3}); getMeanSEMStr(results.Sens{3}); getMeanSEMStr(results.Spec{3})},...
+    'VariableNames',{'Healthy_Healthy', 'Healthy_Amputee', 'Amputee_Amputee'},...
+    'RowNames',{'AUC','Sensitivity','Specificity'});
+
+Labresults.FPRTable=FPRLab; Labresults.FNRTable=FNRLab; Labresults.StatsTable=StatsLab; Labresults.StatsPop=StatsPop;
 
 writetable(Labresults.FPRTable,'./Figs/Paper/LabFPR.xlsx','WriteRowNames',true)
 writetable(Labresults.FNRTable,'./Figs/Paper/LabFNR.xlsx','WriteRowNames',true)
@@ -205,6 +227,8 @@ results.waist.Spec = wSpec;
 results.waist.SpecCI = SpecCI;
 results.waist.FPR = {FPR{1} FPR{2}(4) FPR{3}};
 results.waist.FNR = {FNR{1} FNR{2}(4) FNR{3}};
+results.waist.AUCboot = mean(bootstat(:,2)); %bootstrapped mean
+results.waist.Specboot = mean(bootstat(:,1));
 
 % Train on pocket
 [pAUC,pSens,pSpec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,2,1:3,nData,1,featureset,cvtype,0);
@@ -215,6 +239,8 @@ results.pock.Spec = pSpec;
 results.pock.SpecCI = SpecCI;
 results.pock.FPR = {FPR{1} FPR{2}(4) FPR{3}};
 results.pock.FNR = {FNR{1} FNR{2}(4) FNR{3}};
+results.pock.AUCboot = mean(bootstat(:,2)); %bootstrapped mean
+results.pock.Specboot = mean(bootstat(:,1));
 
 % Train on hand
 [hAUC,hSens,hSpec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,3,1:3,nData,1,featureset,cvtype,0);
@@ -225,6 +251,8 @@ results.hand.Spec = hSpec;
 results.hand.SpecCI = SpecCI;
 results.hand.FPR = {FPR{1} FPR{2}(4) FPR{3}};
 results.hand.FNR = {FNR{1} FNR{2}(4) FNR{3}};
+results.hand.AUCboot = mean(bootstat(:,2)); %bootstrapped mean
+results.hand.Specboot = mean(bootstat(:,1));
 
 % 3 Locations
 [AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,1:3,1:3,nData,1,featureset,cvtype,0);
@@ -235,17 +263,23 @@ results.Spec = Spec;
 results.SpecCI = SpecCI;
 results.FPR = {FPR{1} FPR{2}(4) FPR{3}};
 results.FNR = {FNR{1} FNR{2}(4) FNR{3}};
+results.AUCboot = mean(bootstat(:,2)); %bootstrapped mean
+results.Specboot = mean(bootstat(:,1));
 
 Homeresults = results;
 %% Plot location results (Healthy-Amputee)
 %need to add error bars
 figure, hold on
-bar(1:4,[results.waist.AUC{cvtype} results.pock.AUC{cvtype} results.hand.AUC{cvtype} results.AUC{cvtype}])
-figauc = errorbar(1:4,[results.waist.AUC{cvtype} results.pock.AUC{cvtype} results.hand.AUC{cvtype} results.AUC{cvtype}],...
-    [results.waist.AUC{cvtype}-results.waist.AUCErr{cvtype}(1) results.pock.AUC{cvtype}-results.pock.AUCErr{cvtype}(1) results.hand.AUC{cvtype}-results.hand.AUCErr{cvtype}(1) results.AUC{cvtype}-results.AUCErr{cvtype}(1)],...
-    [results.waist.AUCErr{cvtype}(2)-results.waist.AUC{cvtype} results.pock.AUCErr{cvtype}(2)-results.pock.AUC{cvtype} results.hand.AUCErr{cvtype}(2)-results.hand.AUC{cvtype} results.AUCErr{cvtype}(2)-results.AUC{cvtype}],...
+bar(1:4,[results.waist.AUCboot results.pock.AUCboot results.hand.AUCboot results.AUCboot])
+figauc = errorbar(1:4,[results.waist.AUCboot results.pock.AUCboot results.hand.AUCboot results.AUCboot],...
+    [results.waist.AUCboot-results.waist.AUCErr{cvtype}(1) results.pock.AUCboot-results.pock.AUCErr{cvtype}(1) results.hand.AUCboot-results.hand.AUCErr{cvtype}(1) results.AUCboot-results.AUCErr{cvtype}(1)],...
+    [results.waist.AUCErr{cvtype}(2)-results.waist.AUCboot results.pock.AUCErr{cvtype}(2)-results.pock.AUCboot results.hand.AUCErr{cvtype}(2)-results.hand.AUCboot results.AUCErr{cvtype}(2)-results.AUCboot],...
     'linewidth',1.5,'linestyle','none','color','k');h = gca;
 h.YLim = [0.8 1];
+h.XTicks = 1:4;
+h.XTickLabels = {'Waist','Pocket','Hand','All'};
+set(get(gca,'Xlabel'),'FontSize',16);
+set(gca,'FontSize',16);
 title('mean AUC')
 
 % plot FPR by location
@@ -296,7 +330,13 @@ title('FNR')
 
 FNRHome=table(FNR(:,1),'VariableNames',{'All'},'RowNames',{'Waist','Pocket','Hand','All'});
 
-Homeresults.FPRTable=FPRHome; Homeresults.FNRTable=FNRHome;
+StatsHome=table({getMeanSEMStr(results.waist.AUC{2}); getMeanSEMStr(results.waist.Sens{2}); getMeanSEMStr(results.waist.Spec{2})},...
+    {getMeanSEMStr(results.pock.AUC{2}); getMeanSEMStr(results.pock.Sens{2}); getMeanSEMStr(results.pock.Spec{2})},...
+    {getMeanSEMStr(results.hand.AUC{2}); getMeanSEMStr(results.hand.Sens{2}); getMeanSEMStr(results.hand.Spec{2})},...
+    {getMeanSEMStr(results.AUC{2}); getMeanSEMStr(results.Sens{2}); getMeanSEMStr(results.Spec{2})},...
+    'VariableNames',{'Waist','Pocket','Hand','All'},'RowNames',{'AUC','Sensitivity','Specificity'});
+
+Homeresults.FPRTable=FPRHome; Homeresults.FNRTable=FNRHome; Homeresults.StatsTable=StatsHome;
 writetable(Homeresults.FPRTable,'./Figs/Paper/HomeFPR.xlsx','WriteRowNames',true)
 writetable(Homeresults.FNRTable,'./Figs/Paper/HomeFNR.xlsx','WriteRowNames',true)
 
@@ -502,7 +542,7 @@ if any(cvtype == 2)
     [X, Y, T, AUC]=perfcurve(isfall_all, conf_all, true,'TVals',[0:0.05:1]);
 %     [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'), cell2mat(conf_all'), true,'Nboot',1000,'XVals',[0:0.05:1]); %cb with Bootstrap
 
-    %plot cmat and RIC
+    %plot cmat and ROC
     if length(cvtype) == 3
         plotConfmat(confmat,'Healthy-Amputee',3)
         figure(gcf), subplot(2,2,4), hold on,
@@ -532,10 +572,8 @@ if any(cvtype == 2)
     ci = bootci(1000,@specAUC,TL,sens);
     ci_spec = ci(:,1); ci_AUC = ci(:,2);
     
-    if length(cvtype)<3
-        Spec_HA = mean(bootstat(:,1)); %the spec at 90% sensitivity
-        AUC_HA = mean(bootstat(:,2));  %mean AUC
-    end
+%     Spec_HA = mean(bootstat(:,1)); %the spec at 90% sensitivity
+%     AUC_HA = mean(bootstat(:,2));  %mean AUC
     
     e.LineWidth = 2; e.Marker = 'o';
     AUCerr_HA=ci_AUC;
@@ -707,4 +745,8 @@ for i = 1:length(activities)
         text(i-0.2,j,sprintf('%.3f',confmat(j,i)),'FontSize',12,'FontWeight','bold','Color',col);
     end
 end
+end
+
+function string=getMeanSEMStr(X) % returns string with Mean +/- SEM for a vector
+    string=sprintf('%0.3f +/- %0.3f',mean(X),std(X)/sqrt(length(X)));
 end
