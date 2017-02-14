@@ -205,6 +205,8 @@ Labresults.FPRTable=FPRLab; Labresults.FNRTable=FNRLab; Labresults.StatsTable=St
 
 writetable(Labresults.FPRTable,'./Figs/Paper/LabFPR.xlsx','WriteRowNames',true)
 writetable(Labresults.FNRTable,'./Figs/Paper/LabFNR.xlsx','WriteRowNames',true)
+writetable(Labresults.StatsTable,'./Figs/Paper/LocStats.xlsx','WriteRowNames',true)
+writetable(Labresults.StatsPop,'./Figs/Paper/PopStats.xlsx','WriteRowNames',true)
 
 %% HOME DATA ANALYSIS 
 cvtype = 2;
@@ -339,6 +341,7 @@ StatsHome=table({getMeanSEMStr(results.waist.AUC{2}); getMeanSEMStr(results.wais
 Homeresults.FPRTable=FPRHome; Homeresults.FNRTable=FNRHome; Homeresults.StatsTable=StatsHome;
 writetable(Homeresults.FPRTable,'./Figs/Paper/HomeFPR.xlsx','WriteRowNames',true)
 writetable(Homeresults.FNRTable,'./Figs/Paper/HomeFNR.xlsx','WriteRowNames',true)
+writetable(Homeresults.StatsTable,'./Figs/Paper/HomeStats.xlsx','WriteRowNames',true)
 
 end
 
