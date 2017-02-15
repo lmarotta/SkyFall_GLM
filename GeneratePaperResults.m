@@ -61,17 +61,17 @@ display('HA vs HH')
 display('HA vs AA')
 [h,p] = ttest(results.AUC{2},results.AUC{3},'tail','left')
 
-sprintf('\nH-H Mean AUC %.3f +- %.3f',nanmean(results.AUC{1}),nanstd(results.AUC{1})/sqrt(sum(~isnan(results.AUC{1}))))
-sprintf('\nA-A Mean AUC %.3f +- %.3f',nanmean(results.AUC{3}),nanstd(results.AUC{3})/sqrt(sum(~isnan(results.AUC{3}))))
-sprintf('\nH-A Mean AUC %.3f +- %.3f',nanmean(results.AUC{1}),nanstd(results.AUC{2})/sqrt(sum(~isnan(results.AUC{2}))))
+sprintf('\nH-H Mean AUC %.3f +- %.3f',nanmean(results.AUC{1}),1.96*nanstd(results.AUC{1})/sqrt(sum(~isnan(results.AUC{1}))))
+sprintf('\nA-A Mean AUC %.3f +- %.3f',nanmean(results.AUC{3}),1.96*nanstd(results.AUC{3})/sqrt(sum(~isnan(results.AUC{3}))))
+sprintf('\nH-A Mean AUC %.3f +- %.3f',nanmean(results.AUC{1}),1.96*nanstd(results.AUC{2})/sqrt(sum(~isnan(results.AUC{2}))))
 
-sprintf('\nH-H Mean Sens %.3f +- %.3f',nanmean(results.Sens{1}),nanstd(results.Sens{1})/sqrt(sum(~isnan(results.Sens{1}))))
-sprintf('\nA-A Mean Sens %.3f +- %.3f',nanmean(results.Sens{3}),nanstd(results.Sens{3})/sqrt(sum(~isnan(results.Sens{3}))))
-sprintf('\nH-A Mean Sens %.3f +- %.3f',nanmean(results.Sens{1}),nanstd(results.Sens{2})/sqrt(sum(~isnan(results.Sens{2}))))
+sprintf('\nH-H Mean Sens %.3f +- %.3f',nanmean(results.Sens{1}),1.96*nanstd(results.Sens{1})/sqrt(sum(~isnan(results.Sens{1}))))
+sprintf('\nA-A Mean Sens %.3f +- %.3f',nanmean(results.Sens{3}),1.96*nanstd(results.Sens{3})/sqrt(sum(~isnan(results.Sens{3}))))
+sprintf('\nH-A Mean Sens %.3f +- %.3f',nanmean(results.Sens{1}),1.96*nanstd(results.Sens{2})/sqrt(sum(~isnan(results.Sens{2}))))
 
-sprintf('\nH-H Mean SpeC %.3f +- %.3f',nanmean(results.Spec{1}),nanstd(results.Spec{1})/sqrt(sum(~isnan(results.Spec{1}))))
-sprintf('\nA-A Mean Spec %.3f +- %.3f',nanmean(results.Spec{3}),nanstd(results.Spec{3})/sqrt(sum(~isnan(results.Spec{3}))))
-sprintf('\nH-A Mean Spec %.3f +- %.3f',nanmean(results.Spec{1}),nanstd(results.Spec{2})/sqrt(sum(~isnan(results.Spec{2}))))
+sprintf('\nH-H Mean SpeC %.3f +- %.3f',nanmean(results.Spec{1}),1.96*nanstd(results.Spec{1})/sqrt(sum(~isnan(results.Spec{1}))))
+sprintf('\nA-A Mean Spec %.3f +- %.3f',nanmean(results.Spec{3}),1.96*nanstd(results.Spec{3})/sqrt(sum(~isnan(results.Spec{3}))))
+sprintf('\nH-A Mean Spec %.3f +- %.3f',nanmean(results.Spec{1}),1.96*nanstd(results.Spec{2})/sqrt(sum(~isnan(results.Spec{2}))))
 
 
 % %save figures
