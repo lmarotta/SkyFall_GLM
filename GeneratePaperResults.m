@@ -53,9 +53,13 @@ results.FPR = {FPR{1} FPR{2}(1:3) FPR{3}};
 results.FNR = {FNR{1} FNR{2}(1:3) FNR{3}};
 results.AUCboot = mean(bootstat(:,2)); %bootstrapped mean
 results.Specboot = mean(bootstat(:,1));
+results.mAUC = cellfun(@nanmean,AUC,'UniformOutput',false);
 
-[h,p] = ttest2(results.AUC{2},results.AUC{1},'tail','left','VarType','unequal');
-[h,p] = ttest(results.AUC{2},results.AUC{3},'tail','left');
+
+display('HA vs HH')
+[h,p] = ttest2(results.AUC{2},results.AUC{1},'tail','left','VarType','unequal')
+display('HA vs AA')
+[h,p] = ttest(results.AUC{2},results.AUC{3},'tail','left')
 
 sprintf('\nH-H Mean AUC %.3f +- %.3f',nanmean(results.AUC{1}),nanstd(results.AUC{1})/sqrt(sum(~isnan(results.AUC{1}))))
 sprintf('\nA-A Mean AUC %.3f +- %.3f',nanmean(results.AUC{3}),nanstd(results.AUC{3})/sqrt(sum(~isnan(results.AUC{3}))))
@@ -123,18 +127,26 @@ results.hand.mAUC = cellfun(@nanmean,hAUC,'UniformOutput',false);
 
 Labresults=results;
 
+display('Waist vs. All')
+[h,p] = ttest(results.AUC{2},results.waist.AUC{2},'tail','left')
+display('Pocket vs. All')
+[h,p] = ttest(results.AUC{2},results.pock.AUC{2},'tail','left')
+display('Hand vs. All')
+[h,p] = ttest(results.AUC{2},results.hand.AUC{2},'tail','left')
+
+
 %% Plot location results (Healthy-Amputee)
 %need to add error bars
+HAlen=length(results.AUC{2});
 figure, hold on
-bar(1:4,[results.waist.AUCboot results.pock.AUCboot results.hand.AUCboot results.AUCboot])
-figauc = errorbar(1:4,[results.waist.AUCboot results.pock.AUCboot results.hand.AUCboot results.AUCboot],...
-    [results.waist.AUCboot-results.waist.AUCErr{cvtype}(1) results.pock.AUCboot-results.pock.AUCErr{cvtype}(1) results.hand.AUCboot-results.hand.AUCErr{cvtype}(1) results.AUCboot-results.AUCErr{cvtype}(1)],...
-    [results.waist.AUCErr{cvtype}(2)-results.waist.AUCboot results.pock.AUCErr{cvtype}(2)-results.pock.AUCboot results.hand.AUCErr{cvtype}(2)-results.hand.AUCboot results.AUCErr{cvtype}(2)-results.AUCboot],...
+bar(1:4,[results.waist.mAUC{2} results.pock.mAUC{2} results.hand.mAUC{2} results.mAUC{2}])
+figauc = errorbar(1:4,[results.waist.mAUC{2} results.pock.mAUC{2} results.hand.mAUC{2} results.mAUC{2}],...
+    [std(results.waist.AUC{2})/sqrt(HAlen) std(results.pock.AUC{2})/sqrt(HAlen) std(results.hand.AUC{2})/sqrt(HAlen) std(results.AUC{2})/sqrt(HAlen)],...
     'linewidth',1.5,'linestyle','none','color','k');
 h = gca;
 h.YLim = [0.8 1];
-h.XTicks = 1:4;
-h.XTickLabels = {'Waist','Pocket','Hand','All'};
+h.XTick = 1:4;
+h.XTickLabel = {'Waist','Pocket','Hand','All'};
 set(get(gca,'Xlabel'),'FontSize',16);
 set(gca,'FontSize',16);
 title('mean AUC')
@@ -221,7 +233,7 @@ inds= any(bsxfun(@eq,X_Amp(:,1),unique(F(:,1))'),2) & X_Amp(:,4)<5; % Use falls 
 X_Amp = [X_Amp(inds,:);F(randperm(size(F,1),500),:)];
 
 % Train on waist
-[wAUC,wSens,wSpec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,1,0:3,nData,1,featureset,cvtype,0);
+[wAUC,wSens,wSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1,0:3,nData,1,featureset,cvtype,0);
 results.waist.AUC = wAUC;
 results.waist.AUCErr = AUCErr;
 results.waist.Sens = wSens;
@@ -231,9 +243,10 @@ results.waist.FPR = {FPR{1} FPR{2}(4) FPR{3}};
 results.waist.FNR = {FNR{1} FNR{2}(4) FNR{3}};
 results.waist.AUCboot = mean(bootstat(:,2)); %bootstrapped mean
 results.waist.Specboot = mean(bootstat(:,1));
+results.waist.bootstat = bootstat;
 
 % Train on pocket
-[pAUC,pSens,pSpec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,2,1:3,nData,1,featureset,cvtype,0);
+[pAUC,pSens,pSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,2,1:3,nData,1,featureset,cvtype,0);
 results.pock.AUC = pAUC;
 results.pock.AUCErr = AUCErr;
 results.pock.Sens = pSens;
@@ -243,9 +256,10 @@ results.pock.FPR = {FPR{1} FPR{2}(4) FPR{3}};
 results.pock.FNR = {FNR{1} FNR{2}(4) FNR{3}};
 results.pock.AUCboot = mean(bootstat(:,2)); %bootstrapped mean
 results.pock.Specboot = mean(bootstat(:,1));
+results.pock.bootstat = bootstat;
 
 % Train on hand
-[hAUC,hSens,hSpec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,3,1:3,nData,1,featureset,cvtype,0);
+[hAUC,hSens,hSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,3,1:3,nData,1,featureset,cvtype,0);
 results.hand.AUC = hAUC;
 results.hand.AUCErr = AUCErr;
 results.hand.Sens = hSens;
@@ -255,9 +269,10 @@ results.hand.FPR = {FPR{1} FPR{2}(4) FPR{3}};
 results.hand.FNR = {FNR{1} FNR{2}(4) FNR{3}};
 results.hand.AUCboot = mean(bootstat(:,2)); %bootstrapped mean
 results.hand.Specboot = mean(bootstat(:,1));
+results.hand.bootstat = bootstat;
 
 % 3 Locations
-[AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,1:3,1:3,nData,1,featureset,cvtype,0);
+[AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1:3,1:3,nData,1,featureset,cvtype,0);
 results.AUC = AUC;
 results.AUCErr = AUCErr;
 results.Sens = Sens;
@@ -267,6 +282,7 @@ results.FPR = {FPR{1} FPR{2}(4) FPR{3}};
 results.FNR = {FNR{1} FNR{2}(4) FNR{3}};
 results.AUCboot = mean(bootstat(:,2)); %bootstrapped mean
 results.Specboot = mean(bootstat(:,1));
+results.bootstat = bootstat;
 
 Homeresults = results;
 %% Plot location results (Healthy-Amputee)
@@ -278,8 +294,8 @@ figauc = errorbar(1:4,[results.waist.AUCboot results.pock.AUCboot results.hand.A
     [results.waist.AUCErr{cvtype}(2)-results.waist.AUCboot results.pock.AUCErr{cvtype}(2)-results.pock.AUCboot results.hand.AUCErr{cvtype}(2)-results.hand.AUCboot results.AUCErr{cvtype}(2)-results.AUCboot],...
     'linewidth',1.5,'linestyle','none','color','k');h = gca;
 h.YLim = [0.8 1];
-h.XTicks = 1:4;
-h.XTickLabels = {'Waist','Pocket','Hand','All'};
+h.XTick = 1:4;
+h.XTickLabel = {'Waist','Pocket','Hand','All'};
 set(get(gca,'Xlabel'),'FontSize',16);
 set(gca,'FontSize',16);
 title('mean AUC')
@@ -332,10 +348,10 @@ title('FNR')
 
 FNRHome=table(FNR(:,1),'VariableNames',{'All'},'RowNames',{'Waist','Pocket','Hand','All'});
 
-StatsHome=table({getMeanSEMStr(results.waist.AUC{2}); getMeanSEMStr(results.waist.Sens{2}); getMeanSEMStr(results.waist.Spec{2})},...
-    {getMeanSEMStr(results.pock.AUC{2}); getMeanSEMStr(results.pock.Sens{2}); getMeanSEMStr(results.pock.Spec{2})},...
-    {getMeanSEMStr(results.hand.AUC{2}); getMeanSEMStr(results.hand.Sens{2}); getMeanSEMStr(results.hand.Spec{2})},...
-    {getMeanSEMStr(results.AUC{2}); getMeanSEMStr(results.Sens{2}); getMeanSEMStr(results.Spec{2})},...
+StatsHome=table(getMeanCIStr(results.waist.bootstat(:,1),results.waist.AUCErr{2},results.waist.SpecCI{2}),...
+    getMeanCIStr(results.pock.bootstat(:,1),results.pock.AUCErr{2},results.pock.SpecCI{2}),...
+    getMeanCIStr(results.hand.bootstat(:,1),results.hand.AUCErr{2},results.hand.SpecCI{2}),...
+    getMeanCIStr(results.bootstat(:,1),results.AUCErr{2},results.SpecCI{2}),...
     'VariableNames',{'Waist','Pocket','Hand','All'},'RowNames',{'AUC','Sensitivity','Specificity'});
 
 Homeresults.FPRTable=FPRHome; Homeresults.FNRTable=FNRHome; Homeresults.StatsTable=StatsHome;
@@ -568,12 +584,15 @@ if any(cvtype == 2)
     end
  
     
-    %95% CI on specificity for fixed sensitivity
+
     sens = 0.9;
+    %95% CI on specificity for fixed sensitivity
+    Handle=@(x) specAUC(x,sens);
     TL = [cell2mat(conf_all') cell2mat(cellfun(@double,isfall_all','UniformOutput',false))];
-    bootstat = bootstrp(1000,@specAUC,TL,sens);
-    ci = bootci(1000,@specAUC,TL,sens);
-    ci_spec = ci(:,1); ci_AUC = ci(:,2);
+    bootstat = bootstrp(1000,Handle,TL,'Options',statset('UseParallel',true));
+    ci = bootci(1000,{Handle,TL},'Options',statset('UseParallel',true));
+    ci_spec = ci(:,[1 3:4]); % Spec@90 Sens Spec
+    ci_AUC = ci(:,2); % AUC
     
 %     Spec_HA = mean(bootstat(:,1)); %the spec at 90% sensitivity
 %     AUC_HA = mean(bootstat(:,2));  %mean AUC
@@ -751,5 +770,12 @@ end
 end
 
 function string=getMeanSEMStr(X) % returns string with Mean +/- SEM for a vector
-    string=sprintf('%0.3f +/- %0.3f',mean(X),std(X)/sqrt(length(X)));
+    string=sprintf('%0.3f +/- %0.3f',nanmean(X),nanstd(X)/sqrt(sum(~isnan(X))));
+end
+
+function cellstring=getMeanCIStr(Stat,AUC_CI,S_CI)
+    cellstring=cell(3,1);
+    cellstring{1}=sprintf('0.3f [%0.3f - %0.3f]',nanmean(Stat(:,2)),AUC_CI(1),AUC_CI(2));
+    cellstring{2}=sprintf('0.3f [%0.3f - %0.3f]',nanmean(Stat(:,3)),S_CI(1,2),S_CI(2,2));
+    cellstring{3}=sprintf('0.3f [%0.3f - %0.3f]',nanmean(Stat(:,4)),S_CI(1,3),S_CI(2,3));
 end

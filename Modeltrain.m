@@ -23,7 +23,7 @@ if no_baro %remove barometer features
 end
 
 [B,FitInfo] = lassoglm(FN,L,'binomial','Alpha',alpha,'Lambda',lambda); %train the model
-sparsity = 100*(length(B)-length(find(B)))/length(B)
+sparsity = 100*(length(B)-length(find(B)))/length(B);
 b = B(B~=0); %non zero coefficients (B does not include constant term)
 b = [FitInfo.Intercept;b];
 nz_ind = (B~=0); %non zero indices (skip constant term)
