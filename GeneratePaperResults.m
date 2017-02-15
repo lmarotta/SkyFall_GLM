@@ -775,7 +775,7 @@ end
 
 function cellstring=getMeanCIStr(Stat,AUC_CI,S_CI)
     cellstring=cell(3,1);
-    cellstring{1}=sprintf('0.3f [%0.3f - %0.3f]',nanmean(Stat(:,2)),AUC_CI(1),AUC_CI(2));
-    cellstring{2}=sprintf('0.3f [%0.3f - %0.3f]',nanmean(Stat(:,3)),S_CI(1,2),S_CI(2,2));
-    cellstring{3}=sprintf('0.3f [%0.3f - %0.3f]',nanmean(Stat(:,4)),S_CI(1,3),S_CI(2,3));
+    cellstring{1}=sprintf('%0.3f [%0.3f - %0.3f]',nanmean(Stat(:,2)),AUC_CI(1),AUC_CI(2));
+    cellstring{2}=sprintf('%0.3f [%0.3f - %0.3f]',nanmean(Stat(:,3)),S_CI(1,2),S_CI(2,2));
+    cellstring{3}=sprintf('%0.3f [%0.3f - %0.3f]',nanmean(Stat(:,4)),S_CI(1,3),S_CI(2,3));
 end
