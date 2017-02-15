@@ -128,11 +128,11 @@ results.hand.mAUC = cellfun(@nanmean,hAUC,'UniformOutput',false);
 Labresults=results;
 
 display('Waist vs. All')
-[h,p] = ttest(results.AUC{2},results.waist.AUC{2},'tail','left')
+[h,p] = ttest(results.AUC{2},results.waist.AUC{2})
 display('Pocket vs. All')
-[h,p] = ttest(results.AUC{2},results.pock.AUC{2},'tail','left')
+[h,p] = ttest(results.AUC{2},results.pock.AUC{2})
 display('Hand vs. All')
-[h,p] = ttest(results.AUC{2},results.hand.AUC{2},'tail','left')
+[h,p] = ttest(results.AUC{2},results.hand.AUC{2})
 
 
 %% Plot location results (Healthy-Amputee)
@@ -348,10 +348,10 @@ title('FNR')
 
 FNRHome=table(FNR(:,1),'VariableNames',{'All'},'RowNames',{'Waist','Pocket','Hand','All'});
 
-StatsHome=table(getMeanCIStr(results.waist.bootstat(:,1),results.waist.AUCErr{2},results.waist.SpecCI{2}),...
-    getMeanCIStr(results.pock.bootstat(:,1),results.pock.AUCErr{2},results.pock.SpecCI{2}),...
-    getMeanCIStr(results.hand.bootstat(:,1),results.hand.AUCErr{2},results.hand.SpecCI{2}),...
-    getMeanCIStr(results.bootstat(:,1),results.AUCErr{2},results.SpecCI{2}),...
+StatsHome=table(getMeanCIStr(results.waist.bootstat,results.waist.AUCErr{2},results.waist.SpecCI{2}),...
+    getMeanCIStr(results.pock.bootstat,results.pock.AUCErr{2},results.pock.SpecCI{2}),...
+    getMeanCIStr(results.hand.bootstat,results.hand.AUCErr{2},results.hand.SpecCI{2}),...
+    getMeanCIStr(results.bootstat,results.AUCErr{2},results.SpecCI{2}),...
     'VariableNames',{'Waist','Pocket','Hand','All'},'RowNames',{'AUC','Sensitivity','Specificity'});
 
 Homeresults.FPRTable=FPRHome; Homeresults.FNRTable=FNRHome; Homeresults.StatsTable=StatsHome;
