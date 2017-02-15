@@ -16,11 +16,14 @@ inds=find(TL(:,2),ceil(sum(TL(:,2))*sens));
 I=inds(end);
 S=1-sum(~TL(1:I,2))/sum(~TL(:,2));
 
+Sens=sum(TL(TL(:,1)>.5,2))/sum(TL(:,2));
+Spec=sum(~TL(TL(:,1)<.5,2))/sum(~TL(:,2));
+
 %now computes the specificity 
 % S = sum(~TL(TL(:,1)<T90,2))/( sum(~TL(TL(:,1)<T90,2)) + sum(~TL(TL(:,1)>=T90,2)) );
 
 %AUC 
 [~,~,~,AUC] = perfcurve(TL(:,2),TL(:,1),1);
 
-S_AUC = [S AUC];
+S_AUC = [S AUC Sens Spec];
 end
