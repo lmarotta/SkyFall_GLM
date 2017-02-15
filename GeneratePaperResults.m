@@ -137,11 +137,12 @@ display('Hand vs. All')
 
 %% Plot location results (Healthy-Amputee)
 %need to add error bars
-HAlen=length(results.AUC{2});
+HAinds=~isnan(results.AUC{2});
+HAlen=sum(HAinds);
 figure, hold on
 bar(1:4,[results.waist.mAUC{2} results.pock.mAUC{2} results.hand.mAUC{2} results.mAUC{2}])
 figauc = errorbar(1:4,[results.waist.mAUC{2} results.pock.mAUC{2} results.hand.mAUC{2} results.mAUC{2}],...
-    [std(results.waist.AUC{2})/sqrt(HAlen) std(results.pock.AUC{2})/sqrt(HAlen) std(results.hand.AUC{2})/sqrt(HAlen) std(results.AUC{2})/sqrt(HAlen)],...
+    [nanstd(results.waist.AUC{2})/sqrt(HAlen) nanstd(results.pock.AUC{2})/sqrt(HAlen) nanstd(results.hand.AUC{2})/sqrt(HAlen) nanstd(results.AUC{2})/sqrt(HAlen)],...
     'linewidth',1.5,'linestyle','none','color','k');
 h = gca;
 h.YLim = [0.8 1];
@@ -770,7 +771,7 @@ end
 end
 
 function string=getMeanSEMStr(X) % returns string with Mean +/- SEM for a vector
-    string=sprintf('%0.3f +/- %0.3f',nanmean(X),nanstd(X)/sqrt(sum(~isnan(X))));
+    string=sprintf('%0.3f +/- %0.3f',nanmean(X),1.96*nanstd(X)/sqrt(sum(~isnan(X))));
 end
 
 function cellstring=getMeanCIStr(Stat,AUC_CI,S_CI)
