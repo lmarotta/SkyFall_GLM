@@ -7,6 +7,8 @@
 function [Labresults,Homeresults] = GeneratePaperResults
 close all
 
+C=['r','y','c','m']; % colors for AUC bar plot
+
 rng(200)
 
 nData=500; %number of data points for training on 1 location only
@@ -140,7 +142,10 @@ display('Hand vs. All')
 HAinds=~isnan(results.AUC{2});
 HAlen=sum(HAinds);
 figure, hold on
-bar(1:4,[results.waist.mAUC{2} results.pock.mAUC{2} results.hand.mAUC{2} results.mAUC{2}])
+d=[results.waist.mAUC{2} results.pock.mAUC{2} results.hand.mAUC{2} results.mAUC{2}];
+for i=1:4
+bar(i,d(i),C(i))
+end
 figauc = errorbar(1:4,[results.waist.mAUC{2} results.pock.mAUC{2} results.hand.mAUC{2} results.mAUC{2}],...
     [nanstd(results.waist.AUC{2})/sqrt(HAlen) nanstd(results.pock.AUC{2})/sqrt(HAlen) nanstd(results.hand.AUC{2})/sqrt(HAlen) nanstd(results.AUC{2})/sqrt(HAlen)],...
     'linewidth',1.5,'linestyle','none','color','k');
@@ -289,7 +294,10 @@ Homeresults = results;
 %% Plot location results (Healthy-Amputee)
 %need to add error bars
 figure, hold on
-bar(1:4,[results.waist.AUCboot results.pock.AUCboot results.hand.AUCboot results.AUCboot])
+d=[results.waist.AUCboot results.pock.AUCboot results.hand.AUCboot results.AUCboot];
+for i=1:4
+bar(i,d(i),C(i))
+end
 figauc = errorbar(1:4,[results.waist.AUCboot results.pock.AUCboot results.hand.AUCboot results.AUCboot],...
     [results.waist.AUCboot-results.waist.AUCErr{cvtype}(1) results.pock.AUCboot-results.pock.AUCErr{cvtype}(1) results.hand.AUCboot-results.hand.AUCErr{cvtype}(1) results.AUCboot-results.AUCErr{cvtype}(1)],...
     [results.waist.AUCErr{cvtype}(2)-results.waist.AUCboot results.pock.AUCErr{cvtype}(2)-results.pock.AUCboot results.hand.AUCErr{cvtype}(2)-results.hand.AUCboot results.AUCErr{cvtype}(2)-results.AUCboot],...
