@@ -57,9 +57,9 @@ results.mAUC = cellfun(@nanmean,AUC,'UniformOutput',false);
 
 
 display('HA vs HH')
-[h,p] = ttest2(results.AUC{2},results.AUC{1},'tail','left','VarType','unequal')
+[h,p] = ttest2(results.AUC{2},results.AUC{1},'VarType','unequal')
 display('HA vs AA')
-[h,p] = ttest(results.AUC{2},results.AUC{3},'tail','left')
+[h,p] = ttest(results.AUC{2},results.AUC{3})
 
 sprintf('\nH-H Mean AUC %.3f +- %.3f',nanmean(results.AUC{1}),1.96*nanstd(results.AUC{1})/sqrt(sum(~isnan(results.AUC{1}))))
 sprintf('\nA-A Mean AUC %.3f +- %.3f',nanmean(results.AUC{3}),1.96*nanstd(results.AUC{3})/sqrt(sum(~isnan(results.AUC{3}))))
