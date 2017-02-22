@@ -7,6 +7,7 @@
 function [Labresults,Homeresults] = GeneratePaperResults
 close all
 
+Locations={'Waist','Pocket','Hand','All'};
 C=['r','y','c','m']; % colors for AUC bar plot
 
 rng(200)
@@ -143,19 +144,32 @@ HAinds=~isnan(results.AUC{2});
 HAlen=sum(HAinds);
 figure, hold on
 d=[results.waist.mAUC{2} results.pock.mAUC{2} results.hand.mAUC{2} results.mAUC{2}];
+% for i=1:4
+% bar(i,d(i),C(i))
+% end
+% figauc = errorbar(1:4,[results.waist.mAUC{2} results.pock.mAUC{2} results.hand.mAUC{2} results.mAUC{2}],...
+%     [nanstd(results.waist.AUC{2})/sqrt(HAlen) nanstd(results.pock.AUC{2})/sqrt(HAlen) nanstd(results.hand.AUC{2})/sqrt(HAlen) nanstd(results.AUC{2})/sqrt(HAlen)],...
+%     'linewidth',1.5,'linestyle','none','color','k');
+% h = gca;
+% h.YLim = [0.8 1];
+% h.XTick = 1:4;
+% h.XTickLabel = {'Waist','Pocket','Hand','All'};
+% set(get(gca,'Xlabel'),'FontSize',16);
+% set(gca,'FontSize',16);
+% title('mean AUC')
+
+% Add AUC values for ROC plots
+labAUCstr=cell(4,1);
+figure(labROCfig), hold on
+subplot(2,2,4)
 for i=1:4
-bar(i,d(i),C(i))
+    labAUCstr{i}=sprintf('%s-AUC = %0.3f',Locations{i},d(i));
+    text(.7,.71-.11*i,labAUCstr{i},'FontSize',14);
 end
-figauc = errorbar(1:4,[results.waist.mAUC{2} results.pock.mAUC{2} results.hand.mAUC{2} results.mAUC{2}],...
-    [nanstd(results.waist.AUC{2})/sqrt(HAlen) nanstd(results.pock.AUC{2})/sqrt(HAlen) nanstd(results.hand.AUC{2})/sqrt(HAlen) nanstd(results.AUC{2})/sqrt(HAlen)],...
-    'linewidth',1.5,'linestyle','none','color','k');
-h = gca;
-h.YLim = [0.8 1];
-h.XTick = 1:4;
-h.XTickLabel = {'Waist','Pocket','Hand','All'};
-set(get(gca,'Xlabel'),'FontSize',16);
-set(gca,'FontSize',16);
-title('mean AUC')
+
+% [~,obj]=legend(labAUCstr);
+% legend('boxoff')
+% set(obj(2),'visible','off');
 
 % plot FPR by location
 FPR=[results.waist.FPR{2}; results.pock.FPR{2}; results.hand.FPR{2}; results.FPR{2}];
@@ -297,19 +311,28 @@ Homeresults = results;
 %need to add error bars
 figure, hold on
 d=[results.waist.AUCboot results.pock.AUCboot results.hand.AUCboot results.AUCboot];
+% for i=1:4
+% bar(i,d(i),C(i))
+% end
+% figauc = errorbar(1:4,[results.waist.AUCboot results.pock.AUCboot results.hand.AUCboot results.AUCboot],...
+%     [results.waist.AUCboot-results.waist.AUCErr{cvtype}(1) results.pock.AUCboot-results.pock.AUCErr{cvtype}(1) results.hand.AUCboot-results.hand.AUCErr{cvtype}(1) results.AUCboot-results.AUCErr{cvtype}(1)],...
+%     [results.waist.AUCErr{cvtype}(2)-results.waist.AUCboot results.pock.AUCErr{cvtype}(2)-results.pock.AUCboot results.hand.AUCErr{cvtype}(2)-results.hand.AUCboot results.AUCErr{cvtype}(2)-results.AUCboot],...
+%     'linewidth',1.5,'linestyle','none','color','k');h = gca;
+% h.YLim = [0.8 1];
+% h.XTick = 1:4;
+% h.XTickLabel = {'Waist','Pocket','Hand','All'};
+% set(get(gca,'Xlabel'),'FontSize',16);
+% set(gca,'FontSize',16);
+% title('mean AUC')
+
+% Add AUC in legend for ROC plots
+homeAUCstr=cell(4,1);
+figure(homeROCfig), hold on
+subplot(2,2,4)
 for i=1:4
-bar(i,d(i),C(i))
+    homeAUCstr{i}=sprintf('%s-AUC = %0.3f',Locations{i},d(i));
+    text(.7,.71-.11*i,homeAUCstr{i},'FontSize',14);
 end
-figauc = errorbar(1:4,[results.waist.AUCboot results.pock.AUCboot results.hand.AUCboot results.AUCboot],...
-    [results.waist.AUCboot-results.waist.AUCErr{cvtype}(1) results.pock.AUCboot-results.pock.AUCErr{cvtype}(1) results.hand.AUCboot-results.hand.AUCErr{cvtype}(1) results.AUCboot-results.AUCErr{cvtype}(1)],...
-    [results.waist.AUCErr{cvtype}(2)-results.waist.AUCboot results.pock.AUCErr{cvtype}(2)-results.pock.AUCboot results.hand.AUCErr{cvtype}(2)-results.hand.AUCboot results.AUCErr{cvtype}(2)-results.AUCboot],...
-    'linewidth',1.5,'linestyle','none','color','k');h = gca;
-h.YLim = [0.8 1];
-h.XTick = 1:4;
-h.XTickLabel = {'Waist','Pocket','Hand','All'};
-set(get(gca,'Xlabel'),'FontSize',16);
-set(gca,'FontSize',16);
-title('mean AUC')
 
 % plot FPR by location
 FPR=[results.waist.FPR{2}; results.pock.FPR{2}; results.hand.FPR{2}; results.FPR{2}];
