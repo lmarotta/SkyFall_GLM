@@ -597,9 +597,12 @@ if any(cvtype == 2)
     conf_all = conf_all(~cellfun(@isempty,isfall_all));
     isfall_all = isfall_all(~cellfun(@isempty,isfall_all)); %remove empty cell from missing subj
         
-    [X, Y, T, AUC]=perfcurve(isfall_all, conf_all, true,'TVals',[0:0.05:1]);
-%     [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'), cell2mat(conf_all'), true,'Nboot',1000,'XVals',[0:0.05:1]); %cb with Bootstrap
-
+    if length(unique(X_test(:,1)))>4 % Do bootstrapping for smaller number of subjects
+        [X, Y, T, AUC]=perfcurve(isfall_all, conf_all, true,'TVals',[0:0.05:1]);
+    else
+        [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'), cell2mat(conf_all'), true,'Nboot',1000,'TVals',[0:0.05:1]); %cb with Bootstrap
+    end
+        
     %plot cmat and ROC
     if length(cvtype) == 3
         plotConfmat(confmat,'Healthy-Amputee',3)
@@ -617,7 +620,7 @@ if any(cvtype == 2)
         ylabel('True positive rate')
         set(gca,'FontSize',16);
         title(Locations{4});
-        ylim([0 1]), xlim([0 1])
+        ylim([-0.1 1.1]), xlim([-0.1 1.1])
     else
         plotConfmat(confmat,'Healthy-Amputee');
         %plot ROC curves w confidence bounds    
@@ -641,7 +644,7 @@ if any(cvtype == 2)
         xlabel('False positive rate')
         ylabel('True positive rate')
         set(gca,'FontSize',16);
-        ylim([0 1]), xlim([0 1])
+        ylim([-0.1 1.1]), xlim([-0.1 1.1])
         if length(locations_train)==1
             title(Locations{locations_train(1)});
         else
