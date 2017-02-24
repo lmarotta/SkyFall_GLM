@@ -7,6 +7,7 @@
 function [Labresults,Homeresults] = GeneratePaperResults
 close all
 
+Locations={'Waist','Pocket','Hand','All'};
 C=['r','y','c','m']; % colors for AUC bar plot
 
 rng(200)
@@ -41,11 +42,11 @@ end
 % [AUC{1},Sens{1},Spec{1}] = LOSOCV(X,X_Amp,1,1,0); %GLMnet
 % [AUC{3},Sens{3},Spec{3}] = LOSOCV(X,X_Amp,2,1,0);
 
-
+labROCfig=figure;
 %Train and Test on all 3 locations
 cvtype = [1 2 3]; %all cv
 % cvtype = 2; %H-A only
-[AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1:3,1:3,nData,1,featureset,cvtype,0);
+[AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1:3,1:3,nData,1,featureset,cvtype,0,labROCfig);
 results.AUC = AUC;   %mean and SEM
 results.AUCErr = AUCErr; %bootstrap CI
 results.Sens = Sens; %mean and SEM
@@ -89,7 +90,7 @@ sprintf('\nH-A Mean Spec %.3f +- %.3f',nanmean(results.Spec{1}),1.96*nanstd(resu
 cvtype = 2; %H-A only
 
 % Train on waist
-[wAUC,wSens,wSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1,1:3,nData,1,featureset,cvtype,0);
+[wAUC,wSens,wSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1,1:3,nData,1,featureset,cvtype,0,labROCfig);
 results.waist.AUC = wAUC;
 results.waist.AUCErr = AUCErr;
 results.waist.Sens = wSens;
@@ -102,7 +103,7 @@ results.waist.Specboot = mean(bootstat(:,1));
 results.waist.mAUC = cellfun(@nanmean,wAUC,'UniformOutput',false);
 
 % Train on pocket
-[pAUC,pSens,pSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,2,1:3,nData,1,featureset,cvtype,0);
+[pAUC,pSens,pSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,2,1:3,nData,1,featureset,cvtype,0,labROCfig);
 results.pock.AUC = pAUC;
 results.pock.AUCErr = AUCErr;
 results.pock.Sens = pSens;
@@ -115,7 +116,7 @@ results.pock.Specboot = mean(bootstat(:,1));
 results.pock.mAUC = cellfun(@nanmean,pAUC,'UniformOutput',false);
 
 % Train on hand
-[hAUC,hSens,hSpec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,3,1:3,nData,1,featureset,cvtype,0);
+[hAUC,hSens,hSpec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,3,1:3,nData,1,featureset,cvtype,0,labROCfig);
 results.hand.AUC = hAUC;
 results.hand.AUCErr = AUCErr;
 results.hand.Sens = hSens;
@@ -143,19 +144,32 @@ HAinds=~isnan(results.AUC{2});
 HAlen=sum(HAinds);
 figure, hold on
 d=[results.waist.mAUC{2} results.pock.mAUC{2} results.hand.mAUC{2} results.mAUC{2}];
+% for i=1:4
+% bar(i,d(i),C(i))
+% end
+% figauc = errorbar(1:4,[results.waist.mAUC{2} results.pock.mAUC{2} results.hand.mAUC{2} results.mAUC{2}],...
+%     [nanstd(results.waist.AUC{2})/sqrt(HAlen) nanstd(results.pock.AUC{2})/sqrt(HAlen) nanstd(results.hand.AUC{2})/sqrt(HAlen) nanstd(results.AUC{2})/sqrt(HAlen)],...
+%     'linewidth',1.5,'linestyle','none','color','k');
+% h = gca;
+% h.YLim = [0.8 1];
+% h.XTick = 1:4;
+% h.XTickLabel = {'Waist','Pocket','Hand','All'};
+% set(get(gca,'Xlabel'),'FontSize',16);
+% set(gca,'FontSize',16);
+% title('mean AUC')
+
+% Add AUC values for ROC plots
+labAUCstr=cell(4,1);
+figure(labROCfig), hold on
+subplot(2,2,4)
 for i=1:4
-bar(i,d(i),C(i))
+    labAUCstr{i}=sprintf('%s-AUC = %0.3f',Locations{i},d(i));
+    text(.7,.71-.11*i,labAUCstr{i},'FontSize',14);
 end
-figauc = errorbar(1:4,[results.waist.mAUC{2} results.pock.mAUC{2} results.hand.mAUC{2} results.mAUC{2}],...
-    [nanstd(results.waist.AUC{2})/sqrt(HAlen) nanstd(results.pock.AUC{2})/sqrt(HAlen) nanstd(results.hand.AUC{2})/sqrt(HAlen) nanstd(results.AUC{2})/sqrt(HAlen)],...
-    'linewidth',1.5,'linestyle','none','color','k');
-h = gca;
-h.YLim = [0.8 1];
-h.XTick = 1:4;
-h.XTickLabel = {'Waist','Pocket','Hand','All'};
-set(get(gca,'Xlabel'),'FontSize',16);
-set(gca,'FontSize',16);
-title('mean AUC')
+
+% [~,obj]=legend(labAUCstr);
+% legend('boxoff')
+% set(obj(2),'visible','off');
 
 % plot FPR by location
 FPR=[results.waist.FPR{2}; results.pock.FPR{2}; results.hand.FPR{2}; results.FPR{2}];
@@ -238,8 +252,10 @@ inds= any(bsxfun(@eq,X_Amp(:,1),unique(F(:,1))'),2) & X_Amp(:,4)<5; % Use falls 
 
 X_Amp = [X_Amp(inds,:);F(randperm(size(F,1),500),:)];
 
+homeROCfig=figure;
+
 % Train on waist
-[wAUC,wSens,wSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1,0:3,nData,1,featureset,cvtype,0);
+[wAUC,wSens,wSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1,0:3,nData,1,featureset,cvtype,0,homeROCfig);
 results.waist.AUC = wAUC;
 results.waist.AUCErr = AUCErr;
 results.waist.Sens = wSens;
@@ -252,7 +268,7 @@ results.waist.Specboot = mean(bootstat(:,1));
 results.waist.bootstat = bootstat;
 
 % Train on pocket
-[pAUC,pSens,pSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,2,1:3,nData,1,featureset,cvtype,0);
+[pAUC,pSens,pSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,2,1:3,nData,1,featureset,cvtype,0,homeROCfig);
 results.pock.AUC = pAUC;
 results.pock.AUCErr = AUCErr;
 results.pock.Sens = pSens;
@@ -265,7 +281,7 @@ results.pock.Specboot = mean(bootstat(:,1));
 results.pock.bootstat = bootstat;
 
 % Train on hand
-[hAUC,hSens,hSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,3,1:3,nData,1,featureset,cvtype,0);
+[hAUC,hSens,hSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,3,1:3,nData,1,featureset,cvtype,0,homeROCfig);
 results.hand.AUC = hAUC;
 results.hand.AUCErr = AUCErr;
 results.hand.Sens = hSens;
@@ -278,7 +294,7 @@ results.hand.Specboot = mean(bootstat(:,1));
 results.hand.bootstat = bootstat;
 
 % 3 Locations
-[AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1:3,1:3,nData,1,featureset,cvtype,0);
+[AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1:3,1:3,nData,1,featureset,cvtype,0,homeROCfig);
 results.AUC = AUC;
 results.AUCErr = AUCErr;
 results.Sens = Sens;
@@ -295,19 +311,28 @@ Homeresults = results;
 %need to add error bars
 figure, hold on
 d=[results.waist.AUCboot results.pock.AUCboot results.hand.AUCboot results.AUCboot];
+% for i=1:4
+% bar(i,d(i),C(i))
+% end
+% figauc = errorbar(1:4,[results.waist.AUCboot results.pock.AUCboot results.hand.AUCboot results.AUCboot],...
+%     [results.waist.AUCboot-results.waist.AUCErr{cvtype}(1) results.pock.AUCboot-results.pock.AUCErr{cvtype}(1) results.hand.AUCboot-results.hand.AUCErr{cvtype}(1) results.AUCboot-results.AUCErr{cvtype}(1)],...
+%     [results.waist.AUCErr{cvtype}(2)-results.waist.AUCboot results.pock.AUCErr{cvtype}(2)-results.pock.AUCboot results.hand.AUCErr{cvtype}(2)-results.hand.AUCboot results.AUCErr{cvtype}(2)-results.AUCboot],...
+%     'linewidth',1.5,'linestyle','none','color','k');h = gca;
+% h.YLim = [0.8 1];
+% h.XTick = 1:4;
+% h.XTickLabel = {'Waist','Pocket','Hand','All'};
+% set(get(gca,'Xlabel'),'FontSize',16);
+% set(gca,'FontSize',16);
+% title('mean AUC')
+
+% Add AUC in legend for ROC plots
+homeAUCstr=cell(4,1);
+figure(homeROCfig), hold on
+subplot(2,2,4)
 for i=1:4
-bar(i,d(i),C(i))
+    homeAUCstr{i}=sprintf('%s-AUC = %0.3f',Locations{i},d(i));
+    text(.7,.71-.11*i,homeAUCstr{i},'FontSize',14);
 end
-figauc = errorbar(1:4,[results.waist.AUCboot results.pock.AUCboot results.hand.AUCboot results.AUCboot],...
-    [results.waist.AUCboot-results.waist.AUCErr{cvtype}(1) results.pock.AUCboot-results.pock.AUCErr{cvtype}(1) results.hand.AUCboot-results.hand.AUCErr{cvtype}(1) results.AUCboot-results.AUCErr{cvtype}(1)],...
-    [results.waist.AUCErr{cvtype}(2)-results.waist.AUCboot results.pock.AUCErr{cvtype}(2)-results.pock.AUCboot results.hand.AUCErr{cvtype}(2)-results.hand.AUCboot results.AUCErr{cvtype}(2)-results.AUCboot],...
-    'linewidth',1.5,'linestyle','none','color','k');h = gca;
-h.YLim = [0.8 1];
-h.XTick = 1:4;
-h.XTickLabel = {'Waist','Pocket','Hand','All'};
-set(get(gca,'Xlabel'),'FontSize',16);
-set(gca,'FontSize',16);
-title('mean AUC')
 
 % plot FPR by location
 FPR=[results.waist.FPR{2}; results.pock.FPR{2}; results.hand.FPR{2}; results.FPR{2}];
@@ -374,9 +399,11 @@ end
 
 %cvtype is a vector with the cases
 %[1 2 3] = H-H, H-A, A-A
-function [AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_test,locations_train,locations_test,nData,model,featureset,cvtype,HomeFP_retrain)
+function [AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_test,locations_train,locations_test,nData,model,featureset,cvtype,HomeFP_retrain,ROCfig)
 
 rng(400)
+
+Locations={'Waist','Pocket','Hand','All'};
 
 if HomeFP_retrain
     l=load('Z:/Amputee Phones-R01/Home Data Collection/Healthy/HomeDataHealthy.mat');
@@ -410,6 +437,9 @@ AUC_HH=zeros(Nruns,length(subj));
 Sens_HH=zeros(Nruns,length(subj));
 Spec_HH=zeros(Nruns,length(subj));
 
+if length(cvtype)==3
+    popFig=figure;
+end
 if find(cvtype==1)
     
     for indCV=1:length(subj)
@@ -470,7 +500,7 @@ if find(cvtype==1)
 
     if length(cvtype) == 3
         plotConfmat(confmat,'Healthy-Healthy',1)
-        figure(gcf), subplot(2,2,4), hold on
+        figure(popFig), subplot(2,2,4), hold on
         e = errorbar(X(:,1),Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
         e.LineWidth = 2; e.Marker = 'o';
         xlabel('False positive rate')
@@ -567,32 +597,61 @@ if any(cvtype == 2)
     conf_all = conf_all(~cellfun(@isempty,isfall_all));
     isfall_all = isfall_all(~cellfun(@isempty,isfall_all)); %remove empty cell from missing subj
         
-    [X, Y, T, AUC]=perfcurve(isfall_all, conf_all, true,'TVals',[0:0.05:1]);
-%     [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'), cell2mat(conf_all'), true,'Nboot',1000,'XVals',[0:0.05:1]); %cb with Bootstrap
-
+    if length(unique(X_test(:,1)))>4 % Do bootstrapping for smaller number of subjects
+        [X, Y, T, AUC]=perfcurve(isfall_all, conf_all, true,'TVals',[0:0.05:1]);
+    else
+        [X, Y, T, AUC]=perfcurve(cell2mat(isfall_all'), cell2mat(conf_all'), true,'Nboot',1000,'TVals',[0:0.05:1]); %cb with Bootstrap
+    end
+        
     %plot cmat and ROC
     if length(cvtype) == 3
         plotConfmat(confmat,'Healthy-Amputee',3)
-        figure(gcf), subplot(2,2,4), hold on,
+        figure(popFig), subplot(2,2,4), hold on,
         e = errorbar(X(:,1),Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
         e.LineWidth = 2; e.Marker = 'o';
         xlabel('False positive rate')
         ylabel('True positive rate')
         
-    else
-        plotConfmat(confmat,'Healthy-Amputee');
-        %plot ROC curves w confidence bounds    
-        if ~exist('figroc','var')
-            figroc = figure;
-        end
-        figure(figroc), hold on  
+        figure(ROCfig), hold on
+        subplot(2,2,max(locations_train)+1)
         e = errorbar(X(:,1),Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
         e.LineWidth = 2; e.Marker = 'o';
         xlabel('False positive rate')
         ylabel('True positive rate')
+        set(gca,'FontSize',16);
+        title(Locations{4});
+        ylim([-0.1 1.1]), xlim([-0.1 1.1])
+    else
+        plotConfmat(confmat,'Healthy-Amputee');
+        %plot ROC curves w confidence bounds    
+%         if ~exist('figroc','var')
+%             figroc = figure;
+%         end
+%         figure(figroc), hold on  
+%         e = errorbar(X(:,1),Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
+%         e.LineWidth = 2; e.Marker = 'o';
+%         xlabel('False positive rate')
+%         ylabel('True positive rate')
+        
+        figure(ROCfig), hold on
+        if length(locations_train)==1
+            subplot(2,2,locations_train(1))
+        else
+            subplot(2,2,4)
+        end
+        e = errorbar(X(:,1),Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
+        e.LineWidth = 2; e.Marker = 'o';
+        xlabel('False positive rate')
+        ylabel('True positive rate')
+        set(gca,'FontSize',16);
+        ylim([-0.1 1.1]), xlim([-0.1 1.1])
+        if length(locations_train)==1
+            title(Locations{locations_train(1)});
+        else
+            title(Locations{4});
+        end
+        
     end
- 
-    
 
     sens = 0.9;
     %95% CI on specificity for fixed sensitivity
@@ -704,8 +763,9 @@ if any(cvtype == 3)
 
     %plot cmat and ROC
     if length(cvtype) == 3
+        figure(popFig)
         plotConfmat(confmat,'Amputee-Amputee',2)
-        figure(gcf), subplot(2,2,4),  hold on
+        figure(popFig), subplot(2,2,4),  hold on
         e = errorbar(X(:,1),Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
         e.LineWidth = 2; e.Marker = 'o';
         xlabel('False positive rate')
