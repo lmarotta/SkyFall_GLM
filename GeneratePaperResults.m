@@ -161,10 +161,10 @@ d=[results.waist.mAUC{2} results.pock.mAUC{2} results.hand.mAUC{2} results.mAUC{
 % Add AUC values for ROC plots
 labAUCstr=cell(4,1);
 figure(labROCfig), hold on
-subplot(2,2,4)
 for i=1:4
-    labAUCstr{i}=sprintf('%s-AUC = %0.3f',Locations{i},d(i));
-    text(.7,.71-.11*i,labAUCstr{i},'FontSize',14);
+    subplot(2,2,i)
+    labAUCstr{i}=sprintf('AUC = %0.3f',d(i));
+    text(.4,.45,labAUCstr{i},'FontSize',24);
 end
 
 % [~,obj]=legend(labAUCstr);
@@ -328,10 +328,10 @@ d=[results.waist.AUCboot results.pock.AUCboot results.hand.AUCboot results.AUCbo
 % Add AUC in legend for ROC plots
 homeAUCstr=cell(4,1);
 figure(homeROCfig), hold on
-subplot(2,2,4)
 for i=1:4
-    homeAUCstr{i}=sprintf('%s-AUC = %0.3f',Locations{i},d(i));
-    text(.7,.71-.11*i,homeAUCstr{i},'FontSize',14);
+    subplot(2,2,i)
+    homeAUCstr{i}=sprintf('AUC = %0.3f',d(i));
+    text(.4,.45,homeAUCstr{i},'FontSize',24);
 end
 
 % plot FPR by location

@@ -86,6 +86,13 @@ falls_data.subject=data.subject(fall_inds);
 falls_data.location=data.location(fall_inds);
 falls_data.type_str=data.type_str(fall_inds);
 
+%distribution of max acc
+acc = cellfun(@(x) x(:,2:end)./9.81, falls_data.acce,'UniformOutput',false);
+maxacc = sqrt(cellfun(@(x) max(sum(x.^2,2)),acc)); %in [g]
+figure, hold on, subplot(121)
+boxplot(maxacc), ylim([0 4])
+
+
 act_data.acce=data.acce(~fall_inds);
 act_data.gyro=data.gyro(~fall_inds);
 act_data.baro=data.baro(~fall_inds);
@@ -94,7 +101,24 @@ act_data.subject=data.subject(~fall_inds);
 act_data.location=data.location(~fall_inds);
 act_data.type_str=data.type_str(~fall_inds);
 
+%distribution of max acc
+acc = cellfun(@(x) x(:,2:end)./9.81, act_data.acce,'UniformOutput',false);
+maxacc = sqrt(cellfun(@(x) max(sum(x.^2,2)),acc)); %in [g]
+subplot(122)
+boxplot(maxacc), ylim([0 4])
+
+
 falls_data=JitterClips(falls_data,n);
+
+%distribution of max acc following jitter
+acc = cellfun(@(x) x(:,2:end)./9.81, falls_data.acce,'UniformOutput',false);
+maxacc = sqrt(cellfun(@(x) max(sum(x.^2,2)),acc)); %in [g]
+figure, hold on, subplot(121)
+boxplot(maxacc), ylim([0 4])
+
+%jittering is taking data which are not falls - TO FIX!
+indm = find(maxacc < 2);
+figure, plot(acc{indm(2)})
 
 data.acce=[falls_data.acce; act_data.acce];
 data.gyro=[falls_data.gyro; act_data.gyro];
@@ -122,6 +146,13 @@ data.location(empty_inds)=[];
 data.type_str(empty_inds)=[];
 
 labels=data;
+
+%% Display histogram of max acceleration norm in each clip 
+fall_inds=data.value~=9;
+acc = cellfun(@(x) x(:,2:end)./9.81, data.acce,'UniformOutput',false);
+maxacc = sqrt(cellfun(@(x) max(sum(x.^2,2)),acc)); %in [g]
+figure, subplot(121)
+histogram(maxacc)
 
 %% Feature calculation 
 
