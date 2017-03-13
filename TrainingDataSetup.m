@@ -118,7 +118,11 @@ boxplot(maxacc), ylim([0 4])
 
 %jittering is taking data which are not falls - TO FIX!
 indm = find(maxacc < 2);
-figure, plot(acc{indm(2)})
+if ~isempty(indm)
+    figure, plot(acc{indm(2)})
+else
+    display('No mistaken falls')
+end
 
 data.acce=[falls_data.acce; act_data.acce];
 data.gyro=[falls_data.gyro; act_data.gyro];
