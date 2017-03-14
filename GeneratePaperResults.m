@@ -12,7 +12,7 @@ C=['r','y','c','m']; % colors for AUC bar plot
 
 rng(200)
 
-nData=100; %number of data points for training on 1 location only
+nData=90; %number of data points for training on 1 location only
 
 % features_used = ones(18,1); %full feature set
 features_used = zeros(18,1); features_used(8) = 1; %only magnitude features
@@ -46,7 +46,7 @@ labROCfig=figure;
 %Train and Test on all 3 locations
 cvtype = [1 2 3]; %all cv
 % cvtype = 2; %H-A only
-[AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1:3,1:3,nData,1,featureset,cvtype,0,labROCfig);
+[AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,2:3,1:3,nData,1,featureset,cvtype,0,labROCfig);
 results.AUC = AUC;   %mean and SEM
 results.AUCErr = AUCErr; %bootstrap CI
 results.Sens = Sens; %mean and SEM
@@ -294,7 +294,7 @@ results.hand.Specboot = mean(bootstat(:,1));
 results.hand.bootstat = bootstat;
 
 % 3 Locations
-[AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1:3,1:3,nData,1,featureset,cvtype,0,homeROCfig);
+[AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,2:3,1:3,nData,1,featureset,cvtype,0,homeROCfig);
 results.AUC = AUC;
 results.AUCErr = AUCErr;
 results.Sens = Sens;
