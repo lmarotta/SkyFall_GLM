@@ -12,7 +12,7 @@ C=['r','y','c','m']; % colors for AUC bar plot
 
 rng(200)
 
-nData=500; %number of data points for training on 1 location only
+nData=100; %number of data points for training on 1 location only
 
 % features_used = ones(18,1); %full feature set
 features_used = zeros(18,1); features_used(8) = 1; %only magnitude features

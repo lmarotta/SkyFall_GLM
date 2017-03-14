@@ -119,18 +119,35 @@ boxplot(maxacc), ylim([0 4])
 %jittering is taking data which are not falls - TO FIX!
 indm = find(maxacc < 2);
 if ~isempty(indm)
-    figure, plot(acc{indm(2)})
+    figure, plot(acc{indm(1)})
 else
     display('No mistaken falls')
 end
 
-data.acce=[falls_data.acce; act_data.acce];
-data.gyro=[falls_data.gyro; act_data.gyro];
-data.baro=[falls_data.baro; act_data.baro];
-data.value=[falls_data.value; act_data.value];
-data.subject=[falls_data.subject; act_data.subject];
-data.location=[falls_data.location; act_data.location];
-data.type_str=[falls_data.type_str; act_data.type_str];
+%% remove Activities under 2g and combine data
+
+actInds=cellfun(@(x) max(sum(x(:,2:end).^2,2))>(2*9.81)^2,act_data.acce);
+
+data.acce=[falls_data.acce; act_data.acce(actInds)];
+data.gyro=[falls_data.gyro; act_data.gyro(actInds)];
+data.baro=[falls_data.baro; act_data.baro(actInds)];
+data.value=[falls_data.value; act_data.value(actInds)];
+data.subject=[falls_data.subject; act_data.subject(actInds)];
+data.location=[falls_data.location; act_data.location(actInds)];
+data.type_str=[falls_data.type_str; act_data.type_str(actInds)];
+
+%distribution of max acc
+figure; hold on
+
+acc = cellfun(@(x) x(:,2:end)./9.81, falls_data.acce,'UniformOutput',false);
+maxacc = sqrt(cellfun(@(x) max(sum(x.^2,2)),acc)); %in [g]
+subplot(121)
+boxplot(maxacc), ylim([0 4])
+
+acc = cellfun(@(x) x(:,2:end)./9.81, act_data.acce(actInds),'UniformOutput',false);
+maxacc = sqrt(cellfun(@(x) max(sum(x.^2,2)),acc)); %in [g]
+subplot(122)
+boxplot(maxacc), ylim([0 4])
 
 %% Interpolate Data
 
