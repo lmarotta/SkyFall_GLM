@@ -118,9 +118,10 @@ figure, bar([wFP/sum(L & locsdata==1) wFN/sum(~L & locsdata==1); pFP/sum(L & loc
 display = 0;
 F = [];
 lf = [];
+lf_s={};
 filespath = 'Z:/Amputee Phones-R01/Home Data Collection/Amputees/';
 if ~exist([filespath 'HomeDataAmp.mat'],'file')
-    f = dir('./TrainingData');
+    f = dir('./TrainingData/*.mat');
     S=[];
     for i=1:length(f)
         tempData=load(['./TrainingData/' f(i).name]);
@@ -138,6 +139,7 @@ if ~exist([filespath 'HomeDataAmp.mat'],'file')
         Fnew = [ones(size(Fnew,1),1)*[subjid 1 1 9] Fnew]; 
         F = [F;Fnew];
         lf = [lf;size(Fnew,1)*5/60/60]; %store duration of each day
+        lf_s = [lf_s;{subj}];
         sprintf('Data length = %.2f h',size(F,1)*5/60/60) 
         disp(lf)
     end
