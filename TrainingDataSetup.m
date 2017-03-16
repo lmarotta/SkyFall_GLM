@@ -187,7 +187,7 @@ histogram(maxacc)
 F = extract_feature_matlab(labels);
 
 if condition==2
-    subjid=cellfun(@(x) iff(length(x)>5,find(strcmp([x(1:3) x(5:6)],S)),find(strcmp(x,S))), labels.subject);
+    subjid=cellfun(@(x) iff(length(x)>5,find(strcmp([x(1:3) x(5:end)],S)),find(strcmp(x,S))), labels.subject);
     F(:,1)=subjid;
 end
 
