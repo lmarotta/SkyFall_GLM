@@ -30,6 +30,13 @@ switch condition
         filepath = './TrainingData/';
     case 2
         filepath = './TrainingData/Outdoors/';
+        f = dir('./TrainingData/Healthy/*.mat');
+        S=[];
+        for i=1:length(f)
+            tempData=load(['./TrainingData/Healthy/' f(i).name]);
+            S=[S; unique(tempData.data.subject)];
+            S=unique(S);
+        end
 end
 
 filenames=dir([filepath,'falls_data_10sec_*.mat']);
@@ -178,7 +185,22 @@ histogram(maxacc)
 %% Feature calculation 
 
 F = extract_feature_matlab(labels);
+
+if condition==2
+    subjid=cellfun(@(x) iff(length(x)>5,find(strcmp([x(1:3) x(5:6)],S)),find(strcmp(x,S))), labels.subject);
+    F(:,1)=subjid;
+end
+
 save([savedfilename '.mat'],'F')
 save([savedfilename '_labels.mat'], 'labels')
 % save Training_Data F
 % save Training_Data_labels labels
+
+end
+function result=iff(condition, trueResult, falseResult)
+    if condition
+        result=trueResult;
+    else
+        result=falseResult;
+    end
+end
