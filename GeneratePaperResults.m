@@ -16,6 +16,7 @@ nData=90; %number of data points for training on 1 location only
 
 % features_used = ones(18,1); %full feature set
 features_used = zeros(18,1); features_used(8) = 1; %only magnitude features
+% features_used([1 2 5 8 9]) = 1; %expanded set
 
 featureset=getFeatureInds(features_used);
 
@@ -23,18 +24,27 @@ featureset=getFeatureInds(features_used);
 %Feature matrix assembled as follows
 % F = [subj_id location subjcode labels Features];
 if ~exist('Test_Data_Amputees.mat','file')
-    X_Amp = TrainingDataSetup([], [], 10, 1,'Test_Data_Amputees');
+    X_Amp = TrainingDataSetup([], [], 1, 1,'Test_Data_Amputees');
 else
     X_Amp = load('Test_Data_Amputees');
     X_Amp = X_Amp.F;
 end
 
 if ~exist('HealthyData.mat','file')
-    X = TrainingDataSetup([], [], 10, 0,'HealthyData');
+    X = TrainingDataSetup([], [], 1, 0,'HealthyData');
 else
     X = load('HealthyData');
     X = X.F;
 end
+
+if ~exist('OutdoorFalls.mat','file')
+    O = TrainingDataSetup([], [], 1, 2, 'OutdoorFalls');
+else
+    O = load('OutdoorFalls.mat');
+    O = O.F;
+end
+
+X = [X; O];
 
 % [AUC{2},Sens{2},Spec{2}] = LOSOCV(X,X_Amp,1,0,0); %RF
 % [AUC{4},Sens{4},Spec{4}] = LOSOCV(X,X_Amp,2,0,0);
