@@ -14,9 +14,9 @@ rng(200)
 
 nData=90; %number of data points for training on 1 location only
 
-% features_used = ones(18,1); %full feature set
-features_used = zeros(18,1); features_used(8) = 1; %only magnitude features
-% features_used([1 2 5 8 9]) = 1; %expanded set
+features_used = ones(18,1); %full feature set
+% features_used = zeros(18,1); features_used(8) = 1; %only magnitude features
+% features_used([4 7 8]) = 1; %expanded set
 
 featureset=getFeatureInds(features_used);
 
@@ -56,7 +56,7 @@ labROCfig=figure;
 %Train and Test on all 3 locations
 cvtype = [1 2 3]; %all cv
 % cvtype = 2; %H-A only
-[AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,2:3,1:3,nData,1,featureset,cvtype,0,labROCfig);
+[AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,2:3,1:3,nData,0,featureset,cvtype,0,labROCfig);
 results.AUC = AUC;   %mean and SEM
 results.AUCErr = AUCErr; %bootstrap CI
 results.Sens = Sens; %mean and SEM
@@ -100,7 +100,7 @@ sprintf('\nH-A Mean Spec %.3f +- %.3f',nanmean(results.Spec{1}),1.96*nanstd(resu
 cvtype = 2; %H-A only
 
 % Train on waist
-[wAUC,wSens,wSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1,1:3,nData,1,featureset,cvtype,0,labROCfig);
+[wAUC,wSens,wSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1,1:3,nData,0,featureset,cvtype,0,labROCfig);
 results.waist.AUC = wAUC;
 results.waist.AUCErr = AUCErr;
 results.waist.Sens = wSens;
@@ -113,7 +113,7 @@ results.waist.Specboot = mean(bootstat(:,1));
 results.waist.mAUC = cellfun(@nanmean,wAUC,'UniformOutput',false);
 
 % Train on pocket
-[pAUC,pSens,pSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,2,1:3,nData,1,featureset,cvtype,0,labROCfig);
+[pAUC,pSens,pSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,2,1:3,nData,0,featureset,cvtype,0,labROCfig);
 results.pock.AUC = pAUC;
 results.pock.AUCErr = AUCErr;
 results.pock.Sens = pSens;
@@ -126,7 +126,7 @@ results.pock.Specboot = mean(bootstat(:,1));
 results.pock.mAUC = cellfun(@nanmean,pAUC,'UniformOutput',false);
 
 % Train on hand
-[hAUC,hSens,hSpec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,3,1:3,nData,1,featureset,cvtype,0,labROCfig);
+[hAUC,hSens,hSpec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,3,1:3,nData,0,featureset,cvtype,0,labROCfig);
 results.hand.AUC = hAUC;
 results.hand.AUCErr = AUCErr;
 results.hand.Sens = hSens;
@@ -265,7 +265,7 @@ X_Amp = [X_Amp(inds,:);F(randperm(size(F,1),500),:)];
 homeROCfig=figure;
 
 % Train on waist
-[wAUC,wSens,wSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1,0:3,nData,1,featureset,cvtype,0,homeROCfig);
+[wAUC,wSens,wSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1,0:3,nData,0,featureset,cvtype,0,homeROCfig);
 results.waist.AUC = wAUC;
 results.waist.AUCErr = AUCErr;
 results.waist.Sens = wSens;
@@ -278,7 +278,7 @@ results.waist.Specboot = mean(bootstat(:,1));
 results.waist.bootstat = bootstat;
 
 % Train on pocket
-[pAUC,pSens,pSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,2,1:3,nData,1,featureset,cvtype,0,homeROCfig);
+[pAUC,pSens,pSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,2,1:3,nData,0,featureset,cvtype,0,homeROCfig);
 results.pock.AUC = pAUC;
 results.pock.AUCErr = AUCErr;
 results.pock.Sens = pSens;
@@ -291,7 +291,7 @@ results.pock.Specboot = mean(bootstat(:,1));
 results.pock.bootstat = bootstat;
 
 % Train on hand
-[hAUC,hSens,hSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,3,1:3,nData,1,featureset,cvtype,0,homeROCfig);
+[hAUC,hSens,hSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,3,1:3,nData,0,featureset,cvtype,0,homeROCfig);
 results.hand.AUC = hAUC;
 results.hand.AUCErr = AUCErr;
 results.hand.Sens = hSens;
@@ -304,7 +304,7 @@ results.hand.Specboot = mean(bootstat(:,1));
 results.hand.bootstat = bootstat;
 
 % 3 Locations
-[AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,2:3,1:3,nData,1,featureset,cvtype,0,homeROCfig);
+[AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,2:3,1:3,nData,0,featureset,cvtype,0,homeROCfig);
 results.AUC = AUC;
 results.AUCErr = AUCErr;
 results.Sens = Sens;
@@ -487,6 +487,7 @@ if find(cvtype==1)
                 RFModel=TreeBagger(100,F(indtrain,:),L(indtrain));
                 [pred,conf]=predict(RFModel,F(indtest,:));
                 conf = conf(:,2); %posterior prob of a fall
+                conf_all{indCV}=conf;
                 isfall = logical(L(indtest));
                 isfall_all{indCV}=isfall;
                 [~, ~, ~, AUC_HH(run,indCV)]=perfcurve(isfall, conf, true);
@@ -584,19 +585,45 @@ if any(cvtype == 2)
             end
         else
             RFModel=TreeBagger(100,F(indtrain,:),L(indtrain));
-            for subj = 1:length(unique(X_test(:,1)))
+            
+            if HomeFP_retrain
+                [pred,~,~] = Modeleval(HomeData,HomeL,fvar_si,nz_ind,b,.5,0);
+                sprintf('Spec = %.2f%', length(pred)/(length(pred)+sum(pred)))
+                indmisc=find(pred); %misclassified clips
+                sprintf('# of misclassified clips = %d/%d',length(indmisc),length(F))
+                Fmisc = HomeData(indmisc,:); Lmisc = false(length(indmisc),1);
+                FPHome = [F(indtrain,:);Fmisc]; LPHome = [L(indtrain);Lmisc];
+                disp('Training model on Healthy lab + misclassified home data')
+                [fvar_si,b,nz_ind]=Modeltrain(FPHome,LPHome,alpha,lambda,0);
+            end
+            
+            % Testing the model on each amputee subj (external set)
+            locsdata = X_test(:,2);
+            S=unique(X_test(:,1));
+            
+            for i = 1:length(unique(X_test(:,1)))
+                subj=S(i);
                 rowid = (X_test(:,1)==subj) & any(bsxfun(@eq,X_test(:,2),locations_test),2);
+                rowid_all{i}=find(rowid);
                 [pred,conf]=predict(RFModel,Ft(rowid,:));
                 conf = conf(:,2); %posterior prob of a fall
-                conf_all{subj}=conf;
+                conf_all{i}=conf;
                 isfall = X_test(rowid,4)<5;
-                isfall_all{subj}=isfall;
-                [~, ~, ~, AUC_HA(run,subj)]=perfcurve(isfall, conf, true);
-                Sens_HA(run,subj) = sum(pred & isfall)/sum(isfall);
-                Spec_HA(run,subj) = sum(~pred & ~isfall)/sum(~isfall);
-                confmat=confusionmat(X_test(:,4)<9,cellfun(@(x) logical(str2double(x)),pred));
-                confmat_all(:,:,subj)=confmat;
+                isfall_all{i}=isfall;
                 
+                pred=cellfun(@(x) logical(str2double(x)),pred);
+                
+                if length(unique(isfall)) <2 %subject AF06 with missing activities - TO FIX
+                    isfall_all{i} = [];  conf_all{i}=[]; rowid_all{subj}=[];
+                    locsdata(rowid) = 0;
+                else
+                    [~, ~, ~, AUC_HA(run,i)]=perfcurve(isfall, conf, true);
+                    Sens_HA(run,i) = sum(pred & isfall)/sum(isfall);
+                    Spec_HA(run,i) = sum(~pred & ~isfall)/sum(~isfall);
+                    confmat=confusionmat(X_test(rowid,4)<9,logical(pred));
+                    confmat_all(:,:,i)=confmat;
+                end
+                    
             end
         end
     end
@@ -750,9 +777,10 @@ if any(cvtype == 3)
                 RFModel=TreeBagger(100,F(indtrain,:),L(indtrain));
                 [pred,conf]=predict(RFModel,F(indtest,:));
                 conf = conf(:,2); %posterior prob of a fall
+                conf_all{indCV}=conf;
                 isfall = logical(L(indtest));
                 isfall_all{indCV}=isfall;
-                [~, ~, ~, AUC_AA(run,indCV)]=perfcurve(isfall, conf, true);
+                
                 
                 isfall = logical(L(indtest));
                 isfall_all{indCV}=isfall;
@@ -761,8 +789,13 @@ if any(cvtype == 3)
                 confmat=confusionmat(isfall,pred);
                 confmat_all(:,:,indCV)=confmat;
                 
-                Sens_AA(run,indCV) = sum(pred & isfall)/sum(isfall);
-                Spec_AA(run,indCV) = sum(~pred & ~isfall)/sum(~isfall);
+                if length(unique(isfall)) <2 %subject AF06 with missing activities - TO FIX
+                    isfall_all{indCV} = [];  conf_all{indCV}=[];
+                else
+                    [~, ~, ~, AUC_AA(run,indCV)]=perfcurve(isfall, conf, true);
+                    Sens_AA(run,indCV) = sum(pred & isfall)/sum(isfall);
+                    Spec_AA(run,indCV) = sum(~pred & ~isfall)/sum(~isfall);
+                end
             end
         end
     end
