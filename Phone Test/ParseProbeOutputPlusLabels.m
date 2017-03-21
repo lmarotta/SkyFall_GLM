@@ -15,7 +15,7 @@ function ParseProbeOutputPlusLabels(plot_data, labels_offset, YYYY_start, MM_sta
 % clear all
 
 if nargin == 0
-    labels_offset = 0; % offset for data from 10-24-2016: 396000; 0 otherwise
+    labels_offset = 396000; % offset for data from 10-24-2016: 396000; 0 otherwise
     plot_data = 1; % flag to plot parsed data
 elseif nargin ~= 2 && nargin ~= 12
     error('invalid number of input arguments. Should be 0, 2 or 12');
@@ -463,11 +463,13 @@ save falls_data data
 %% Identify activities data to include with falls
 %close all
 
+fall_inds=find(keep_ind);
 falls_size=sum(keep_ind);
 subject={};
 
 subjs=unique(activity_subject);
 subj_counts=zeros(1,length(subjs));
+act_ind = false(length(keep_ind),1);
 for indSubj=1:length(subjs)
     Subj_inds=strcmp(subjs{indSubj},activity_subject);
     start_ind=find(Subj_inds,1);
@@ -475,9 +477,11 @@ for indSubj=1:length(subjs)
     start_time=activity_start_end(start_ind,1);
     end_time=activity_start_end(end_ind,2);
     
-    keep_ind=keep_ind | (start_time<labels.timestampSTART_END(:,2) & end_time>labels.timestampSTART_END(:,1));
-    subj_counts(indSubj)=sum(keep_ind)-falls_size-sum(subj_counts(1:indSubj-1));
+    act_ind=act_ind | (start_time<labels.timestampSTART_END(:,2) & end_time>labels.timestampSTART_END(:,1));
+    subj_counts(indSubj)=sum(act_ind)-sum(subj_counts(1:indSubj-1));
 end
+
+keep_ind=[fall_inds act_ind];
 
 data.winsize = labels.winsize(keep_ind);
 data.features = labels.features(keep_ind, true(1,size(labels.features,2))); %fallnet model features
