@@ -15,8 +15,8 @@ function ParseProbeOutputPlusLabels(plot_data, labels_offset, YYYY_start, MM_sta
 % clear all
 
 if nargin == 0
-    labels_offset = 396000; % offset for data from 10-24-2016: 396000; 0 otherwise
-    plot_data = 1; % flag to plot parsed data
+    labels_offset = 0; % offset for data from 10-24-2016: 396000; 0 otherwise
+    plot_data = 0; % flag to plot parsed data
 elseif nargin ~= 2 && nargin ~= 12
     error('invalid number of input arguments. Should be 0, 2 or 12');
 end
@@ -481,7 +481,7 @@ for indSubj=1:length(subjs)
     subj_counts(indSubj)=sum(act_ind)-sum(subj_counts(1:indSubj-1));
 end
 
-keep_ind=[fall_inds act_ind];
+keep_ind=[fall_inds; find(act_ind)];
 
 data.winsize = labels.winsize(keep_ind);
 data.features = labels.features(keep_ind, true(1,size(labels.features,2))); %fallnet model features
@@ -493,7 +493,7 @@ data.acce = labels.acce(keep_ind);      %sensor data for each window
 data.gyro = labels.gyro(keep_ind);
 data.baro = labels.baro(keep_ind);
 
-act_size=sum(keep_ind)-falls_size;
+act_size=sum(subj_counts);
 
 data.subject = [data.subject; cell(act_size,1)];
 for i=1:length(subjs)
