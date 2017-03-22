@@ -135,7 +135,7 @@ if ~exist([filespath 'HomeDataAmp.mat'],'file')
         subj=f(i).name(1:5);
         subjid=find(strcmp(subj,S));
         %extract features
-        Fnew = HomeDataSetup(labels,1.5); %1.5g threshold for acceleration clips
+        Fnew = HomeDataSetup(labels,2); %1.5g threshold for acceleration clips
         Fnew = [ones(size(Fnew,1),1)*[subjid 1 1 9] Fnew]; 
         F = [F;Fnew];
         lf = [lf;size(Fnew,1)*5/60/60]; %store duration of each day
