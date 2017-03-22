@@ -25,27 +25,50 @@ featureset=getFeatureInds(features_used);
 %Feature matrix assembled as follows
 % F = [subj_id location subjcode labels Features];
 if ~exist('Test_Data_Amputees.mat','file')
-    X_Amp = TrainingDataSetup([], [], 1, 1,'Test_Data_Amputees');
+    X_Amp = TrainingDataSetup([], [], 10, 1,'Test_Data_Amputees');
+    labels_Amp = load('Test_Data_Amputees_labels');
+    labels_Amp.acce = labels_Amp.labels.acce;
+    labels_Amp.value = labels_Amp.labels.value;
 else
     X_Amp = load('Test_Data_Amputees');
     X_Amp = X_Amp.F;
+    
+    labels_Amp = load('Test_Data_Amputees_labels');
+    labels_Amp.acce = labels_Amp.labels.acce;
+    labels_Amp.value = labels_Amp.labels.value;
 end
 
 if ~exist('HealthyData.mat','file')
-    X = TrainingDataSetup([], [], 1, 0,'HealthyData');
+    X = TrainingDataSetup([], [], 10, 0,'HealthyData');
+    labels = load('HealthyData_labels');
+    labels.acce = labels.labels.acce;
+    labels.value = labels.labels.value;
 else
     X = load('HealthyData');
     X = X.F;
+    
+    labels = load('HealthyData_labels');
+    labels.acce = labels.labels.acce;
+    labels.value = labels.labels.value;
 end
 
 if ~exist('OutdoorFalls.mat','file')
-    O = TrainingDataSetup([], [], 1, 2, 'OutdoorFalls');
+    O = TrainingDataSetup([], [], 10, 2, 'OutdoorFalls');
+    labels_O = load('OutdoorFalls_labels');
+    labels_O.acce = labels_O.labels.acce;
+    labels_O.value = labels_O.labels.value;
 else
     O = load('OutdoorFalls.mat');
     O = O.F;
+    
+    labels_O = load('OutdoorFalls_labels');
+    labels_O.acce = labels_O.labels.acce;
+    labels_O.value = labels_O.labels.value;
 end
 
 X = [X; O];
+labels.acce=[labels.acce; labels_O.acce];
+labels.value=[labels.value; labels_O.value];
 
 % [AUC{2},Sens{2},Spec{2}] = LOSOCV(X,X_Amp,1,0,0); %RF
 % [AUC{4},Sens{4},Spec{4}] = LOSOCV(X,X_Amp,2,0,0);
@@ -57,7 +80,7 @@ labROCfig=figure;
 %Train and Test on all 3 locations
 cvtype = [1 2 3]; %all cv
 % cvtype = 2; %H-A only
-[AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1:3,1:3,nData,model,featureset,cvtype,0,labROCfig);
+[AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1:3,1:3,nData,model,featureset,cvtype,0,labROCfig,labels,labels_Amp);
 results.AUC = AUC;   %mean and SEM
 results.AUCErr = AUCErr; %bootstrap CI
 results.Sens = Sens; %mean and SEM
@@ -101,7 +124,7 @@ sprintf('\nH-A Mean Spec %.3f +- %.3f',nanmean(results.Spec{1}),1.96*nanstd(resu
 cvtype = 2; %H-A only
 
 % Test on waist
-[wAUC,wSens,wSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1:3,1,nData,model,featureset,cvtype,0,labROCfig);
+[wAUC,wSens,wSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1:3,1,nData,model,featureset,cvtype,0,labROCfig,labels,labels_Amp);
 results.waist.AUC = wAUC;
 results.waist.AUCErr = AUCErr;
 results.waist.Sens = wSens;
@@ -114,7 +137,7 @@ results.waist.Specboot = mean(bootstat(:,1));
 results.waist.mAUC = cellfun(@nanmean,wAUC,'UniformOutput',false);
 
 % Test on pocket
-[pAUC,pSens,pSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1:3,2,nData,model,featureset,cvtype,0,labROCfig);
+[pAUC,pSens,pSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1:3,2,nData,model,featureset,cvtype,0,labROCfig,labels,labels_Amp);
 results.pock.AUC = pAUC;
 results.pock.AUCErr = AUCErr;
 results.pock.Sens = pSens;
@@ -127,7 +150,7 @@ results.pock.Specboot = mean(bootstat(:,1));
 results.pock.mAUC = cellfun(@nanmean,pAUC,'UniformOutput',false);
 
 % Test on hand
-[hAUC,hSens,hSpec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,1:3,3,nData,model,featureset,cvtype,0,labROCfig);
+[hAUC,hSens,hSpec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,1:3,3,nData,model,featureset,cvtype,0,labROCfig,labels,labels_Amp);
 results.hand.AUC = hAUC;
 results.hand.AUCErr = AUCErr;
 results.hand.Sens = hSens;
@@ -305,7 +328,7 @@ homeROCfig=figure;
 % results.hand.bootstat = bootstat;
 
 % 3 Locations
-[AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1:3,1:3,nData,model,featureset,cvtype,1,homeROCfig);
+[AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1:3,1:3,nData,model,featureset,cvtype,1,homeROCfig,labels,labels_Amp);
 results.AUC = AUC;
 results.AUCErr = AUCErr;
 results.Sens = Sens;
@@ -407,18 +430,18 @@ end
 
 %cvtype is a vector with the cases
 %[1 2 3] = H-H, H-A, A-A
-function [AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_test,locations_train,locations_test,nData,model,featureset,cvtype,HomeData,ROCfig)
+function [AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_test,locations_train,locations_test,nData,model,featureset,cvtype,HomeData,ROCfig,HLabels,ALabels)
 
 rng(400)
 
 Locations={'Waist','Pocket','Hand','All'};
 
-if HomeData
-    l=load('Z:/Amputee Phones-R01/Home Data Collection/Healthy/HomeDataHealthy.mat');
-    HomeData=l.F;
-    HomeData = HomeData(:,featureset);
-    HomeL = zeros(size(HomeData,1),1); %all labels are non-fall
-end
+% if HomeData
+%     l=load('Z:/Amputee Phones-R01/Home Data Collection/Healthy/HomeDataHealthy.mat');
+%     HomeData=l.F;
+%     HomeData = HomeData(:,featureset);
+%     HomeL = zeros(size(HomeData,1),1); %all labels are non-fall
+% end
 
 %convert labels to binary (1,4=falls, 9=activities/nonfalls)
 % Assign fall categories as 1 (falls) or 0 (non-fall)
@@ -502,6 +525,15 @@ if find(cvtype==1)
                 Spec_HH(run,indCV) = sum(~pred & ~isfall)/sum(~isfall);
                 
             end
+            
+            Train.acce=HLabels.acce(indtrain);
+            Train.value=HLabels.value(indtrain);
+
+            Test.acce=HLabels.acce(indtest);
+            Test.value=HLabels.value(indtest);
+
+            [FPR_Thresh(indCV), FNR_Thresh(indCV)] = ThresholdDetection(Train,Test);
+            
         end
     end
     
@@ -517,6 +549,7 @@ if find(cvtype==1)
         xlabel('False positive rate')
         ylabel('True positive rate')
         
+        plot(nanmean(FPR_Thresh),nanmean(1-FNR_Thresh),'x')
     else
         plotConfmat(confmat,'Healthy-Healthy');
         %plot ROC curves w confidence bounds
@@ -575,6 +608,15 @@ if any(cvtype == 2)
                     Sens_HA(run,i) = sum(pred & isfall)/sum(isfall);
                     Spec_HA(run,i) = sum(~pred & ~isfall)/sum(~isfall);
                 end
+                
+                Train.acce=HLabels.acce(indtrain);
+                Train.value=HLabels.value(indtrain);
+
+                Test.acce=ALabels.acce(rowid);
+                Test.value=ALabels.value(rowid);
+
+                [FPR_Thresh(i), FNR_Thresh(i)] = ThresholdDetection(Train,Test);
+                
             end
         else
             RFModel=TreeBagger(100,F(indtrain,:),L(indtrain));
@@ -605,8 +647,17 @@ if any(cvtype == 2)
                     confmat=confusionmat(X_test(rowid,4)<9,logical(pred));
                     confmat_all(:,:,i)=confmat;
                 end
-                    
+                  
+                Train.acce=HLabels.acce(indtrain);
+                Train.value=HLabels.value(indtrain);
+
+                Test.acce=ALabels.acce(rowid);
+                Test.value=ALabels.value(rowid);
+
+                [FPR_Thresh(i), FNR_Thresh(i)] = ThresholdDetection(Train,Test);
+                
             end
+            
         end
     end
     
@@ -630,6 +681,8 @@ if any(cvtype == 2)
         e.LineWidth = 2; e.Marker = 'o';
         xlabel('False positive rate')
         ylabel('True positive rate')
+        
+        plot(nanmean(FPR_Thresh),nanmean(1-FNR_Thresh),'x')
         
         figure(ROCfig), hold on
         subplot(2,2,max(locations_train)+1)
@@ -670,6 +723,8 @@ if any(cvtype == 2)
             else
                 title(Locations{4});
             end
+            
+            plot(nanmean(FPR_Thresh),nanmean(1-FNR_Thresh),'x')
         else
             e = errorbar(X(:,1),Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
             e.LineWidth = 2; e.Marker = 'o';
@@ -678,6 +733,8 @@ if any(cvtype == 2)
             set(gca,'FontSize',16);
             ylim([-0.1 1.1]), xlim([-0.1 1.1])
             title('Lab+Home Results')
+            
+            plot(nanmean(FPR_Thresh),nanmean(1-FNR_Thresh),'x')
         end
         
     end
@@ -790,6 +847,15 @@ if any(cvtype == 3)
                     Spec_AA(run,indCV) = sum(~pred & ~isfall)/sum(~isfall);
                 end
             end
+            
+            Train.acce=ALabels.acce(indtrain);
+            Train.value=ALabels.value(indtrain);
+
+            Test.acce=ALabels.acce(indtest);
+            Test.value=ALabels.value(indtest);
+
+            [FPR_Thresh(indCV), FNR_Thresh(indCV)] = ThresholdDetection(Train,Test);
+            
         end
     end
     
@@ -808,6 +874,8 @@ if any(cvtype == 3)
         ylabel('True positive rate')
         legend('Healthy-Healthy','Healthy-Amputee','Amputee-Amputee')
         xlim([-0.1 0.6]), ylim([0 1.05]), axis square
+        
+        plot(nanmean(FPR_Thresh),nanmean(1-FNR_Thresh),'x')
     else
         plotConfmat(confmat,'Amputee-Amputee');
         %plot ROC curves w confidence bounds    

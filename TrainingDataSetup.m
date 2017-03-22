@@ -131,17 +131,18 @@ else
     display('No mistaken falls')
 end
 
-%% remove Activities under 2g and combine data
+%% remove Falls/Activities under 2g and combine data
 
+fallInds=cellfun(@(x) max(sum(x(:,2:end).^2,2))>(2*9.81)^2,falls_data.acce);
 actInds=cellfun(@(x) max(sum(x(:,2:end).^2,2))>(2*9.81)^2,act_data.acce);
 
-data.acce=[falls_data.acce; act_data.acce(actInds)];
-data.gyro=[falls_data.gyro; act_data.gyro(actInds)];
-data.baro=[falls_data.baro; act_data.baro(actInds)];
-data.value=[falls_data.value; act_data.value(actInds)];
-data.subject=[falls_data.subject; act_data.subject(actInds)];
-data.location=[falls_data.location; act_data.location(actInds)];
-data.type_str=[falls_data.type_str; act_data.type_str(actInds)];
+data.acce=[falls_data.acce(fallInds); act_data.acce(actInds)];
+data.gyro=[falls_data.gyro(fallInds); act_data.gyro(actInds)];
+data.baro=[falls_data.baro(fallInds); act_data.baro(actInds)];
+data.value=[falls_data.value(fallInds); act_data.value(actInds)];
+data.subject=[falls_data.subject(fallInds); act_data.subject(actInds)];
+data.location=[falls_data.location(fallInds); act_data.location(actInds)];
+data.type_str=[falls_data.type_str(fallInds); act_data.type_str(actInds)];
 
 %distribution of max acc
 figure; hold on
