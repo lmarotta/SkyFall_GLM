@@ -9,14 +9,15 @@ close all
 
 Locations={'Waist','Pocket','Hand','All'};
 C=['r','y','c','m']; % colors for AUC bar plot
-
+model=0; % 0 - RF, 1 - GLM
 rng(200)
 
-nData=90; %number of data points for training on 1 location only
+nData=0; %number of data points for training on 1 location only;
+          %Set to 0 to remove constraint
 
 features_used = ones(18,1); %full feature set
 % features_used = zeros(18,1); features_used(8) = 1; %only magnitude features
-% features_used([4 7 8]) = 1; %expanded set
+% features_used([ 1 2 5 8 9]) = 1; %expanded set
 
 featureset=getFeatureInds(features_used);
 
@@ -56,7 +57,7 @@ labROCfig=figure;
 %Train and Test on all 3 locations
 cvtype = [1 2 3]; %all cv
 % cvtype = 2; %H-A only
-[AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,2:3,1:3,nData,0,featureset,cvtype,0,labROCfig);
+[AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1:3,1:3,nData,model,featureset,cvtype,0,labROCfig);
 results.AUC = AUC;   %mean and SEM
 results.AUCErr = AUCErr; %bootstrap CI
 results.Sens = Sens; %mean and SEM
@@ -99,8 +100,8 @@ sprintf('\nH-A Mean Spec %.3f +- %.3f',nanmean(results.Spec{1}),1.96*nanstd(resu
 %% Train on 1 location and test on 3
 cvtype = 2; %H-A only
 
-% Train on waist
-[wAUC,wSens,wSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1,1:3,nData,0,featureset,cvtype,0,labROCfig);
+% Test on waist
+[wAUC,wSens,wSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1:3,1,nData,model,featureset,cvtype,0,labROCfig);
 results.waist.AUC = wAUC;
 results.waist.AUCErr = AUCErr;
 results.waist.Sens = wSens;
@@ -112,8 +113,8 @@ results.waist.AUCboot = mean(bootstat(:,2)); %bootstrapped mean
 results.waist.Specboot = mean(bootstat(:,1));
 results.waist.mAUC = cellfun(@nanmean,wAUC,'UniformOutput',false);
 
-% Train on pocket
-[pAUC,pSens,pSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,2,1:3,nData,0,featureset,cvtype,0,labROCfig);
+% Test on pocket
+[pAUC,pSens,pSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1:3,2,nData,model,featureset,cvtype,0,labROCfig);
 results.pock.AUC = pAUC;
 results.pock.AUCErr = AUCErr;
 results.pock.Sens = pSens;
@@ -125,8 +126,8 @@ results.pock.AUCboot = mean(bootstat(:,2)); %bootstrapped mean
 results.pock.Specboot = mean(bootstat(:,1));
 results.pock.mAUC = cellfun(@nanmean,pAUC,'UniformOutput',false);
 
-% Train on hand
-[hAUC,hSens,hSpec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,3,1:3,nData,0,featureset,cvtype,0,labROCfig);
+% Test on hand
+[hAUC,hSens,hSpec,AUCErr,SpecCI,FPR,FNR,~] = LOSOCV(X,X_Amp,1:3,3,nData,model,featureset,cvtype,0,labROCfig);
 results.hand.AUC = hAUC;
 results.hand.AUCErr = AUCErr;
 results.hand.Sens = hSens;
@@ -264,47 +265,47 @@ X_Amp = [X_Amp(inds,:);F(randperm(size(F,1),500),:)];
 
 homeROCfig=figure;
 
-% Train on waist
-[wAUC,wSens,wSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1,0:3,nData,0,featureset,cvtype,0,homeROCfig);
-results.waist.AUC = wAUC;
-results.waist.AUCErr = AUCErr;
-results.waist.Sens = wSens;
-results.waist.Spec = wSpec;
-results.waist.SpecCI = SpecCI;
-results.waist.FPR = {FPR{1} FPR{2}(4) FPR{3}};
-results.waist.FNR = {FNR{1} FNR{2}(4) FNR{3}};
-results.waist.AUCboot = mean(bootstat(:,2)); %bootstrapped mean
-results.waist.Specboot = mean(bootstat(:,1));
-results.waist.bootstat = bootstat;
-
-% Train on pocket
-[pAUC,pSens,pSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,2,1:3,nData,0,featureset,cvtype,0,homeROCfig);
-results.pock.AUC = pAUC;
-results.pock.AUCErr = AUCErr;
-results.pock.Sens = pSens;
-results.pock.Spec = pSpec;
-results.pock.SpecCI = SpecCI;
-results.pock.FPR = {FPR{1} FPR{2}(4) FPR{3}};
-results.pock.FNR = {FNR{1} FNR{2}(4) FNR{3}};
-results.pock.AUCboot = mean(bootstat(:,2)); %bootstrapped mean
-results.pock.Specboot = mean(bootstat(:,1));
-results.pock.bootstat = bootstat;
-
-% Train on hand
-[hAUC,hSens,hSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,3,1:3,nData,0,featureset,cvtype,0,homeROCfig);
-results.hand.AUC = hAUC;
-results.hand.AUCErr = AUCErr;
-results.hand.Sens = hSens;
-results.hand.Spec = hSpec;
-results.hand.SpecCI = SpecCI;
-results.hand.FPR = {FPR{1} FPR{2}(4) FPR{3}};
-results.hand.FNR = {FNR{1} FNR{2}(4) FNR{3}};
-results.hand.AUCboot = mean(bootstat(:,2)); %bootstrapped mean
-results.hand.Specboot = mean(bootstat(:,1));
-results.hand.bootstat = bootstat;
+% % Test on waist
+% [wAUC,wSens,wSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1:3,1,nData,model,featureset,cvtype,0,homeROCfig);
+% results.waist.AUC = wAUC;
+% results.waist.AUCErr = AUCErr;
+% results.waist.Sens = wSens;
+% results.waist.Spec = wSpec;
+% results.waist.SpecCI = SpecCI;
+% results.waist.FPR = {FPR{1} FPR{2}(4) FPR{3}};
+% results.waist.FNR = {FNR{1} FNR{2}(4) FNR{3}};
+% results.waist.AUCboot = mean(bootstat(:,2)); %bootstrapped mean
+% results.waist.Specboot = mean(bootstat(:,1));
+% results.waist.bootstat = bootstat;
+% 
+% % Test on pocket
+% [pAUC,pSens,pSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1:3,2,nData,model,featureset,cvtype,0,homeROCfig);
+% results.pock.AUC = pAUC;
+% results.pock.AUCErr = AUCErr;
+% results.pock.Sens = pSens;
+% results.pock.Spec = pSpec;
+% results.pock.SpecCI = SpecCI;
+% results.pock.FPR = {FPR{1} FPR{2}(4) FPR{3}};
+% results.pock.FNR = {FNR{1} FNR{2}(4) FNR{3}};
+% results.pock.AUCboot = mean(bootstat(:,2)); %bootstrapped mean
+% results.pock.Specboot = mean(bootstat(:,1));
+% results.pock.bootstat = bootstat;
+% 
+% % Test on hand
+% [hAUC,hSens,hSpec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1:3,3,nData,model,featureset,cvtype,0,homeROCfig);
+% results.hand.AUC = hAUC;
+% results.hand.AUCErr = AUCErr;
+% results.hand.Sens = hSens;
+% results.hand.Spec = hSpec;
+% results.hand.SpecCI = SpecCI;
+% results.hand.FPR = {FPR{1} FPR{2}(4) FPR{3}};
+% results.hand.FNR = {FNR{1} FNR{2}(4) FNR{3}};
+% results.hand.AUCboot = mean(bootstat(:,2)); %bootstrapped mean
+% results.hand.Specboot = mean(bootstat(:,1));
+% results.hand.bootstat = bootstat;
 
 % 3 Locations
-[AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,2:3,1:3,nData,0,featureset,cvtype,0,homeROCfig);
+[AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_Amp,1:3,1:3,nData,model,featureset,cvtype,1,homeROCfig);
 results.AUC = AUC;
 results.AUCErr = AUCErr;
 results.Sens = Sens;
@@ -338,70 +339,67 @@ d=[results.waist.AUCboot results.pock.AUCboot results.hand.AUCboot results.AUCbo
 % Add AUC in legend for ROC plots
 homeAUCstr=cell(4,1);
 figure(homeROCfig), hold on
-for i=1:4
-    subplot(2,2,i)
-    homeAUCstr{i}=sprintf('AUC = %0.3f',d(i));
-    text(.4,.45,homeAUCstr{i},'FontSize',24);
-end
+homeAUCstr{4}=sprintf('AUC = %0.3f',d(4));
+text(.4,.45,homeAUCstr{4},'FontSize',24);
 
-% plot FPR by location
-FPR=[results.waist.FPR{2}; results.pock.FPR{2}; results.hand.FPR{2}; results.FPR{2}];
-
-figure, hold on
-imagesc(FPR);
-M=max(max(FPR));
-i = 1;
-if results.waist.FPR{2}(i)<.2*M; Color='w'; else Color='k'; end
-text(i,1,sprintf('%0.2f',results.waist.FPR{2}(i)*100),'Color',Color)
-if results.pock.FPR{2}(i)<.2*M; Color='w'; else Color='k'; end
-text(i,2,sprintf('%0.2f',results.pock.FPR{2}(i)*100),'Color',Color)
-if results.hand.FPR{2}(i)<.2*M; Color='w'; else Color='k'; end
-text(i,3,sprintf('%0.2f',results.hand.FPR{2}(i)*100),'Color',Color)
-if results.FPR{2}(i)<.2*M; Color='w'; else Color='k'; end
-text(i,4,sprintf('%0.2f',results.FPR{2}(i)*100),'Color',Color)
-
-set(gca,'YDir','reverse')
-set(gca,'YTick',1:4)
-set(gca,'XTick',1:4)
-set(gca,'XTickLabel',{'Waist', 'Pocket', 'Hand'})
-set(gca,'YTickLabel',{'Waist', 'Pocket', 'Hand', 'All'})
-title('FPR')
-
-FPRHome=table(FPR(:,1),'VariableNames',{'All'},'RowNames',{'Waist','Pocket','Hand','All'});
-
-% plot FNR by location
-FNR=[results.waist.FNR{2}; results.pock.FNR{2}; results.hand.FNR{2}; results.FNR{2}];
-
-figure, hold on
-imagesc(FNR);
-M=max(max(FNR));
-if results.waist.FNR{2}(i)<.2*M; Color='w'; else Color='k'; end
-text(i,1,sprintf('%0.2f',results.waist.FNR{2}(i)*100),'Color',Color)
-if results.pock.FNR{2}(i)<.2*M; Color='w'; else Color='k'; end
-text(i,2,sprintf('%0.2f',results.pock.FNR{2}(i)*100),'Color',Color)
-if results.hand.FNR{2}(i)<.2*M; Color='w'; else Color='k'; end
-text(i,3,sprintf('%0.2f',results.hand.FNR{2}(i)*100),'Color',Color)
-if results.FNR{2}(i)<.2*M; Color='w'; else Color='k'; end
-text(i,4,sprintf('%0.2f',results.FNR{2}(i)*100),'Color',Color)
-set(gca,'YDir','reverse')
-set(gca,'YTick',1:4)
-set(gca,'XTick',1:4)
-set(gca,'XTickLabel',{'Waist', 'Pocket', 'Hand'})
-set(gca,'YTickLabel',{'Waist', 'Pocket', 'Hand', 'All'})
-title('FNR')
-
-FNRHome=table(FNR(:,1),'VariableNames',{'All'},'RowNames',{'Waist','Pocket','Hand','All'});
-
-StatsHome=table(getMeanCIStr(results.waist.bootstat,results.waist.AUCErr{2},results.waist.SpecCI{2}),...
-    getMeanCIStr(results.pock.bootstat,results.pock.AUCErr{2},results.pock.SpecCI{2}),...
-    getMeanCIStr(results.hand.bootstat,results.hand.AUCErr{2},results.hand.SpecCI{2}),...
-    getMeanCIStr(results.bootstat,results.AUCErr{2},results.SpecCI{2}),...
-    'VariableNames',{'Waist','Pocket','Hand','All'},'RowNames',{'AUC','Sensitivity','Specificity'});
-
-Homeresults.FPRTable=FPRHome; Homeresults.FNRTable=FNRHome; Homeresults.StatsTable=StatsHome;
-writetable(Homeresults.FPRTable,'./Figs/Paper/HomeFPR.xlsx','WriteRowNames',true)
-writetable(Homeresults.FNRTable,'./Figs/Paper/HomeFNR.xlsx','WriteRowNames',true)
-writetable(Homeresults.StatsTable,'./Figs/Paper/HomeStats.xlsx','WriteRowNames',true)
+% % plot FPR by location
+% FPR=[results.waist.FPR{2}; results.pock.FPR{2}; results.hand.FPR{2}; results.FPR{2}];
+% 
+% figure, hold on
+% imagesc(FPR);
+% M=max(max(FPR));
+% i = 1;
+% if results.waist.FPR{2}(i)<.2*M; Color='w'; else Color='k'; end
+% text(i,1,sprintf('%0.2f',results.waist.FPR{2}(i)*100),'Color',Color)
+% if results.pock.FPR{2}(i)<.2*M; Color='w'; else Color='k'; end
+% text(i,2,sprintf('%0.2f',results.pock.FPR{2}(i)*100),'Color',Color)
+% if results.hand.FPR{2}(i)<.2*M; Color='w'; else Color='k'; end
+% text(i,3,sprintf('%0.2f',results.hand.FPR{2}(i)*100),'Color',Color)
+% if results.FPR{2}(i)<.2*M; Color='w'; else Color='k'; end
+% text(i,4,sprintf('%0.2f',results.FPR{2}(i)*100),'Color',Color)
+% 
+% set(gca,'YDir','reverse')
+% set(gca,'YTick',1:4)
+% set(gca,'XTick',1:4)
+% set(gca,'XTickLabel',{'Waist', 'Pocket', 'Hand'})
+% set(gca,'YTickLabel',{'Waist', 'Pocket', 'Hand', 'All'})
+% title('FPR')
+% 
+% FPRHome=table(FPR(:,1),'VariableNames',{'All'},'RowNames',{'Waist','Pocket','Hand','All'});
+% 
+% % plot FNR by location
+% FNR=[results.waist.FNR{2}; results.pock.FNR{2}; results.hand.FNR{2}; results.FNR{2}];
+% 
+% figure, hold on
+% imagesc(FNR);
+% M=max(max(FNR));
+% if results.waist.FNR{2}(i)<.2*M; Color='w'; else Color='k'; end
+% text(i,1,sprintf('%0.2f',results.waist.FNR{2}(i)*100),'Color',Color)
+% if results.pock.FNR{2}(i)<.2*M; Color='w'; else Color='k'; end
+% text(i,2,sprintf('%0.2f',results.pock.FNR{2}(i)*100),'Color',Color)
+% if results.hand.FNR{2}(i)<.2*M; Color='w'; else Color='k'; end
+% text(i,3,sprintf('%0.2f',results.hand.FNR{2}(i)*100),'Color',Color)
+% if results.FNR{2}(i)<.2*M; Color='w'; else Color='k'; end
+% text(i,4,sprintf('%0.2f',results.FNR{2}(i)*100),'Color',Color)
+% set(gca,'YDir','reverse')
+% set(gca,'YTick',1:4)
+% set(gca,'XTick',1:4)
+% set(gca,'XTickLabel',{'Waist', 'Pocket', 'Hand'})
+% set(gca,'YTickLabel',{'Waist', 'Pocket', 'Hand', 'All'})
+% title('FNR')
+% 
+% FNRHome=table(FNR(:,1),'VariableNames',{'All'},'RowNames',{'Waist','Pocket','Hand','All'});
+% 
+% StatsHome=table(getMeanCIStr(results.waist.bootstat,results.waist.AUCErr{2},results.waist.SpecCI{2}),...
+%     getMeanCIStr(results.pock.bootstat,results.pock.AUCErr{2},results.pock.SpecCI{2}),...
+%     getMeanCIStr(results.hand.bootstat,results.hand.AUCErr{2},results.hand.SpecCI{2}),...
+%     getMeanCIStr(results.bootstat,results.AUCErr{2},results.SpecCI{2}),...
+%     'VariableNames',{'Waist','Pocket','Hand','All'},'RowNames',{'AUC','Sensitivity','Specificity'});
+% 
+% Homeresults.FPRTable=FPRHome; Homeresults.FNRTable=FNRHome; Homeresults.StatsTable=StatsHome;
+% writetable(Homeresults.FPRTable,'./Figs/Paper/HomeFPR.xlsx','WriteRowNames',true)
+% writetable(Homeresults.FNRTable,'./Figs/Paper/HomeFNR.xlsx','WriteRowNames',true)
+% writetable(Homeresults.StatsTable,'./Figs/Paper/HomeStats.xlsx','WriteRowNames',true)
 
 end
 
@@ -409,13 +407,13 @@ end
 
 %cvtype is a vector with the cases
 %[1 2 3] = H-H, H-A, A-A
-function [AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_test,locations_train,locations_test,nData,model,featureset,cvtype,HomeFP_retrain,ROCfig)
+function [AUC,Sens,Spec,AUCErr,SpecCI,FPR,FNR,bootstat] = LOSOCV(X,X_test,locations_train,locations_test,nData,model,featureset,cvtype,HomeData,ROCfig)
 
 rng(400)
 
 Locations={'Waist','Pocket','Hand','All'};
 
-if HomeFP_retrain
+if HomeData
     l=load('Z:/Amputee Phones-R01/Home Data Collection/Healthy/HomeDataHealthy.mat');
     HomeData=l.F;
     HomeData = HomeData(:,featureset);
@@ -440,7 +438,7 @@ isfall_all=cell(1,length(subj));
 confmat_all=zeros(2,2,length(subj));
 Nruns = 1;  %average multiple runs for each subject
 alpha = 0.6;
-lambda = 0.015;
+lambda = 0.015; % default .015
 
 %% LOSO CV HEALTHY
 AUC_HH=zeros(Nruns,length(subj));
@@ -465,13 +463,14 @@ if find(cvtype==1)
         %balance the dataset - randomly sample nData instances from each class
         %repeat it 5 times and average results
         for run = 1:Nruns
-            indtrain = [falls_ind(randperm(length(falls_ind),nData)); nfalls_ind(randperm(length(nfalls_ind),nData))];
-            
+            if nData > 0
+                indtrain = [falls_ind(randperm(length(falls_ind),nData)); nfalls_ind(randperm(length(nfalls_ind),nData))];
+            else
+                indtrain = [falls_ind; nfalls_ind];
+            end
+                
             if model
-                % Train GLMnet
-                %default values - no grid search over params
-                alpha = 0.6;
-                lambda = 0.015;
+                % Train GLMnet                
                 
                 [fvar_si,b,nz_ind]=Modeltrain(F(indtrain,:),L(indtrain),alpha,lambda,0);
                 % Testing the model on Test Data (left out subject)
@@ -501,6 +500,7 @@ if find(cvtype==1)
                 
                 Sens_HH(run,indCV) = sum(pred & isfall)/sum(isfall);
                 Spec_HH(run,indCV) = sum(~pred & ~isfall)/sum(~isfall);
+                
             end
         end
     end
@@ -546,21 +546,14 @@ if any(cvtype == 2)
     nfalls_ind = find(indtrain & ~L);
     
     for run = 1:Nruns
-        indtrain = [falls_ind(randperm(length(falls_ind),nData)); nfalls_ind(randperm(length(nfalls_ind),nData))];
+        if nData > 0
+            indtrain = [falls_ind(randperm(length(falls_ind),nData)); nfalls_ind(randperm(length(nfalls_ind),nData))];
+        else
+            indtrain = [falls_ind; nfalls_ind];
+        end
         
         if model
             [fvar_si,b,nz_ind]=Modeltrain(F(indtrain,:),L(indtrain),alpha,lambda,0);
-            
-            if HomeFP_retrain
-                [pred,~,~] = Modeleval(HomeData,HomeL,fvar_si,nz_ind,b,.5,0);
-                sprintf('Spec = %.2f%', length(pred)/(length(pred)+sum(pred)))
-                indmisc=find(pred); %misclassified clips
-                sprintf('# of misclassified clips = %d/%d',length(indmisc),length(F))
-                Fmisc = HomeData(indmisc,:); Lmisc = false(length(indmisc),1);
-                FPHome = [F(indtrain,:);Fmisc]; LPHome = [L(indtrain);Lmisc];
-                disp('Training model on Healthy lab + misclassified home data')
-                [fvar_si,b,nz_ind]=Modeltrain(FPHome,LPHome,alpha,lambda,0);
-            end
             
             % Testing the model on each amputee subj (external set)
             locsdata = X_test(:,2);
@@ -585,17 +578,6 @@ if any(cvtype == 2)
             end
         else
             RFModel=TreeBagger(100,F(indtrain,:),L(indtrain));
-            
-            if HomeFP_retrain
-                [pred,~,~] = Modeleval(HomeData,HomeL,fvar_si,nz_ind,b,.5,0);
-                sprintf('Spec = %.2f%', length(pred)/(length(pred)+sum(pred)))
-                indmisc=find(pred); %misclassified clips
-                sprintf('# of misclassified clips = %d/%d',length(indmisc),length(F))
-                Fmisc = HomeData(indmisc,:); Lmisc = false(length(indmisc),1);
-                FPHome = [F(indtrain,:);Fmisc]; LPHome = [L(indtrain);Lmisc];
-                disp('Training model on Healthy lab + misclassified home data')
-                [fvar_si,b,nz_ind]=Modeltrain(FPHome,LPHome,alpha,lambda,0);
-            end
             
             % Testing the model on each amputee subj (external set)
             locsdata = X_test(:,2);
@@ -671,21 +653,31 @@ if any(cvtype == 2)
 %         ylabel('True positive rate')
         
         figure(ROCfig), hold on
-        if length(locations_train)==1
-            subplot(2,2,locations_train(1))
+        if ~HomeData
+            if length(locations_test)==1
+                subplot(2,2,locations_test(1))
+            else
+                subplot(2,2,4)
+            end
+            e = errorbar(X(:,1),Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
+            e.LineWidth = 2; e.Marker = 'o';
+            xlabel('False positive rate')
+            ylabel('True positive rate')
+            set(gca,'FontSize',16);
+            ylim([-0.1 1.1]), xlim([-0.1 1.1])
+            if length(locations_test)==1
+                title(Locations{locations_test(1)});
+            else
+                title(Locations{4});
+            end
         else
-            subplot(2,2,4)
-        end
-        e = errorbar(X(:,1),Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
-        e.LineWidth = 2; e.Marker = 'o';
-        xlabel('False positive rate')
-        ylabel('True positive rate')
-        set(gca,'FontSize',16);
-        ylim([-0.1 1.1]), xlim([-0.1 1.1])
-        if length(locations_train)==1
-            title(Locations{locations_train(1)});
-        else
-            title(Locations{4});
+            e = errorbar(X(:,1),Y(:,1),Y(:,1)-Y(:,2),Y(:,3)-Y(:,1));
+            e.LineWidth = 2; e.Marker = 'o';
+            xlabel('False positive rate')
+            ylabel('True positive rate')
+            set(gca,'FontSize',16);
+            ylim([-0.1 1.1]), xlim([-0.1 1.1])
+            title('Lab+Home Results')
         end
         
     end
@@ -751,13 +743,14 @@ if any(cvtype == 3)
         
         for run = 1:Nruns
             %balance the dataset
-            indtrain = [falls_ind(randperm(length(falls_ind),nData)); nfalls_ind(randperm(length(nfalls_ind),nData))];
+            if nData > 0
+                indtrain = [falls_ind(randperm(length(falls_ind),nData)); nfalls_ind(randperm(length(nfalls_ind),nData))];
+            else
+                indtrain = [falls_ind; nfalls_ind];
+            end
             
             if model
                 % Train GLMnet
-                %default values - no grid search over params
-                alpha = 0.6;
-                lambda = 0.015;
                 
                 [fvar_si,b,nz_ind]=Modeltrain(F(indtrain,:),L(indtrain),alpha,lambda,0);
                 % Testing the model on Test Data (left out subject)
