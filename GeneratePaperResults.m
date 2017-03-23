@@ -750,8 +750,7 @@ if any(cvtype == 2)
     
 %     Spec_HA = mean(bootstat(:,1)); %the spec at 90% sensitivity
 %     AUC_HA = mean(bootstat(:,2));  %mean AUC
-    
-    e.LineWidth = 2; e.Marker = 'o';
+
     AUCerr_HA=ci_AUC;
     SpecCI_HA = ci_spec;
 
