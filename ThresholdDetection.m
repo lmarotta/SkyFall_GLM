@@ -5,11 +5,18 @@
 % LFT - Lower Fall Threshold
 % data - cell array of acceleration clips
 
-function isfall=ThresholdDetection(UFT,LFT,data)
+function [FPR,FNR]=ThresholdDetection(TrainData,TestData)
 
-    MaxAcc = cellfun(@(x) sqrt(max(sum(x(:,2:end).^2,2))),data);
-    MinAcc = cellfun(@(x) sqrt(min(sum(x(:,2:end).^2,2))),data);
+    UFT = min(cellfun(@(x) sqrt(max(sum(x(:,2:end).^2,2))),TrainData.acce(TrainData.value<9)));
+    LFT = max(cellfun(@(x) sqrt(min(sum(x(:,2:end).^2,2))),TrainData.acce(TrainData.value<9)));
+
+    MaxAcc = cellfun(@(x) sqrt(max(sum(x(:,2:end).^2,2))),TestData.acce);
+    MinAcc = cellfun(@(x) sqrt(min(sum(x(:,2:end).^2,2))),TestData.acce);
 
     isfall=MaxAcc>UFT & MinAcc<LFT;
+    
+    FNR = sum(~isfall(TestData.value<9))/sum(TestData.value<9);
+    FPR = sum(isfall(TestData.value==9))/sum(TestData.value==9);
+    
 end
     
