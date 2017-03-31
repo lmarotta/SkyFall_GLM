@@ -16,7 +16,7 @@ function ParseProbeOutputPlusLabels(plot_data, labels_offset, YYYY_start, MM_sta
 
 if nargin == 0
     labels_offset = 0; % offset for data from 10-24-2016: 396000; 0 otherwise
-    plot_data = 0; % flag to plot parsed data
+    plot_data = 1; % flag to plot parsed data
 elseif nargin ~= 2 && nargin ~= 12
     error('invalid number of input arguments. Should be 0, 2 or 12');
 end

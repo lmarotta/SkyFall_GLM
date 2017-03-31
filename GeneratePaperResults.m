@@ -16,7 +16,7 @@ nData=0; %number of data points for training on 1 location only;
           %Set to 0 to remove constraint
 
 features_used = ones(18,1); %full feature set
-% features_used = zeros(18,1); features_used(8) = 1; %only magnitude features
+features_used = zeros(18,1); features_used(8) = 1; %only magnitude features
 % features_used([ 1 2 5 8 9]) = 1; %expanded set
 
 featureset=getFeatureInds(features_used);
