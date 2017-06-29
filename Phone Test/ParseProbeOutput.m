@@ -59,8 +59,6 @@ duration = -ones(length(ind_correct),3);  %evaluation time for each record (prep
 acce = cell(length(ind_correct),1);      %sensor data for each window
 gyro = cell(length(ind_correct),1);
 baro = cell(length(ind_correct),1);
-acce_inerp = cell(length(ind_correct),1);      %inerpolated sensor data for each window
-gyro_inerp = cell(length(ind_correct),1);
 %FAILURES
 failure_timestampSTART_END = -ones(length(ind_failures),2); %start and end timestamps for sensor data in the window
 failure_reason = cell(length(ind_failures),1);
@@ -132,28 +130,7 @@ for ind=1:length(ind_correct)
     Nsamplesbar = Nsamplesbar(2)-Nsamplesbar(1)-1;
     baro{ind} = [str2double(temp_correct(stsbar+1:stsbar+Nsamplesbar))' str2double(temp_correct(ipbar+1:ipbar+Nsamplesbar))' ...
         str2double(temp_correct(iabar+1:iabar+Nsamplesbar))'];
-    
-    % parse interpolated sensors data
-    acc_inerp_start = find(strcmp(temp_correct,'INTERPOLATED_ACCELEROMETER_SAMPLES'));
-    gyr_inerp_start = find(strcmp(temp_correct,'INTERPOLATED_GYROSCOPE_SAMPLES'));
-    
-    ix_int_acc = ix(find(ix > acc_inerp_start,1));
-    iy_int_acc = iy(find(iy > acc_inerp_start,1));
-    iz_int_acc = iz(find(iz > acc_inerp_start,1));
-    sts_int_acc = sensortimestamps(find(sensortimestamps > acc_inerp_start,1));
-    Nsamplesacc_int = sort([ix_int_acc iy_int_acc iz_int_acc sts_int_acc]);
-    Nsamplesacc_int = Nsamplesacc_int(2)-Nsamplesacc_int(1)-1;
-    acce_inerp{ind} = [str2double(temp_correct(sts_int_acc+1:sts_int_acc+Nsamplesacc_int))' str2double(temp_correct(ix_int_acc+1:ix_int_acc+Nsamplesacc_int))' ...
-        str2double(temp_correct(iy_int_acc+1:iy_int_acc+Nsamplesacc_int))' str2double(temp_correct(iz_int_acc+1:iz_int_acc+Nsamplesacc_int))'];
-    
-    ix_int_gyr = ix(find(ix > gyr_inerp_start,1));
-    iy_int_gyr = iy(find(iy > gyr_inerp_start,1));
-    iz_int_gyr = iz(find(iz > gyr_inerp_start,1));
-    sts_int_gyr = sensortimestamps(find(sensortimestamps > gyr_inerp_start,1));
-    Nsamplesgyr_int = sort([ix_int_gyr iy_int_gyr iz_int_gyr sts_int_gyr]);
-    Nsamplesgyr_int = Nsamplesgyr_int(2)-Nsamplesgyr_int(1)-1;
-    gyro_inerp{ind} = [str2double(temp_correct(sts_int_gyr+1:sts_int_gyr+Nsamplesgyr_int))' str2double(temp_correct(ix_int_gyr+1:ix_int_gyr+Nsamplesgyr_int))' ...
-        str2double(temp_correct(iy_int_gyr+1:iy_int_gyr+Nsamplesgyr_int))' str2double(temp_correct(iz_int_gyr+1:iz_int_gyr+Nsamplesgyr_int))'];
+        
 end
 
 labels.winsize = winsize;

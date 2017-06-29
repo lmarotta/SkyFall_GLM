@@ -56,7 +56,7 @@ for indChunk=1:ceil(length(labels.acce)/chunkSize)
     
     com.company.TrainFeatureExtractor.extractFeatures('labels_temp.mat', 'chunk_features.csv');
     
-    F=[F; xlsread('chunk_features.csv')];
+    F=[F; csvread('chunk_features.csv')];
     
 end
 

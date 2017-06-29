@@ -2,7 +2,7 @@
 % Inputs:
 % locations     Cell array of desired data locations {'pouch', 'pocket', 'hand'}
 % subjs         Cell array of desired subject IDs
-% condition     0: healthy, 1: Amputee, 2: healthy outdoor 
+% condition     0: healthy, 1: Amputee, 2: healthy outdoor, 3:Healthy_S5 phones 
 % leave inputs empty ([]) to use all
 
 function F = TrainingDataSetup(locations, subjs, n, condition, savedfilename)
@@ -27,7 +27,7 @@ switch condition
     case 0 
         filepath = './TrainingData/Healthy/';
     case 1
-        filepath = './TrainingData/';
+        filepath = './TrainingData/Amputees/';
     case 2
         filepath = './TrainingData/Outdoors/';
         f = dir('./TrainingData/Healthy/*.mat');
@@ -37,6 +37,8 @@ switch condition
             S=[S; unique(tempData.data.subject)];
             S=unique(S);
         end
+    case 3
+        filepath = './TrainingData/HealthyS5/'; %new set of phones
 end
 
 filenames=dir([filepath,'falls_data_10sec_*.mat']);
