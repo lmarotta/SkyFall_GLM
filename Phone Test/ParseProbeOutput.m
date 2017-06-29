@@ -49,6 +49,9 @@ ind_correct = find(correct);
 failure = cellfun(@(x) ~isempty(strfind(x,'Failure')),Probe);
 ind_failures = find(failure);
 
+%Indices of Activity Detection records
+act_inds = find(cellfun(@(x) ~isempty(strfind(x,'ActivityDetection')),Probe));
+
 %Initialize structure contents (each element corresponds to a window)
 winsize = -ones(length(ind_correct),1);
 features = -ones(length(ind_correct),Nfeatures); %fallnet model features
@@ -73,9 +76,6 @@ for ind=1:length(ind_correct)
  
     x=find(strcmp(temp_correct,'EVALUATION_WINDOW_SIZE'));
     winsize(ind) = str2double(temp_correct(x+1));
-    
-    v=find(strcmp(temp_correct,'FALL_VALUES'));
-    features(ind,:) = str2double(temp_correct(v+1:v+Nfeatures));
     
     %Additional Start and End timestamps for the clip
     xs = find(strcmp(temp_correct,'MIN_ABSOLUTE_TIMESTAMP'));
@@ -142,8 +142,6 @@ labels.duration = duration;  %evaluation time for each record (preparation, veri
 labels.acce = acce;      %sensor data for each window
 labels.gyro = gyro;
 labels.baro = baro;
-labels.acce_inerp = acce_inerp;      %interpolated sensor data for each window
-labels.gyro_inerp = gyro_inerp;
 
 labels.phone = Phone(ind_correct);
 
@@ -184,4 +182,30 @@ labels.failure.duration = failure_duration;
 labels.failure.evalstart = failure_evalstart; %timestamp when the model started to evaluate 
 labels.failure.phone = Phone(ind_failures);
 
-save FallProbe_TestData labels -v7.3
+act_type_all={};
+act_conf_all={};
+
+for i=1:length(act_inds)
+    ind = act_inds(i);
+    temp = strsplit(Payload{ind},{'{' '"' ':' ',' ' ' '[' ']' '}'});
+    
+    act_counts = temp{find(strcmp(temp,'ACTIVITY_COUNT'))+1};
+    
+    act_type={};
+    act_conf=[];
+    
+    type_inds = find(strcmp(temp,'ACTIVITY_TYPE'));
+    conf_inds = find(strcmp(temp,'ACTIVITY_CONFIDENCE'));
+    
+    for j=1:str2double(act_counts)
+        act_type = [act_type temp{type_inds(j)+1}];
+        act_conf = [act_conf str2double(temp{conf_inds(j)+1})]; 
+    end
+    
+    act_type_all = [act_type_all {act_type}];
+    act_conf_all = [act_conf_all act_conf];
+end
+
+activity_detection = struct('Type',act_type_all,'Conf',act_conf_all);
+
+save FallProbe_TestData labels activity_detection -v7.3
