@@ -54,7 +54,6 @@ act_inds = find(cellfun(@(x) ~isempty(strfind(x,'ActivityDetection')),Probe));
 
 %Initialize structure contents (each element corresponds to a window)
 winsize = -ones(length(ind_correct),1);
-features = -ones(length(ind_correct),Nfeatures); %fallnet model features
 timestampSTART_END=-ones(length(ind_correct),2); %start end of each window 
 evalstart = -ones(length(ind_correct),1);  %timestamp when the model started to evaluate  
 sensor_counts =-ones(length(ind_correct),3); % # of samples per sensor
@@ -134,7 +133,6 @@ for ind=1:length(ind_correct)
 end
 
 labels.winsize = winsize;
-labels.features = features; %fallnet model features
 labels.timestampSTART_END = timestampSTART_END; %fallnet model features
 labels.evalstart = evalstart;  %timestamp when the model started to evaluate  
 labels.sensor_counts = sensor_counts; % # of samples per sensor
@@ -184,6 +182,7 @@ labels.failure.phone = Phone(ind_failures);
 
 act_type_all={};
 act_conf_all={};
+timestamps={};
 
 for i=1:length(act_inds)
     ind = act_inds(i);
@@ -204,8 +203,9 @@ for i=1:length(act_inds)
     
     act_type_all = [act_type_all {act_type}];
     act_conf_all = [act_conf_all act_conf];
+    timestamps = [timestamps temp(find(strcmp(temp,'TIMESTAMP'))+1)];
 end
 
-activity_detection = struct('Type',act_type_all,'Conf',act_conf_all);
+activity_detection = struct('Type',act_type_all,'Conf',act_conf_all,'Timestamp',timestamps);
 
 save FallProbe_TestData labels activity_detection -v7.3
