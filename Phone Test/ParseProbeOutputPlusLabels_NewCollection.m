@@ -1,24 +1,19 @@
 %%  ParseProbeOutputPlusLabels
 % Inputs:
 % plot_data = 1; - flag to plot parsed data
-% labels_offset = 0; offset for data from 10-24-2016: 396000; 0 otherwise
-% optional:
-% YYYY_start, MM_start, DD_start, HH_start, MIN_start - data cutoff start
-% in UTC timestamp (+5h from Chicago time)
-% YYYY_end, MM_end, DD_end, HH_end, MIN_end  - data cutoff end in UTC
-% timestamp (+5h from Chicago time)
+% labels_offset = 0; offset for time discrepancy between labels and data
 %
 % Loads a user-selected .txt file containing exported data from Fallnet
 % and sensor probes and separates probe data for analysis
 
-function ParseProbeOutputPlusLabels(plot_data, labels_offset, YYYY_start, MM_start, DD_start, HH_start, MIN_start, YYYY_end, MM_end, DD_end, HH_end, MIN_end)
+function ParseProbeOutputPlusLabels(plot_data, labels_offset)
 % clear all
 
 if nargin == 0
     labels_offset = 0; % offset for data from 10-24-2016: 396000; 0 otherwise
     plot_data = 1; % flag to plot parsed data
-elseif nargin ~= 2 && nargin ~= 12
-    error('invalid number of input arguments. Should be 0, 2 or 12');
+elseif nargin ~= 2
+    error('invalid number of input arguments. Should be 0 or 2');
 end
 
 % load file
@@ -29,26 +24,7 @@ Payload=PayloadTable.Payload;
 PhoneID = PayloadTable.UserID;
 
 date_of_data_collection = PayloadTable.Logged{1};
-date_of_data_collection = strcat(date_of_data_collection(3:4), date_of_data_collection(6:7), date_of_data_collection(9:10));
-
-%load current fall model file from github
-[FileName,PathName,~] = uigetfile('*.mat');
-model=load([PathName '/' FileName]);
-Nfeatures = length(model.b);
-
-if nargin == 12
-    cutoff_start = datetime(YYYY_start,MM_start,DD_start,HH_start,MIN_start,0,0);  %This is in UTC (+5h from Chicago time)
-    cutoff_end = datetime(YYYY_end,MM_end,DD_end,HH_end,MIN_end,0,0);  %This is in UTC (+5h from Chicago time)
-
-    timestr=cellfun(@(x) strsplit(x(strfind(x,'"TIMESTAMP"'):strfind(x,'"TIMESTAMP"')+100),{':' ','}),Payload,'UniformOutput',false);
-    timestamp=cellfun(@(x) str2double(x{:,2}),timestr);
-    timestamp=datetime(1970,1,1,0,0,timestamp);
-
-    filtered_times=timestamp>cutoff_start & timestamp<cutoff_end;
-    Probe = Probe(filtered_times);
-    Payload = Payload(filtered_times);
-    PhoneID = PhoneID(filtered_times);
-end    
+date_of_data_collection = strcat(date_of_data_collection(3:4), date_of_data_collection(6:7), date_of_data_collection(9:10)); 
 
 % split labels and data
 fall_labels_ind = cellfun(@(x) ~isempty(strfind(x,'falls')),Payload);
@@ -99,37 +75,6 @@ falllabels.location = fall_location;
 falllabels.subject = fall_subject;
 falllabels.laytime = fall_laytime;
 
-save falllabels falllabels
-
-
-% parse activities labels
-activity_types = cell(length(activity_labels),1);
-activity_subject = cell(length(activity_labels),1);
-activity_location = cell(length(activity_labels),1);
-activity_start_end = -ones(length(activity_labels),2);
-
-for i=1:length(activity_labels)
-    temp=strsplit(activity_labels{i},{'{' '"' ':' ',' '[' ']' '}'});
-    
-    ts_start = find(strcmp(temp,'start'));
-    ts_end = find(strcmp(temp,'end'));
-    activity_start_end(i,:) = [str2double(temp(ts_start+1)) str2double(temp(ts_end+1))];
-    
-    type = find(strcmp(temp,'name'));
-    activity_types(i) = temp(type+2);
-    
-    subj = find(strcmp(temp,'SubID'));
-    activity_subject(i) = temp(subj+2);
-    
-    loc = find(strcmp(temp,'location'));
-    activity_location(i) = temp(loc+2);
-    
-    laytime = find(strcmp(temp,'lietime'));
-    activity_laytime(i) = str2double(temp(laytime+2));
-end
-
-activity_start_end=activity_start_end-labels_offset;
-
 %indices of correct and failure records
 correct = cellfun(@(x) isempty(strfind(x,'Failure')) && ~isempty(strfind(x,'FallNet')),data_probe);
 ind_correct = find(correct);
@@ -141,16 +86,11 @@ act_inds = find(cellfun(@(x) ~isempty(strfind(x,'ActivityDetection')),Probe));
 
 %Initialize structure contents (each element corresponds to a window)
 winsize = -ones(length(ind_correct),1);
-features = -ones(length(ind_correct),Nfeatures); %fallnet model features
 timestampSTART_END=-ones(length(ind_correct),2); %start end of each window 
-evalstart = -ones(length(ind_correct),1);  %timestamp when the model started to evaluate  
-sensor_counts =-ones(length(ind_correct),3); % # of samples per sensor
-duration = -ones(length(ind_correct),3);  %evaluation time for each record (preparation, verification, evaluation)  
+sensor_counts =-ones(length(ind_correct),3); % # of samples per sensor 
 acce = cell(length(ind_correct),1);      %sensor data for each window
 gyro = cell(length(ind_correct),1);
 baro = cell(length(ind_correct),1);
-acce_inerp = cell(length(ind_correct),1);      %inerpolated sensor data for each window
-gyro_inerp = cell(length(ind_correct),1);
 %FAILURES
 failure_timestampSTART_END = -ones(length(ind_failures),2); %start and end timestamps for sensor data in the window
 failure_reason = cell(length(ind_failures),1);
@@ -256,15 +196,12 @@ labels.failure.value = failure_value;
 labels.failure.duration = failure_duration; 
 labels.failure.evalstart = failure_evalstart; %timestamp when the model started to evaluate 
 
-save fall_data_unlabeled labels
-
 %% label falls data
 if ~isempty(fall_labels)
     
     keep_ind = zeros(length(labels.winsize),1);
     location = {};
     subject = {};
-    type = [];
     type_str = {};
     
     keep_failure = zeros(length(ind_failures));
@@ -429,165 +366,6 @@ data.value=get_value(data.type_str);
 
 save falls_data data
 
-%% Identify activities data to include with falls
-%close all
-
-fall_inds=find(keep_ind);
-falls_size=sum(keep_ind);
-subject={};
-
-subjs=unique(activity_subject);
-subj_counts=zeros(1,length(subjs));
-act_ind = false(length(keep_ind),1);
-for indSubj=1:length(subjs)
-    Subj_inds=strcmp(subjs{indSubj},activity_subject);
-    start_ind=find(Subj_inds,1);
-    end_ind=find(Subj_inds,1,'last');
-    start_time=activity_start_end(start_ind,1);
-    end_time=activity_start_end(end_ind,2);
-    
-    act_ind=act_ind | (start_time<labels.timestampSTART_END(:,2) & end_time>labels.timestampSTART_END(:,1));
-    subj_counts(indSubj)=sum(act_ind)-sum(subj_counts(1:indSubj-1));
-end
-
-keep_ind=[fall_inds; find(act_ind)];
-
-data.winsize = labels.winsize(keep_ind);
-data.timestampSTART_END = labels.timestampSTART_END(keep_ind, true(1,2)); %fallnet model features  
-data.sensor_counts = labels.sensor_counts(keep_ind, true(1,3)); % # of samples per sensor
-data.acce = labels.acce(keep_ind);      %sensor data for each window
-data.gyro = labels.gyro(keep_ind);
-data.baro = labels.baro(keep_ind);
-
-act_size=sum(subj_counts);
-
-data.subject = [data.subject; cell(act_size,1)];
-for i=1:length(subjs)
-    data.subject(falls_size+1+sum(subj_counts(1:i-1)):falls_size+sum(subj_counts(1:i)))=subjs(i);
-end
-data.type_str(falls_size+1:falls_size+act_size) = ({'Non-Fall'});
-% data.location(falls_size+1:falls_size+act_size) = ({'NA'});
-
-data.location(falls_size+1:falls_size+act_size)=getActivityLocations(...
-    data.timestampSTART_END(falls_size+1:falls_size+act_size,:), activity_location, activity_start_end);
-
-data.value=[data.value; repmat(9,[act_size 1])];
-
-save falls_act_data data
-
-%% label activities data
-if ~isempty(activity_labels)
-    
-    keep_ind = zeros(length(labels.winsize),1);
-    location = {};
-    subject = {};
-    type = [];
-    type_str = {};
-    
-    keep_failure = zeros(length(ind_failures));
-    
-    curr_data_ind = 1;
-    for i=1:length(activity_labels)
-        % current labels data
-        curr_act_start = activity_start_end(i,1);
-        curr_act_end = activity_start_end(i,2);
-        curr_type = activity_types(i);
-        curr_loc = activity_location(i);
-        curr_subj = activity_subject(i);        
-      
-        act_found = 0;
-        for j=curr_data_ind:length(ind_correct)
-            
-            if ~act_found
-                % current sensors data
-                %curr_clip_start = labels.evalstart(j);        
-                %curr_clip_end = curr_clip_start + labels.winsize(j)*1000;
-                curr_clip_start = labels.timestampSTART_END(j,1);        
-                curr_clip_end = labels.timestampSTART_END(j,2);
-
-                if curr_act_start > curr_clip_start && curr_act_start < curr_clip_end
-                    % beginning of the activity
-                    ind_act_start = j+1; 
-                end
-                
-                if curr_act_end > curr_clip_start && curr_act_end < curr_clip_end
-                    % end of the activity
-                    ind_act_end = j-1;
-                    
-                    keep_ind(ind_act_start:ind_act_end) = 1;
-                    num_clips = ind_act_end - ind_act_start + 1;
-                    ct = cell(num_clips,1);
-                    ct(:) = {curr_type};
-                    cl = cell(num_clips,1);
-                    cl(:) = {curr_loc};
-                    cs = cell(num_clips,1);
-                    cs(:) = {curr_subj};
-                    
-                    type_str = [type_str; ct];
-                    location = [location; cl];
-                    subject = [subject; cs];
-                    
-                    curr_data_ind = j;
-                    act_found = 1;
-                    
-                    % plot activity
-                    if plot_data
-                        data_to_plot = labels.acce(ind_act_start:ind_act_end);
-                        % convert timestamps to absolute
-                        for k=1:length(data_to_plot)
-                            data_to_plot{k}(:,1) = data_to_plot{k}(:,1)*1000 + labels.timestampSTART_END(ind_act_start+k,1);
-                        end                
-                        data_to_plot = cell2mat(data_to_plot);
-                        t = data_to_plot(:,1);
-                        plot_title = strcat(curr_type,{' '},curr_loc);
-                        figure, plot(t,data_to_plot(:,2), t,data_to_plot(:,3), t,data_to_plot(:,4)), legend('X','Y','Z')
-                        title(plot_title);
-                    end
-                end                  
-            else
-                break;
-            end 
-        end
-        
-        
-        % look for failures in the labeled range (aasumes there are not a
-        % lot of failures)     
-        for j=1:length(ind_failures)
-            curr_clip_start = labels.failure.evalstart(j);
-            curr_clip_end = curr_clip_start + 5000;
-            if curr_clip_start > curr_act_start && curr_clip_start < curr_act_end
-                keep_failure(j) = 1;
-            end
-        end
-        
-        
-    end
-end
-%%
-keep_ind = logical(keep_ind);
-keep_failure = logical(keep_failure);
-
-actdata.winsize = labels.winsize(keep_ind);
-actdata.timestampSTART_END = labels.timestampSTART_END(keep_ind, true(1,2)); %fallnet model features
-actdata.sensor_counts = labels.sensor_counts(keep_ind, true(1,3)); % # of samples per sensor
-actdata.acce = labels.acce(keep_ind);      %sensor data for each window
-actdata.gyro = labels.gyro(keep_ind);
-actdata.baro = labels.baro(keep_ind);
-
-actdata.type_str = type_str;
-actdata.subject = subject;
-actdata.location = location;
-
-actdata.failure.timestampSTART_END = labels.failure.timestampSTART_END(keep_failure, true(1,2)); %start and end timestamps for sensor data in the window
-actdata.failure.reason = labels.failure.reason(keep_failure);
-actdata.failure.value = labels.failure.value(keep_failure);
-actdata.failure.duration = labels.failure.duration(keep_failure, true(1,3)); 
-actdata.failure.evalstart = labels.failure.evalstart(keep_failure); %timestamp when the model started to evaluate 
-
-actdata.value=get_value(actdata.type_str);
-
-save activities_data actdata
-
 %% Activity Detection Probe
 act_type_all={};
 act_conf_all={};
@@ -616,6 +394,8 @@ for i=1:length(act_inds)
 end
 
 activity_detection = struct('Type',act_type_all,'Conf',act_conf_all,'Timestamp',timestamps);
+
+save ActData activity_detection
 
 combine_data_into_10sec_clips(date_of_data_collection, plot_data)
 
