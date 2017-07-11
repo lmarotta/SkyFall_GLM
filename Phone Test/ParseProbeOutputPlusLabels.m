@@ -364,7 +364,8 @@ data.failure.evalstart = labels.failure.evalstart(keep_failure); %timestamp when
 % Values field for data
 data.value=get_value(data.type_str);
 
-save falls_data data
+save(['falls_data_' date_of_data_collection], 'data')
+
 
 %% Activity Detection Probe
 act_type_all={};
@@ -395,7 +396,7 @@ end
 
 activity_detection = struct('Type',act_type_all,'Conf',act_conf_all,'Timestamp',timestamps);
 
-save ActData activity_detection
+save(['ActData_' date_of_data_collection], 'activity_detection')
 
 combine_data_into_10sec_clips(date_of_data_collection, plot_data)
 
