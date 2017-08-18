@@ -11,7 +11,7 @@ function ParseProbeOutputPlusLabels(plot_data, labels_offset)
 
 if nargin == 0
     labels_offset = 0; % offset for data from 10-24-2016: 396000; 0 otherwise
-    plot_data = 1; % flag to plot parsed data
+    plot_data = 0; % flag to plot parsed data
 elseif nargin ~= 2
     error('invalid number of input arguments. Should be 0 or 2');
 end
@@ -91,6 +91,7 @@ sensor_counts =-ones(length(ind_correct),3); % # of samples per sensor
 acce = cell(length(ind_correct),1);      %sensor data for each window
 gyro = cell(length(ind_correct),1);
 baro = cell(length(ind_correct),1);
+fall_prob = -ones(length(ind_correct),1);
 %FAILURES
 failure_timestampSTART_END = -ones(length(ind_failures),2); %start and end timestamps for sensor data in the window
 failure_reason = cell(length(ind_failures),1);
@@ -105,6 +106,13 @@ for ind=1:length(ind_correct)
  
     x=find(strcmp(temp_correct,'EVALUATION_WINDOW_SIZE'));
     winsize(ind) = str2double(temp_correct(x+1));
+    
+    x = find(strcmp(temp_correct,'NOT_FALL_PROBABILITY'));
+    if ~isempty(x)
+        fall_prob(ind) = str2double(temp_correct(x+1));
+    else
+        fall_prob(ind) = 0;
+    end
     
     %Additional Start and End timestamps for the clip
     xs = find(strcmp(temp_correct,'MIN_ABSOLUTE_TIMESTAMP'));
@@ -158,6 +166,7 @@ labels.sensor_counts = sensor_counts; % # of samples per sensor
 labels.acce = acce;      %sensor data for each window
 labels.gyro = gyro;
 labels.baro = baro;
+labels.fall_prob = fall_prob;
 
 
 for ind=1:length(ind_failures)
@@ -350,6 +359,7 @@ data.sensor_counts = labels.sensor_counts(keep_ind, true(1,3)); % # of samples p
 data.acce = labels.acce(keep_ind);      %sensor data for each window
 data.gyro = labels.gyro(keep_ind);
 data.baro = labels.baro(keep_ind);
+data.fall_prob = labels.fall_prob(keep_ind);
 
 data.type_str = type_str;
 data.subject = subject;
@@ -400,6 +410,7 @@ save(['ActData_' date_of_data_collection], 'activity_detection')
 
 date = date_of_data_collection;
 
+%% 10 sec clips
 % combine_data_into_10sec_clips(date_of_data_collection, plot_data)
 
 data_ind = find(data.value==9,1);
@@ -422,6 +433,7 @@ num_falls = length(falllabels.types);
 acce = cell(num_falls,1);      %sensor data for each window
 gyro = cell(num_falls,1);
 baro = cell(num_falls,1);
+fall_prob = cell(num_falls,1);
 
 % form 10 sec clips
 curr_data_ind = 1;
@@ -441,6 +453,8 @@ for i=1:length(falllabels.types)
             %curr_clip_end = curr_clip_start + labels.winsize(j)*1000;
             curr_clip_start = labels.timestampSTART_END(j,1);        
             curr_clip_end = labels.timestampSTART_END(j,2);
+            
+            fall_prob_temp = [];
             
             % fall starts in this clip
             if fall_start > curr_clip_start && fall_start < curr_clip_end
@@ -465,6 +479,7 @@ for i=1:length(falllabels.types)
                 gyro_curr(:,1) = labels.timestampSTART_END(j,1) + 1000*gyro_curr(:,1);
                 baro_curr(:,1) = labels.timestampSTART_END(j,1) + 1000*baro_curr(:,1);
                 
+                fall_prob_temp = [fall_prob_temp labels.fall_prob(j)];
                 
                 if new_clip_start < curr_clip_start % take data from previous clip
                     % previous clip data
@@ -484,6 +499,8 @@ for i=1:length(falllabels.types)
                     acce_10sec = [acce_10sec; acce_prev(start_ind_acce:end,:)];
                     gyro_10sec = [gyro_10sec; gyro_prev(start_ind_gyro:end,:)];
                     baro_10sec = [baro_10sec; baro_prev(start_ind_baro:end,:)];
+                    
+                    fall_prob_temp = [fall_prob_temp labels.fall_prob(j-1)];
                     
                     % start for the current clip
                     start_ind_acce = 1;
@@ -510,6 +527,8 @@ for i=1:length(falllabels.types)
                 gyro_next(:,1) = labels.timestampSTART_END(j+1,1) + 1000*gyro_next(:,1);
                 baro_next(:,1) = labels.timestampSTART_END(j+1,1) + 1000*baro_next(:,1);                
                 
+                fall_prob_temp = [fall_prob_temp labels.fall_prob(j+1)];
+                
                 if new_clip_end < labels.timestampSTART_END(j+1,2)
                     take_one_more_clip = 0;
                     
@@ -534,6 +553,8 @@ for i=1:length(falllabels.types)
                     gyro_onemore = labels.gyro{j+2};
                     baro_onemore = labels.baro{j+2};
                     
+                    fall_prob_temp = [fall_prob_temp labels.fall_prob(j+2)];
+                    
                     % convert timestamps to absolute
                     acce_onemore(:,1) = labels.timestampSTART_END(j+2,1) + 1000*acce_onemore(:,1);
                     gyro_onemore(:,1) = labels.timestampSTART_END(j+2,1) + 1000*gyro_onemore(:,1);
@@ -552,6 +573,8 @@ for i=1:length(falllabels.types)
                 gyro{i} = gyro_10sec;
                 baro{i} = baro_10sec;
 
+                fall_prob{i} = fall_prob_temp;
+                
                 if fall_end > curr_clip_end
                     curr_data_ind = j+2;
                 end
@@ -581,6 +604,8 @@ end
 data.acce = [acce; data.acce];     %sensor data for each window
 data.gyro = [gyro; data.gyro];
 data.baro = [baro; data.baro];
+
+data.fall_prob = fall_prob;
 
 data.type_str = [falllabels.types; data.type_str];
 data.subject = [falllabels.subject; data.subject];
