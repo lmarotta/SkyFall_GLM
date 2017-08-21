@@ -82,7 +82,9 @@ for ind=1:length(ind_correct)
     timestampSTART_END(ind,:) = [str2double(temp_correct(xs+1)) str2double(temp_correct(xe+1))];
         
     eval_start_ts = find(strcmp(temp_correct,'EVALUATION_START'));
-    evalstart(ind) = str2double(temp_correct(eval_start_ts+1));
+    if ~isempty(eval_start_ts)
+            evalstart(ind) = str2double(temp_correct(eval_start_ts+1));
+    end
     
     ac = find(strcmp(temp_correct,'ACCELEROMETER_READING_COUNT'));
     gc = find(strcmp(temp_correct,'GYROSCOPE_READING_COUNT'));
@@ -93,7 +95,9 @@ for ind=1:length(ind_correct)
     prepd = find(strcmp(temp_correct,'PREPARE_DURATION'));
     verifd = find(strcmp(temp_correct,'VERIFY_DURATION')); 
     predd = find(strcmp(temp_correct,'PREDICT_DURATION'));
-    duration(ind,:)=[str2double(temp_correct(prepd+1)) str2double(temp_correct(verifd+1)) str2double(temp_correct(predd+1))];
+    if ~(isempty(prepd) || isempty(verifd) || isempty(predd))
+        duration(ind,:)=[str2double(temp_correct(prepd+1)) str2double(temp_correct(verifd+1)) str2double(temp_correct(predd+1))];
+    end
     
     % parse raw sensors data
     accstart = find(strcmp(temp_correct,'ACCELEROMETER_SAMPLES'));
@@ -208,4 +212,4 @@ end
 
 activity_detection = struct('Type',act_type_all,'Conf',act_conf_all,'Timestamp',timestamps);
 
-save FallProbe_TestData labels activity_detection -v7.3
+save FallProbe_TestData labels activity_detection
