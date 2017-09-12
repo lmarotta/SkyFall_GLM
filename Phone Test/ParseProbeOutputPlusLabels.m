@@ -65,6 +65,10 @@ for i=1:length(fall_labels)
     
     laytime = find(strcmp(temp,'lietime'));
     fall_laytime(i) = str2double(temp(laytime+2));
+    
+    start_position = find(strcmp(temp,'falltype'));
+    fall_start_position = temp(start_position+2);
+    
 end
 
 fall_start_end = fall_start_end - labels_offset;
@@ -74,6 +78,7 @@ falllabels.start_end_marked = fall_start_end;
 falllabels.location = fall_location;
 falllabels.subject = fall_subject;
 falllabels.laytime = fall_laytime;
+falllabels.start_position = fall_start_position;
 
 %indices of correct and failure records
 correct = cellfun(@(x) isempty(strfind(x,'Failure')) && ~isempty(strfind(x,'FallNet')),data_probe);
@@ -421,6 +426,7 @@ data.value = data.value(data_ind:end);
 data.type_str = data.type_str(data_ind:end);
 data.location = data.location(data_ind:end);
 data.subject = data.subject(data_ind:end);
+data.start_position = {};
 data = rmfield(data, 'winsize');
 data = rmfield(data, 'timestampSTART_END');
 data = rmfield(data, 'sensor_counts');
@@ -611,6 +617,7 @@ data.type_str = [falllabels.types; data.type_str];
 data.subject = [falllabels.subject; data.subject];
 data.location = [falllabels.location; data.location];
 data.value = [get_value(falllabels.types); data.value];
+data.start_position = [falllabels.start_position; data.start_position];
 
 save(['falls_data_10sec_' date '.mat'], 'data')
 
